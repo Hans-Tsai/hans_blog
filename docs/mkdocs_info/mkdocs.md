@@ -16,3 +16,7 @@ For full documentation visit [mkdocs.org](https://www.mkdocs.org).
     docs/
         index.md  # The documentation homepage.
         ...       # Other markdown pages, images and other files.
+
+## References
+
+* [Mkdocs 部署靜態網頁至 GitHub pages 組態說明 (mkdocs.yml)](https://zhuanlan.zhihu.com/p/613038183)
