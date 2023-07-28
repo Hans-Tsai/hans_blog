@@ -65,16 +65,16 @@ theme:
       primary: cyan
       accent: cyan
       toggle:
-        icon: material/brightness-7
+        icon: material/weather-night
         name: Switch to dark mode
     - scheme: slate
       primary: cyan
       accent: cyan
       toggle:
-        icon: material/brightness-4
+        icon: material/weather-sunny
         name: Switch to light mode
   font:
-    text: Roboto
+    text: Poppins
     code: Roboto Mono
   favicon: assets/favicon.png
   icon:
@@ -98,7 +98,7 @@ extra:
   analytics:
     provider: google
     property: !ENV GOOGLE_ANALYTICS_KEY
-  # generator: false  #刪除頁尾顯示“使用 MkDocs 材料製造”
+  generator: false  #刪除頁尾顯示“使用 MkDocs 材料製造”
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/hans-tsai
@@ -149,8 +149,15 @@ markdown_extensions:
 # Page tree
 nav:
   - Home: index.md
-  - Programming language: 
+  - Programming language:
     - Node.js: programming_language/nodejs.md
+    - Java: programming_language/java.md
+  - Backend:
+    - Framework:
+      - Spring: backend/framework/spring/spring.md
+  - Cloud:
+    - AWS:
+      - SAA: cloud/aws/saa.md
   - Version Control:
     - Git: version_control/git.md
   - MkDocs Info:

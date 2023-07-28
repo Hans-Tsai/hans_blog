@@ -1,5 +1,6 @@
-# Node.js Learn
-## 自主學習 Node.js 的觀念和指令後做的統整 & 學習筆記
+Node.js Learn
+===
+自主學習 Node.js 的觀念和指令後做的統整 & 學習筆記
 ---
 
 ### 安裝方式
