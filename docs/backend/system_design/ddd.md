@@ -3,8 +3,8 @@ Domain Driven Design (領域驅動設計)
 DDD 的基本觀念 & 實作範例
 ---
 
-# :bulb: 術語表
-## Strategic Design 戰略設計
+## 術語表 :bulb:
+### Strategic Design 戰略設計
 
 > **Domain (領域):**
 >
@@ -32,9 +32,9 @@ DDD 的基本觀念 & 實作範例
 >
 > 泛指那些用來解決 Domain 問題的解決方案 (e.g. 程式碼、UML 圖、其他 Artifacts)。
 
-## Tactical Design 戰術設計
-
-### 領域物件 (Domain Object): 主要是針對程式碼實作中 Domain layer 內的 class
+### Tactical Design 戰術設計
+#### 領域物件 (Domain Object)
+- 主要是針對程式碼實作中 Domain layer 內的 class
 > **實體 (Entity):** 
 > 能被識別出來的物件 有 id。 Entity 的狀態會在其生命週期中持續追蹤其變化。
 >
@@ -60,10 +60,10 @@ DDD 的基本觀念 & 實作範例
 > - **應用服務 (Application Service):**
 >   等同於系統的使用案例，主要負責技術細節並呼叫領域物件或領域服務處理業務邏輯。
 
-# DDD 基本概念
+## DDD 基本概念
 > **核心精神: Think in context.** (在脈絡中思考)
 
-## DDD 架構的全貌圖
+### DDD 架構的全貌圖
 - 團隊與領域專家溝通及合作 **捕捉領域知識** 並且建構 **通用語言** (Ubiquitous Language)。
 - 依照所理解的 **問題域 (Problem Space)** 以及 **解決方案域(Solution Space)** 的資訊建立 **領域 (Domain)**。
 - 將領域 (Domain)切成若干個 **子領域 (Subdomain)** ，並定義每一個子領域的優先等級。
@@ -72,27 +72,27 @@ DDD 的基本觀念 & 實作範例
 
 ![DDD 架構全貌圖](../../assets/pics/ddd/ddd_full_architecture.jpeg)
 
-## 戰略設計 (Strategic Design)
+### 戰略設計 (Strategic Design)
 
-## 戰術設計 (Tactical Design)
+### 戰術設計 (Tactical Design)
 
-# DDD 實作範例
-## 電商的 Bounded Context 圖解
-### 關鍵使用案例
+## DDD 實作範例
+### 電商的 Bounded Context
+#### 關鍵使用案例
 - 購物車結帳時要 **判斷會員等級**，若是 VIP 則會有相應的折扣
 - **瀏覽商品** 時，部分商品只能 **被部分等級的客人看到**。比如說大量香菸組合包只能被菁英會員瀏覽
 - 購物車結帳時需要從商品目錄 **取得商品資訊** 來計算價錢
 - 購物時需要透過 **第三方支付** 來處理金流
 - 需要整合 **第三方物流** 讓客人知道物流進度
 - **營收分析系統** 需要與購物系統共享資料
-### 以下是可能的 Context Mapping 圖 (設計沒有正確答案)
+#### 以下是可能的 Context Mapping 圖 (設計沒有正確答案)
 - ![Ecommerce Bounded Context](../../assets/pics/ddd/Ecommerce_Bounded_Context.png)
 
-## 保險公司
-### 題目
+### 保險公司
+#### 題目
 - [GitHub: 題目](https://github.com/ContextMapper/context-mapper-examples/tree/master/src/main/cml/insurance-example)
 
-### 一家保險公司需要以下幾個 Bounded Context
+#### 一家保險公司需要以下幾個 Bounded Context
 - Customer Management 客戶管理
     - 客戶管理系統要管理所有保險公司客戶的資料。因此，他通常在與其他 Bounded Context 關係中的中心
 - Customer Self-Service Management 客戶自助服務
@@ -106,12 +106,11 @@ DDD 的基本觀念 & 實作範例
 - Printing Context 列印功能
     - 代表一個外部系統讓許多內部的 Bounded Context 可以透過 API 來使用。他處理那些需要列印的文件如債務 (Debt)、保單等等
 
-### 官方圖解
+#### 官方圖解
 - ![保險公司範例_官方圖解](../../assets/pics/ddd/保險公司範例_官方圖解.png)
 
-## 電影院
-
-### 題目
+### 電影院
+#### 題目
 - 需求 (真實世界的情境): 
   - 我希望能夠成立一家電影院，這個電影院必須要有 **售票亭** 可以售票給顧客
   - 售票時，員工要檢查 **顧客的身分證、時間、電影、座位** 等等
@@ -119,13 +118,13 @@ DDD 的基本觀念 & 實作範例
   - 當然，電影院一定要有 **放映廳**，要進去放映廳前會有員工 **檢查消費者的票** 是否符合目前播放的電影
   - 再來， 客人在售票處買電影票時也可以添加 **食物套餐**，然後你可以憑票去 **飲食部** 換取你的食物，飲食部需要與售票處獨立出來，因為飲食部還需要 **管理食物的庫存**
 
-### 初步 Bounded Context 圖解
+#### 初步 Bounded Context 圖解
 - Domain
   - Core Domain: Movie(放映廳)
   - Supporting Subdomain: Ticket(售票)、Food(食物)
 - ![電影院範例_Bounded_Context](../../assets/pics/ddd/電影院範例_Bounded_Context.png)
 
-### 關鍵使用案例
+#### 關鍵使用案例
 - 售票亭可以售票給客人，客人可以選擇電影、時刻、座位以及是否添加套餐
 - 售票亭員工售票前，要檢查客人的身分證以符合電影分級
 - 客人可以用 APP 線上預約訂票與餐點，然後到現場售票亭取票
@@ -133,7 +132,7 @@ DDD 的基本觀念 & 實作範例
 - 客人要到飲食部憑票才能兌換到食物，飲食部員工要依電影票上的餐點品項製作餐點
 - 當飲食部任何食物庫存低於 50% 時，要通知庫存管理部補貨。早上通知下午補貨，下午通知隔天早上補貨
 
-### 詳細 Bounded Context 圖解
+#### 詳細 Bounded Context 圖解
 - Box Office Context 售票處
 - Online Booking 線上訂票
 - Concession Stand Context 飲食部
@@ -141,13 +140,13 @@ DDD 的基本觀念 & 實作範例
 - Auditorium Context 放映廳
 - ![電影院範例_詳細_Bounded_Context](../../assets/pics/ddd/電影院範例_詳細_Bounded_Context.png)
 
-### 補充
+#### 補充
 - 接者當你開始在 Bounded Context 中開發 Domain Model 時，可以發現一件有趣的事情:
     - 一個電影票券在不同的 Bounded Context 中有不一樣的行爲 (一個 Ticket 各自表述)
     - ![ticket_in_different_context](../../assets/pics/ddd/ticket_in_different_context.png)
 
-# 觀念釐清
-## 請說明 Subdomain 與 Bounded Context 間的差別?
+## 觀念釐清
+### 請說明 Subdomain 與 Bounded Context 間的差別?
 - Subdomain 你將商業需求拆解與分類的結果; Bounded Context 代表你實際解決問題的系統拆解與分類
 - 有時候這兩者緊緊相關很容易搞混，但他們的確是不同的東西。可以參考 DDD 之父 Eric Evans 在這篇 [youtube video](https://youtu.be/Wbsh1Qw2-Ss) 的簡短回答。裡面提到：
     - 這就像地板與地毯的關係。地板是 Subdomain， Bounded Context 是地毯。當你剛裝修好新家就像剛啟動專案時，地毯設計與地板完全匹配，所以你很難發覺他們的差異。但兩者的確是不同的東西
@@ -158,7 +157,7 @@ DDD 的基本觀念 & 實作範例
     - Domain Model 則是被建立來滿足各個 Subdomain 的使用案例。理想上 Model 與 Subdomain 間會有一比一的對應關係，但是很難實現。Model 會受到組織架構、語言的模糊性、商業流程或是開發模式的影響。因此一個 Subdomain 可能會包含一個至多個 Model ，而一個 Model 也有可能跨越多個 Subdomain。這種事情很常見於 Legacy System 的環境中
     - Models 需要被隔離並在一個明確的(explicit)邊界內被定義，如此才能讓 Model 不受污染且專注。就像前面所說，這就是我們的 Bounded Context。 **不像是 Subdomain，一個 Bounded Context 是一個能保證 Model 間邊界的具體的技術實作。 Bounded Context 存在於 Subdomain 中並在其中明確的表達 Domain Models 的含義。**
 
-## 請說出 Context Mapping 的所有模式以及大致的功能?
+### 請說出 Context Mapping 的所有模式以及大致的功能?
 - **Shared Kernel**: 共用程式碼
   + ![shared_kernel](../../assets/pics/ddd/shared_kernel.png)
 - **Partnership**: 雙方雙向合作
@@ -174,8 +173,8 @@ DDD 的基本觀念 & 實作範例
 - **Conformist**: 有上下游關係但上游方對於下游方沒有責任
   + ![conformist](../../assets/pics/ddd/conformist.png)
 
-# DDD 學習路徑
+## DDD 學習路徑
 ![Domain Driven Design --- Roadmap](../../assets/pics/ddd/ddd_roadmap.png)
 
-# 參考資料
+## 參考資料
 - [iT 邦幫忙: Think in Domain-Driven Design 系列](https://ithelp.ithome.com.tw/users/20111997/ironman/2730)
