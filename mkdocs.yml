@@ -162,17 +162,17 @@ nav:
   - Version Control:
     - Git: version_control/git.md
   - Coding Interview:
-    - LeetCode: 
-      - LeetCode 75: coding_interview/LeetCode/LeetCode75.md
+    - LeetCode:
+      - LeetCode 75: coding_interview/leetcode/leetcode75.md
     - NeetCode:
-      - Blind 75: coding_interview/NeetCode/Blind75.md
+      - Blind 75: coding_interview/neetcode/blind75.md
       - Core skills:
-        - Data Structure: coding_interview/NeetCode/data_structure.md
-        - Algorithm: coding_interview/NeetCode/algorithm.md
-        - Design Pattern: coding_interview/NeetCode/design_pattern.md
-      - Tech interview handbook:
-        - Coding interview preparation: coding_interview/NeetCode/coding_interview_preparation.md
-        # - System design interview preparation
-        # - Behavioral interview preparation
+        - Data Structure: coding_interview/neetcode/data_structure.md
+        - Algorithm: coding_interview/neetcode/algorithm.md
+        - Design Pattern: coding_interview/neetcode/design_pattern.md
+    - Tech interview handbook:
+      - Coding interview preparation: coding_interview/tech_interview_handbook/coding_interview_preparation.md
+      # - System design interview preparation
+      # - Behavioral interview preparation
   - MkDocs Info:
     - MkDocs: mkdocs_info/mkdocs.md
