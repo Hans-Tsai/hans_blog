@@ -152,7 +152,7 @@ Node.js Learn
 
 #### How to install Node.js?
 - Node有很多種安裝方式,最常見的方式是透過套件管理包(package manager)下載,在這種情況下,每個作業系統有自己的安裝方式
-  + 可參考[安裝方式](#安裝方式)的章節
+  + 可參考 **安裝方式** 的章節
 - NVM(Node Version Manager)是一種執行Node.js的流行方法
   + nvm讓我們可以輕鬆切換Node版本
   + 假如碰到錯誤時,可以安裝新版本以嘗試輕鬆地回滾(rollback)
@@ -394,7 +394,7 @@ Node.js Learn
     * 例: $ `node app.js --name=joe`
 
 #### Output to the command line using Node.js
-> npm的[chalk](https://github.com/chalk/chalk)套件---可設定終端機輸出文字的樣式與顏色<br>
+> npm的 chalk 套件---可設定終端機輸出文字的樣式與顏色<br>
 > npm的[progress](https://www.npmjs.com/package/progress)套件---可以在`CLI console`畫面上創造進度條的套件<br>
 
 - 利用[console](https://nodejs.org/api/console.html#console_console)核心模組的基本輸出(basic output)
@@ -503,7 +503,7 @@ Node.js Learn
   + 如我們所見,`console.log()`非常適合在後台(Console)打印出訊息,這也就是所謂的標準輸出(standard output, `stdout`)
   + 反之,`console.error()`則會將訊息打印到標準錯誤(standard error, `stderr`)流(stream)上面
     + `stderr`流不會出現在後台(Console)上,但是它會出現在錯誤日誌上(error log)
-- 為文字輸出上色-[跳脫序列(escape sequences)](https://gist.github.com/iamnewton/8754917) & npm的[chalk](https://github.com/chalk/chalk) package
+- 為文字輸出上色-[跳脫序列(escape sequences)](https://gist.github.com/iamnewton/8754917) & npm的 chalk package
   + 我們可以利用跳脫序列(escape sequence)將文字輸出上色
   + 跳脫序列是一組字符代表一種顏色
   + 範例程式碼
@@ -522,7 +522,7 @@ Node.js Learn
       console.log(chalk.yellow('hi!'))
       ```
       * 從上面的範例程式碼可以看出我們可以使用`chalk.yellow()`這個方法會比起跳脫序列(escape sequences)來得更好記與更好閱讀
-    * 更多相關功能可以參考[chalk]((https://github.com/chalk/chalk))
+    * 更多相關功能可以參考 npm 的 chalk 套件
 - 建立進度條-npm的[progress](https://www.npmjs.com/package/progress) package
   + `progress`是一個非常棒的套件在CLI console畫面上創造 **進度條** 的套件
   + 可以先利用npm來安裝`progress`這個套件

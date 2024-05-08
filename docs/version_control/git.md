@@ -165,7 +165,7 @@ Git Learn
       * ![git commit --amend --no-edit參數圖解說明](../assets/pics/git/git%20commit%20--amend%20--no-edit參數圖解說明.png)
   + 提醒:即便"只是修改commit message",仍然會產生新的commit id,因為這樣對Git來說commit物件的內容是有"變動"的,所以Git會重新計算並產生一顆新的Commit物件,也就是說這其實算是一次全新的commit
   + 如果想修改更早的commit紀錄,就必須使用$ `git rebase` 指令了
-    * 可參考[分支(branch)操作](#分支branch操作)的 $ `git rebase -i` 章節 
+    * 可參考 **分支(branch)操作** 的 $ `git rebase -i` 章節 
   + 團隊開發守則:即便只是修改commit message,不管如何它就是修改了一次歷史,所以請盡量"不要"在已經`push`出去之後再修改,否則可能會造成其他人的困擾
 #### 如果有特定檔案不想放在Git裡面一起備份或是上傳到Git Server的話,例如:資料庫密碼,雲端伺服器的金鑰...可以加入 `.gitignore`中
   + 可以在專案中建立一個 `.gitignore` 的檔案,裡面可以設定想要忽略的規則
@@ -236,7 +236,7 @@ Git Learn
     * ![Tag物件介紹](../assets/pics/git/Tag物件介紹.png)
   + 統整: `Tag物件`中的有附註Tag(Annotated Tag)會指向某個`Commit物件`
 #### 分支(branch)操作
-  + [分支基礎操作可參考](#分支branch是什麼)
+  + 分支基礎操作可參考 **分支branch是什麼** 章節
   + 合併分支的兩種方式($ `git merge` & $ `git rebase`)
     * 方法一 : $ `git merge`
     * $ `git merge <要合併到的分支名稱>`: 可以用來將目前所在的分支(branch)合併到 `<要合併到的分支名稱>`
@@ -304,7 +304,7 @@ Git Learn
           * 用 $ `git reset <要回到過去的哪個Commit物件id> --hard`
           * 這樣就可以回到`Rebase`以前的狀態了
         * 先檢視目前的`ORIG_HEAD`指向的`Commit物件的id`
-          * 可先參考[`ORIG_HEAD`是什麼?](#orig_head是什麼)
+          * 可先參考 **ORIG_HEAD`是什麼?** 章節
           * $ `cat .git/ORIG_HEAD`: `回傳Git危險操作以前的`ORIG_HEAD`指向的`Commit物件`的id
           * ![git reset ORIG_HEAD --hard 來回到危險操作以前的ORIG_HEAD指向的Commit物件的SHA-1值_統整](../assets/pics/git/git%20reset%20ORIG_HEAD%20--hard%20來回到危險操作以前的ORIG_HEAD指向的Commit物件的SHA-1值_統整.gif)
   + 使用`Rebase`方式來合併分支的優缺點分析
@@ -332,7 +332,7 @@ Git Learn
           * $ `git commit --amend`: "修改"該`Commit物件`
           * `$ git rebase --continue`: 繼續`Rebase`下去
         * 如果這時候不是要修改該`Commit物件`,而是想要將該`Commit物件`拆分成兩個`Commit物件`的話,可以用`Reset`指令來完成
-          * 可先參考[如果不小心使用$ `git reset --hard` 模式,能救回來嗎?](#如果不小心使用-git-reset---hard-模式能救回來嗎)
+          * 可先參考 **如果不小心使用 git reset --hard 模式,能救回來嗎?** 章節
           * $ `git reset HEAD^` : 回到`HEAD`目前指向的`Commit物件`的前一次`commit紀錄`上
           * $ `git status`: 先檢視一下目前的Git狀態
             * ![git rebase -i 互動模式的edit選項,Rebase到一半的Git狀態圖解畫面說明](../assets/pics/git/git%20rebase%20-i%20互動模式的edit選項,Rebase到一半的Git狀態圖解畫面說明.png)<br>
@@ -355,11 +355,8 @@ Git Learn
       * ![在Rebase互動模式中利用reword來編輯過去的commit message](../assets/pics/git/在Rebase互動模式中利用reword來編輯過去的commit%20message.png)
     * 提醒: 經過`Rebase模式`修改後,因為前後要接的Commit物件都不同(其實時間也不同),所以會重新計算並做出一顆新的Commit物件; <br>
     而因為在Git歷史紀錄上的這兩顆Commit物件被換掉了,在它們兩個之後的一整串Commit物件全部都必須做出新的Commit物件出來替代舊的Commit物件們
-      * 相關觀念可參考
-      * [分支(branch)操作](#分支branch操作)的<br>
-      $ `git rebase` 的原理其實是做多次"Apply"到`新的基準點branch`指向的`Commit物件`上原理 & 圖解說明
-      * [SHA-1(安全散列演算法) 介紹](#sha-1安全散列演算法-介紹)的<br>
-      `Blob`物件的`SHA-1`值計算公式 章節
+      * 相關觀念可參考 **分支(branch)操作** 章節
+      * $ `git rebase` 的原理其實是做多次"Apply"到`新的基準點branch`指向的`Commit物件`上原理 & 圖解說明
     * 提醒: 在執行`Rebase操作`時,要多注意"相依性問題", 否則一定會出問題的
       * `情境說明`
       * 某次`commit紀錄`修改了`zebra.html`,結果卻不小心把這次`commit紀錄`移動到建立`zebra.html`的那次`commit紀錄`之前
@@ -378,7 +375,7 @@ Git Learn
     * $ `git revert HEAD --no-edit`: 這樣一來剛剛被刪除的`pig.html`中的"abc"字串又復活了; 但同時Git又會新增一個`Revert_"Revert" xxxxx` 的`Commit物件`,會造成`Commit物件`越來越多
       * ![取消Revert操作會產生Revert_Revert的Commit物件](../assets/pics/git/取消Revert操作會產生Revert_Revert的Commit物件.png) 
     * $ `git reset HEAD^ --hard`: 適用於直接放棄`HEAD`的前一次`commit紀錄`的所有操作(包括工作目錄 和 暫存區)
-      * 可參考 [如果想重新編輯剛才的commit](#如果想重新編輯剛才的commit)
+      * 可參考 **如果想重新編輯剛才的commit** 章節
       * 較推薦此作法!
   + `Revert指令`的建議使用情境
     * 如果是個人開發的專案,其實可以直接用`Reset`切回去就好
@@ -507,7 +504,7 @@ Git Learn
     * $ `git reset HEAD~2` = $ `git reset @~2`
     * $ `git reset HEAD^^`= $ `git reset @^^`
     * 以上四種指令都是相同的意思,代表要回到目前的`HEAD指標`指向的`Commit物件`以前的`2次``commit紀錄`的那時候
-    * 可參考[如果想重新編輯剛才的commit](#如果想重新編輯剛才的commit)
+    * 可參考 **如果想重新編輯剛才的commit** 章節
     
 #### `ORIG_HEAD`是什麼?
 - `ORIG_HEAD` 是Git特別的一個紀錄點,這個紀錄點會自動記錄在"Git的危險操作"以前,當下的`HEAD`指向的`Commit物件的id`
@@ -580,7 +577,7 @@ Git Learn
       * 例如: $ `git checkout -b test origin/test` 
   + 在 `Detached HEAD` 狀態下其實跟平常一樣操作Git,也可以進行commit,只是commit後,當下的那個`Commit物件`就只會有`HEAD`指標指向它,這時如果將`HEAD`指標切換到其他分支的話,這個`Commit物件`就很不容以被找回來了(除非你有記下這個`Commit物件`的id); 如果一直沒有人來找它的話,就要等到Git自動觸發資源回收機制來回收它了
     * 這情況會有點類似於要從過去的`commit紀錄`,再長一個新的分支出來的情境
-      * 可參考[如果想從過去的某次`commit紀錄`再長一個`新的分支(branch)`出來,該如何做呢?](#如果想從過去的某次commit紀錄再長一個新的分支branch出來該如何做呢) 
+      * 可參考 **如果想從過去的某次commit紀錄再長一個新的分支(branch)出來,該如何做呢?** 章節
     * 這時如果想留下這個`Commit物件`的話,可以在該Commit物件上建立一個`分支(branch)`貼紙貼在上面
       * $ `git branch <要新增的分支名稱> <該Commit物件的id>`
     * 也可以建立新的分支後,直接切換到該分支上面
@@ -603,7 +600,7 @@ Git Learn
 
 #### `Tag` (標籤) 是什麼?
 - `Tag` (標籤): 是一個指向某一個`Commit物件`的"指標"
-  + 可先參考[Git 的四大物件(`Blob`,`Tree`,`Commit`,`Tag`)觀念介紹](#git-的四大物件blobtreecommittag觀念介紹)
+  + 可先參考 **Git 的四大物件(Blob, Tree, Commit, Tag)觀念介紹** 章節
   + `Tag` (標籤)依據官方文件有以下3種適合作為的用途
       > Annotated tags are meant for release while lightweight tags are meant for private or temporary object labels. 
       * 軟體版本號(`release version`)
@@ -645,16 +642,16 @@ Git Learn
 #### Git的資源回收機制($ `git gc`)是怎麼運作的呢?
 - 在Git裡,每當把檔案加入暫存區(staging area)時,Git便會根據"檔案內容"製作出`Blob物件`; 每當完成`commit`,便會跟著產生所需的`Tree物件`以及`Commit物件`
   + 當物件越來越多,並達到觸發Git自動資源回收的機制(`Garbage Collection`)時,Git會利用這個機制來自動整理這些物件,同時也會把`Unreachable狀態`的物件清掉 
-  + 可以先參考[Git其實不是在做差異備份,而是在為當時的專案建立快照(snapshot)](#git其實不是在做差異備份而是在為當時的專案建立快照snapshot)的$ `git gc`章節
+  + 可以先參考 **Git其實不是在做差異備份,而是在為當時的專案建立快照(snapshot)** 章節
   + Git的資源回收機制($ `git gc`)會自動回收掉`Unreachable狀態`的物件,但需要加上 `--prune=now` 來搭配使用,才會當下立即就生效
-    * 可以先參考[如何把一個檔案從Git版控中真正的移除掉呢?](#如何把一個檔案從git版控中真正的移除掉呢)
+    * 可以先參考 **如何把一個檔案從Git版控中真正的移除掉呢?** 章節
   + $ `git gc`其實會默默地呼叫$ `git prune`指令來清除`Unreachable物件`,但$ `git prune`指令也是要給它設定到期日,所以剛才的指令其實原理如下
     * $ `git gc --prune=now`  =  $ `git gc` + $ `git prune --expire=now`
 - 還有什麼方式會產生出`Unreachable狀態`的物件?
   + 當已經將檔案加入暫存區(staging area)後,卻又將該檔案從Git版控中移除,脫離Git的控管,變為`Untracked File`狀態
   + 因為一旦Git物件產生後,除非手動進 `.git/objects/` 目錄處理掉,不然該物件就會一直留在那邊了
-  + 可先參考[Git其實不是在做差異備份,而是在為當時的專案建立快照(snapshot)](#git其實不是在做差異備份而是在為當時的專案建立快照snapshot)的 $ `git ls-files -s` 章節
-  + 可先參考[$ `git rm --cached` V.S. `.gitignore` 比較](#-git-rm---cached-vs-gitignore-比較)的 $ `git rm --cached` 部分
+  + 可先參考 **Git其實不是在做差異備份,而是在為當時的專案建立快照(snapshot)** 的 `git ls-files -s` 章節
+  + 可先參考 **`git rm --cached` V.S. `.gitignore` 比較** 章節的 $ `git rm --cached` 部分
   + `情境說明`
     * $ `echo "手動產生一個Unreachable物件" > unreachable.html`
     * $ `git add unreachable.html`
@@ -668,7 +665,7 @@ Git Learn
     * $ `git cat-file -p <該Unreachable狀態的Blob物件的id>`
       * ![用git cat-file -p <該Unreachable狀態的Blob物件的id>  來檢視該Unreachable狀態的物件的內容](../assets/pics/git/用git%20cat-file%20-p%20<該Unreachable狀態的Blob物件的id>%20%20來檢視該Unreachable狀態的物件的內容.png)
   + 被刪除的`標籤`(Tag)物件,也會成為`Unreachable狀態`的物件
-    * 可先參考[`Tag` (標籤) 是什麼?](#tag-標籤-是什麼) 
+    * 可先參考 **Tag (標籤) 是什麼?** 章節 
     * $ `git tag -a unreachable_object -m "刪除Tag物件後,會產生Unreachable狀態的物件"`
       * 建立一個`有附註標籤`(Annotated Tag),因為`標籤`(Tag)物件原本是指向某個`Commit物件`,但當該有附註標籤被刪除時,這個被指向的`Commit物件`就會變成`Unreachable狀態`的物件
     * $ `git tag -d unreachable_object`
@@ -677,7 +674,7 @@ Git Learn
       * 會顯示這個被刪除的Tag物件(`unreachable_object`),該檔案會變成為`Unreachable狀態`的物件
       * 因為它不像`Commit物件`,還會有`Reflog`對它念念不忘,已經沒有其他物件或指標指向這個`Tag物件`,所以這個已被刪除的`Tag物件`就會立刻變成`Unreachable狀態`
   + 在做`Rebase`的時候,其實也會產生出多個`Unreachable狀態`的物件
-    * 可先參考[分支(branch)操作](#分支branch操作)的$ `git rebase`原理的部分
+    * 可先參考 **分支(branch)操作** 章節的 `git rebase` 原理的部分
     * 因為在`Rebase`的過程中,Git會把原本的`Commit物件`們分別複製一份到新的`base分支`上並且重新計算一份新的`SHA-1`值給這些新的`Commit物件`; 同時,最後`分支`與`HEAD`也都會遷移過去新的`Commit物件`上,所以這時候原本舊的那些`Commit物件`們,就會變成`Unreachable狀態`的物件們
   + 總結: 在Git的世界中`Unreachable狀態`的物件其實是還蠻常見到的,以下情況都會產生出`Unreachable狀態`的物件
     * 利用$ `git reset --hard`切到別的`Commit物件`上後,並且將`Reflog`設定為已到期後; 這時候在`Reset`之前,Git原本指向的那些`Commit物件`就會變成`Unreachable狀態`
@@ -757,7 +754,7 @@ Git Learn
     * 細節提醒: 這兩個分支都是平等關係,細微的差異是`cat`合併掉`dog`分支的話,`cat分支`會往前移動
     * 細節提醒: 合併分支後而產生的新的`Commit物件`其實裡面會紀錄誰是誰的老爸,當`cat`合併`dog分支`的話,`cat分支`就會寫在前面
       * 可以用$ `git cat-file -p <物件id>` 來檢視該`Commit物件`的`Parent`(通常會指向前一次的`Commit物件`)是指向哪個`Commit物件`
-      * 可參考[Git 的四大物件(`Blob`,`Tree`,`Commit`,`Tag`)觀念介紹](#git四大物件blobtreecommittag彼此之間其實是平行關係)
+      * 可參考 **Git 的四大物件(Blob, Tree, Commit, Tag)觀念介紹** 章節
       * ![git cat-file -p <Commit物件>可以用來檢視該Commit物件的Parent是誰_統整](../assets/pics/git/git%20cat-file%20-p%20<Commit物件>可以用來檢視該Commit物件的Parent是誰_統整.gif)
 
 #### 合併分支其實不是真的在合併分支!
@@ -779,8 +776,8 @@ Git Learn
 - `標籤(Tag)`與`分支(branch)`都是一種指標,都會放在 .git/refs/ 目錄裡面,但放的位置不同
   + `標籤(Tag)` 會放在 `.git/refs/tags/` 目錄裡面
   + `分支(branch)`會放在 `.git/refs/heads/` 目錄裡面
-- 可先參考[`Tag` (標籤) 是什麼?](#tag-標籤-是什麼)
-- 可先參考[`分支(branch)`是什麼?](#分支branch是什麼)
+- 可先參考 **Tag (標籤) 是什麼?** 章節
+- 可先參考 **分支(branch)是什麼?** 章節
 - `標籤(Tag)`與`分支(branch)`的內容看起來會很像,都是`40`個字元的`SHA-1值`
   + `輕量標籤`(lightweight tag)指向的是一個Commit物件
     + $ `cat .git/refs/tags/<輕量標籤的名稱>`
@@ -858,7 +855,7 @@ Git Learn
   + ![檔案修改到一半卻git checkout分支的圖解說明-part_總結](../assets/pics/git/檔案修改到一半卻git%20checkout分支的圖解說明-part_總結.gif)
   + 總結: Git切換分支( `$ git checkout <branch name>` )時,並不會影響到已經在工作目錄(working directory)的那些修改喔!
 #### 如果不小心把還沒合併的分支刪掉了,該怎麼挽救?
-  + 可先參考 [`分支(branch)`是什麼?](#分支branch是什麼) 的刪除分支篇
+  + 可先參考 **分支(branch) 是什麼?** 章節的刪除分支篇
   + $ `git branch -D <尚未合併的分支名稱>`: 強制刪除該分支( 不管該分支是否已經合併(merged)到其上游分支(upstream branch) )
     * 此時會顯示"被刪除的分支"當下是指向哪個`Commit物件`,可以先記下來這個`Commit物件`的id
     * ![不小心刪掉尚未合併的分支的圖解說明](../assets/pics/git/不小心刪掉尚未合併的分支的圖解說明.png)
@@ -866,7 +863,7 @@ Git Learn
     * 所以既然刪掉分支後,那些`Commit物件`都還在的話,只是因為我們當下通常沒有記下那些`Commit物件的id`,所以比較不容易再拿回來使用,這時我們可以創造一個`新的分支(new branch)`來把這些`Commit物件`都接回來!
       * $ `git branch <新的分支名稱> <剛剛被刪掉的分支當下指向的Commit物件的id>`: 建立一個`新的分支(new branch)`並讓該分支指向這個`Commit物件`,相當於再拿一張新的貼紙貼回去的意思
     * 補充: 若當下刪除"尚未合併分支"的時候,沒有記下該分支當下指向的`Commit物件`的id,可以用git reflog來找找看,因為Git的Reflog會預設保留`30`天
-      * 可參考 [如果不小心使用$ `git reset --hard` 模式,能救回來嗎?](#如果不小心使用-git-reset---hard-模式能救回來嗎)
+      * 可參考 **如果不小心使用$ `git reset --hard` 模式,能救回來嗎?** 章節
 #### 如果想從過去的某次`commit紀錄`再長一個`新的分支(branch)`出來,該如何做呢?
   + 第一步驟: 必須先回到過去的那個`commit紀錄`的狀態
     * $ `git checkout <要回到的過去的那個Commit物件的id>` 
@@ -987,7 +984,7 @@ Git Learn
     * $ `git stash drop stash@{<編號>}`: 從`Stash List`中刪除該`Stash`
     * $ `git stash clear`: 從`Stash List`中清除所有的`Stash`
 #### 如果不小心將機敏資料(ex:帳號、密碼)放在Git裡,想把它刪掉,該怎麼做呢?
-  + 可先參考[如果有特定檔案不想放在Git裡面一起備份或是上傳到Git Server的話,例如:資料庫密碼,雲端伺服器的金鑰...可以加入 `.gitignore`中](#如果有特定檔案不想放在git裡面一起備份或是上傳到git-server的話例如資料庫密碼雲端伺服器的金鑰可以加入-gitignore中)
+  + 可先參考 **如果有特定檔案不想放在Git裡面一起備份或是上傳到Git Server的話,例如:資料庫密碼,雲端伺服器的金鑰...可以加入 .gitignore 中]** 章節
   + 首先,如果是已經`推送(Push)`上去到GitHub上的話,請先不要想要用Git來解決,強烈建議直接先改密碼再說! 改完密碼後,再接著利用Git做後續補救措施
   + `情境說明`
   + 假設我想要把`config/database.yml`這個檔案從每個`Commit物件`裡把它拿掉,比較辛苦的做法是使用 `Rebase`指令,然後一個一個進去`Commit物件`去編輯
@@ -1012,8 +1009,8 @@ Git Learn
         * 其實與其說是備份,也只是備份開始進行`filter-branch`之前的那個`HEAD`指向的`Commit物件`的`SHA-1值`而已
         * 接著就可以利用`hard Reset指令`直接切回去原來的`Commit物件`,這樣就都回來了
           * $ `git reset .git/refs/original/refs/heads/master --hard` 
-          * 可參考[$ `git reset` 是用來"前往"到指定的`Commit物件`上的](#-git-reset-是用來前往到指定的commit物件上的)
-          * 可參考[如果想重新編輯剛才的commit](#如果想重新編輯剛才的commit)
+          * 可參考 **git reset 是用來前往到指定的 Commit 物件上的** 章節
+          * 可參考 **如果想重新編輯剛才的commit** 章節
     * 利用 $ `git push -f`:重新"強制"`推送(Push)`一份你剛剛已經$ `git filter-branch`過後的`commit`上去來覆蓋掉它
       * 提醒: 因為其實已經`推送(Push)`出去的東西就跟潑出去的水一樣,收不回來的 
 #### 可以只取用某個分支的其中某幾個`commit`嗎?
@@ -1037,13 +1034,13 @@ Git Learn
     參考圖片出處<https://gitbook.tw/chapters/faq/remove-files-from-git.html>
     * 將整個 `.git/` 目錄完全移除
     * 用`Rebase方式`進行編輯,重整`commit紀錄` (=> 適用於當`commit紀錄`的數量不算多的時候)
-      * 可參考[分支(branch)操作](#分支branch操作)的 $ `git rebase -i` 章節
+      * 可參考 **分支(branch)操作** 章節的 `git rebase -i`
     * 利用$ `git filter-branch --tree-filter <command>`,可以大範圍的對每個`Commit物件`都執行一次該指定的命令(`<command>`),並於修改完成後再自動重新`commit`
       * 例如: `$ git filter-branch -f --tree-filter "rm -f config/database.yml"`
         * 注意! 多加了一個 "`-f`"參數,是因為要強制覆寫`filter-branch`的備份點,這邊使用`filter-branch`指令把檔案從`工作目錄`(working directory)移除掉,這時候`database.yml`確實不見了,但還有好幾個跟資源回收有關的事情需要處理
         * `-f` (=> `--force`): 強制覆寫`filter-branch`的備份點
         > `git filter-branch -f`: git filter-branch refuses to start with an existing temporary directory or when there are already refs starting with refs/original/, unless forced.
-      * 可以參考[如果不小心將機敏資料(ex:帳號、密碼)放在Git裡,想把它刪掉,該怎麼做呢?](#如果不小心將機敏資料ex帳號密碼放在git裡想把它刪掉該怎麼做呢)
+      * 可以參考 **如果不小心將機敏資料(ex:帳號、密碼)放在Git裡,想把它刪掉,該怎麼做呢?** 章節
     * 因為執行$ `git filter-branch`指令,所有Git會自動有備份點,隨時可以透過它再跳回去,所以要先斷了這條線
       * $ `rm .git/refs/original/refs/heads/master`
     * $ `git reflog expire --all --expire=now`: 要求`Reflog`現在立刻過期(因為`Reflog`預設會自動保存30天內的紀錄)
@@ -1058,7 +1055,7 @@ Git Learn
     * 最後,啟動Git的資源回收機制,請垃圾車"現在"來把它們載走
       * $ `git gc --prune=now`: 
         * `--prune=<date>`: 修剪掉所有比`<date>`這個時間還"舊"的並且"未受控制"(loose)的物件 
-      * 可參考[Git其實不是在做差異備份,而是在為當時的專案建立快照(snapshot)](#git其實不是在做差異備份而是在為當時的專案建立快照snapshot)的$`git gc`章節
+      * 可參考 **Git其實不是在做差異備份,而是在為當時的專案建立快照(snapshot)** 章節的$`git gc`章節
     * 可以檢查看看是否真的完全刪除了該檔案,可以利用以下2種方法
       * $ `git fsck`
         * ![用git fsck檢查是否真的完全刪除掉該檔案了](../assets/pics/git/用git%20fsck檢查是否真的完全刪除掉該檔案了.png)<br>
@@ -1145,11 +1142,11 @@ Git Learn
     * `情境說明`
       * 因為現在這個專案之前有推送東西到Server上,所以遠端分支也會記錄一份在本機上,一樣也是有`HEAD`、`master分支`,但會在前面加註遠端節點origin,變成`origin/HEAD`、`origin/master`
       * 其實之前在`Push指令`時有加`-u` (=> `--set-upstream`)參數,就是用來設定`upstream`(上游)用的,所以目前這個`origin/master`遠端分支其實就是本地`master分支`的upstream喔
-        * 可參考[新建一個GitHub repository,並推送本地端repository到GitHub上](#新建一個github-repository並推送本地端repository到github上)
+        * 可參考 **新建一個GitHub repository,並推送本地端repository到GitHub上** 章節
       * 利用 $ `git fetch origin master` 將`遠端分支`(origin/master)下載一份回到本地端的`master分支`上面 
       * 因為這個遠端分支(origin/master)是從master分支分出去的,而且進度還比master分支還要新,可以利用`Merge指令`合併它們
         * $ `git merge origin/master`: 將目前所在的分支合併到`遠端分支`(origin/master); 就能讓`本地端分支`(master)跟上`遠端分支`(origin/master)的進度了
-        * 可參考[分支(branch)操作](#分支branch操作)的$ `git merge`篇
+        * 可參考 **分支(branch)操作** 章節的 `git merge` 篇
       * ![git fetch + git merge 的完整流程_統整](../assets/pics/git/git%20fetch%20+%20git%20merge%20的完整流程_統整.gif)<br>
         參考圖片出處<https://gitbook.tw/chapters/github/pull-from-github.html>
       * 補充1: 其實可以把`origin/master`這種遠端分支視為一個從原來本地端`master分支`分出去的一個分支就好了
@@ -1158,7 +1155,7 @@ Git Learn
     * $ `git pull`: 其實就是去遠端origin節點抓東西回來(`Fetch`),並且更新本機的進度(`Merge`)而已
     * 執行`Pull指令`時,如果內容沒有衝突,就會自動建立合併提交。如果發生衝突的話,需先解決衝突然後再手動提交
     * 也可以只用`Rebase方式`來合併分支
-      * 可先參考[分支(branch)操作](#分支branch操作)的$ `git rebase`篇
+      * 可參考 **分支(branch)操作** 章節的 `git rebase` 篇
       * $ `git pull --rebase`: 指定使用`Rebase方式`來合併(Merge)下載回來的內容
         * `-r` (=> `--rebase`): 當從遠端repository`下載(Fetch)`回來後,將目前所在的分支(current branch)用`Rebase的方式`合併到其`上游分支`(upstream branch)的上面
       * 適用情境: 當不想因為合併分支而多產生一次`commit紀錄`的話,可以用`Rebase方式`來合併分支
@@ -1187,7 +1184,7 @@ Git Learn
 
 #### 從伺服器上複製遠端repository下來
 - 可以利用$ `git clone <HTTPS or SSH>` 指令來將遠端的repository複製一份到本地端來檢視
-  + 可先參考[新建一個GitHub repository,並推送本地端repository到GitHub上](#新建一個github-repository並推送本地端repository到github上)的 HTTPS 與 SSH 的比較
+  + 可先參考 **新建一個GitHub repository,並推送本地端repository到GitHub上** 章節的 HTTPS 與 SSH 的比較
   + 方法一: 利用HTTPS的方式複製
     * $ `git clone https://github.com/Hans-Tsai/gitLearn.git`
     * 此方法使用者只要當下輸入 `帳號` & `密碼` 就可以複製了
@@ -1240,16 +1237,16 @@ Git Learn
 
 #### 如何跟上當初Fork的專案的進度呢?
 - 當原作者先收下別人的`Pull Request`時,該專案的進度就會比在我們自己帳號底下的進度還要前面了; 這時如果想要讓自己帳號底下`Fork`過來的這個專案"跟上"原作專案的目前的進度的話,可以利用以下2種方法
-  + 也可以先參考[為什麼有時候會推送(Push)不上去遠端repository呢?](#為什麼有時候會推送push不上去遠端repository呢)
+  + 也可以先參考 **為什麼有時候會推送(Push)不上去遠端repository呢?** 章節
   + 方法一: 砍掉重新`Fork`一遍
-    * 可參考[利用Pull Request來跟其它開發者的開源專案做互動](#利用pull-request來跟其它開發者的開源專案做互動)的`Fork流程介紹`篇
+    * 可參考 **利用Pull Request來跟其它開發者的開源專案做互動** 章節
   + 方法二: 跟上游同步
     * 先設定原作的遠端節點
       * $ `git remote -v`: 可以列出遠端節點的url
       * `-v` (=> `--verbose`): 詳細列出遠端節點的名稱與url
       * ![利用git remote -v 來列出遠端節點的url](../assets/pics/git/利用git%20remote%20-v%20來列出遠端節點的url.png)
       * $ `git remote add <遠端節點的名稱> <遠端節點repository的url>`: 新增另一個遠端節點名稱與url,而這個遠端節點指的位置就是"原作的專案"
-      * 可參考[新建一個GitHub repository,並推送本地端repository到GitHub上](#新建一個github-repository並推送本地端repository到github上)的$ `git remote add`篇
+      * 可參考 **新建一個GitHub repository,並推送本地端repository到GitHub上** 章節的 `git remote add`篇
     * 抓取原作專案的內容
       * $ `git fetch <剛剛設定好的新的指向原作專案的遠端節點的名稱>`: 利用`Fetch`指令來取得原作專案最新版的內容
     * $ `git merge <要合併到的分支名稱>`: 利用`Merge`指令合併到`遠端節點`(原作專案)的遠端分支上面
@@ -1264,7 +1261,7 @@ Git Learn
   + ![透過GitHub上的圖形化介面來刪除遠端分支](../assets/pics/git/透過GitHub上的圖形化介面來刪除遠端分支.png)
 - 也可以透過Git指令來刪除遠端分支
   + $ `git push <遠端節點的名稱> <要記得在這邊空一格>:<要刪除的遠端分支的名稱>`: 其實可以透過`推送`(Push)時重新命名遠端分支的名稱時,來達到刪除遠端分支的效果
-  + 可參考[新建一個GitHub repository,並推送本地端repository到GitHub上](#新建一個github-repository並推送本地端repository到github上) 的補充2(如何在推送時重新命名一個遠端分支的名稱呢?) 篇
+  + 可參考 **新建一個GitHub repository,並推送本地端repository到GitHub上** 章節的補充2(如何在推送時重新命名一個遠端分支的名稱呢?)
 
 #### 什麼時機適合用$ `git push -f` 來強制推送(Push)上去到遠端repository呢?
 - 當想要整理Git歷史紀錄or只會影響到自己一人時,可以使用強制推送( `$ git push -f` )的指令
@@ -1279,7 +1276,7 @@ Git Learn
   + ![GitHub提供的Branch protection rule功能的詳細規則介紹_圖解說明](../assets/pics/git/GitHub提供的Branch%20protection%20rule功能的詳細規則介紹_圖解說明.png)<br>
     參考圖片出處<https://gitbook.tw/chapters/github/using-force-push.html>
 - 萬一利用$ `git push -f` 來強制推送(Push)上去到遠端repository後又後悔了的話,可以換你或是其它有之前進度的隊友,再次進行$ `git push -f` 指令一次,把正確的內容強迫推上去,蓋掉前一次的$ `git push -f` 指令所造成的災難
-- 可參考[為什麼有時候會推送(Push)不上去遠端repository呢?](#為什麼有時候會推送push不上去遠端repository呢)的 方法二: 無論規則,強制`推送`(Push)上去 篇
+- 可參考 **為什麼有時候會推送(Push)不上去遠端repository呢?** 章節的方法二: 無論規則,強制`推送`(Push)上去 篇
 
 #### 如何透過`更新檔`(Patch)來更新本機端的repository的內容呢?
 - 在Git和許多版本控制的軟體還沒有誕生以前,開發者們必須透過Email來寄送更新檔案
@@ -1414,7 +1411,7 @@ Git Learn
     * 相對另外兩種工作流程(`workflow`)來說會比較複雜
     * 需頻繁切換分支
     * 在現今版本快速更迭的時代,`Hotfix` & `Release分支`是幾乎用不到的。因為合併到`master分支`後如果有`bug`就直接修復且發布下個版本了,如果還使用這兩個分支,需要**合併回develop和master分支**,但實際上**開發者很常忘記合併回這兩個主分支**
-  + 可參考[Git Flow介紹](#git-flow介紹) 
+  + 可參考 **Git Flow介紹** 章節
 - `GitHub Flow`
   + 優點
     * 適合屬於需要**持續發布**的專案
@@ -1425,7 +1422,7 @@ Git Learn
       * `情境說明`
       * 當遇到iOS官方版本更新,而如果審核期間又有新版本要發布的話,這個時候只有一個`master主分支`就會不夠用,所以還得另外再建一個新分支來維護
     * 當`master分支`合併後如果不發布,會造成`線上`(production)和`master分支的內容`不一致
-  + 可參考[GitHub Flow介紹](#github-flow介紹)
+  + 可參考 **GitHub Flow介紹** 章節
 - `GitLab Flow`
   + 優點
     * `GitLab Flow` 結合了 `Git Flow` & `GitHub Flow`兩者的優點
@@ -1435,7 +1432,7 @@ Git Learn
   + 缺點
     * 相較於`GitHub Flow`來說會比較複雜
     * 當`prodcution版本`需要多個版本(`pre-production分支`)來維護時,可能會變得如同`Git Flow`一樣複雜
-  + 可參考[GitLab Flow介紹](#gitlab-flow介紹)
+  + 可參考 **GitLab Flow介紹** 章節
 - 三種團隊共同協作的工作流程(workflow)的共同點
   + 都是**功能驅動式開發**(`Feature-driven development`)---以需求為開發的起點,先有需求才有以上那些分支,且開發完後該分支就會被合併到主分支,然後刪除
   + `Git Flow` & `GitHub Flow` & `GitLab Flow` 三種工作流程的比較可參考[4 branching workflows for Git](<https://medium.com/@patrickporto/4-branching-workflows-for-git-30d0aaee7bf>)
