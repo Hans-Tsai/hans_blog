@@ -119,8 +119,8 @@ markdown_extensions:
   - pymdownx.caret
   - pymdownx.details
   - pymdownx.emoji:
-      emoji_generator: !!python/name:materialx.emoji.to_svg
-      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -171,7 +171,7 @@ nav:
         - Algorithm: coding_interview/neetcode/core_skills/algorithm.md
         - Design Pattern: coding_interview/neetcode/core_skills/design_pattern.md
     - Tech interview handbook:
-      - Coding interview preparation: coding_interview/tech_interview_handbook/coding_interview_preparation.md
+      - Coding interview preparation: coding_interview/tech_interview_handbook/blind75.md
       # - System design interview preparation
       # - Behavioral interview preparation
   - MkDocs Info:

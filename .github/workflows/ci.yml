@@ -1,3 +1,48 @@
+# name: ci 
+# on:
+#   push:
+#     branches:
+#       - master 
+#       - main
+# permissions:
+#   contents: write
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+#       - name: Setup Node.js environment
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: 20.x
+#       - uses: actions/setup-python@v4
+#         with:
+#           python-version: 3.x
+#       - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV 
+#       - uses: actions/cache@v3
+#         with:
+#           key: mkdocs-material-${{ env.cache_id }}
+#           path: .cache
+#           restore-keys: |
+#             mkdocs-material-
+#       - run: pip install mkdocs-material
+#       - name: Install dependencies
+#         run: sudo apt-get install pngquant
+#       - name: Install Python dependencies
+#         run: |
+#           pip install \
+#             "cairosvg>=2.5" \
+#             "mkdocs-git-committers-plugin-2>=1.1.1" \
+#             "mkdocs-git-revision-date-localized-plugin>=1.0" \
+#             "mkdocs-minify-plugin>=0.3" \
+#             "mkdocs-rss-plugin>=1.2" \
+#             "mkdocs-redirects>=1.0" \
+#             "pillow<10"
+#       - name: Install Python core module and plugins
+#         run: pip install -r requirements.txt
+#       - run: mkdocs gh-deploy --force
+
+
 name: ci 
 on:
   push:
@@ -10,34 +55,20 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - name: Configure Git Credentials
+        run: |
+          git config user.name "hans-tsai"
+          git config user.email "lgs840522@gmail.com"
+      - uses: actions/setup-python@v5
         with:
           python-version: 3.x
       - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           key: mkdocs-material-${{ env.cache_id }}
           path: .cache
           restore-keys: |
             mkdocs-material-
-      - run: pip install mkdocs-material
-      - name: Install dependencies
-        run: sudo apt-get install pngquant
-      - name: Install Python dependencies
-        run: |
-          pip install \
-            "cairosvg>=2.5" \
-            "mkdocs-git-committers-plugin-2>=1.1.1" \
-            "mkdocs-git-revision-date-localized-plugin>=1.0" \
-            "mkdocs-minify-plugin>=0.3" \
-            "mkdocs-rss-plugin>=1.2" \
-            "mkdocs-redirects>=1.0" \
-            "pillow<10"
-      - name: Install Python core module and plugins
-        run: pip install -r requirements.txt
+      - run: pip install mkdocs-material 
       - run: mkdocs gh-deploy --force
