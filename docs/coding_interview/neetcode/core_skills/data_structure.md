@@ -11,64 +11,64 @@ Data Structure
 ```java
 class DynamicArray {
   private int[] arr;
-  // 陣列中的元素個數
+  // 陣列中的實際元素個數
   private int size;
 
   public DynamicArray(int capacity) {
     this.arr = new int[capacity];
-	this.size = 0;
+    this.size = 0;
   }
 
   // Get value at the i-th index
   public int get(int i) {
-	if (i < 0 || i > size-1) {
-		throw new IndexOutOfBoundsException("Index is illegal.");
-	}
+    if (i < 0 || i > size-1) {
+      throw new IndexOutOfBoundsException("Index is illegal.");
+    }
 
-	return arr[i];
+    return arr[i];
   }
   
   // Insert value n at the i-th index
   public void set(int i, int n) {
-	if (i < 0 || i > size-1) {
-	  throw new IndexOutOfBoundsException("Index is illegal.");
-	}
-
-	arr[i] = n;
+    if (i < 0 || i > size-1) {
+      throw new IndexOutOfBoundsException("Index is illegal.");
+    }
+    arr[i] = n;
   }
 
   // Insert n in the last position of the array
   public void pushback(int n) {
-	if (size == arr.length) {
-		resize();
-	}
-	arr[size++] = n;
+    if (size == arr.length) {
+      resize();
+    }
+    arr[size++] = n;
   }
 
   // Remove the last element in the array
   public int popback() {
-	if (size == 0) {
-		throw new IllegalStateException("Cannot pop from an empty array.");
-	}
-	return arr[--size];
+    if (size == 0) {
+      throw new IllegalStateException("Cannot pop from an empty array.");
+    }
+
+    return arr[--size];
   }
 
   // Resize the array
   private void resize() {
-	int newCapacity = arr.length * 2;
-	int[] newArr = new int[newCapacity];
-	System.arraycopy(arr, 0, newArr, 0, this.size);
-	arr = newArr;
+    int newCapacity = arr.length * 2;
+    int[] newArr = new int[newCapacity];
+    System.arraycopy(arr, 0, newArr, 0, this.size);
+    arr = newArr;
   }
 
   // Get the size of the array
   public int getSize() {
-	return size;
+	  return size;
   }
 
   // Get the capacity of the array
   public int getCapacity() {
-	return arr.length;
+	  return arr.length;
   }
 }
 ```
