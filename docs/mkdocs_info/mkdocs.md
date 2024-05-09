@@ -19,7 +19,7 @@ For full documentation visit [mkdocs.org](https://www.mkdocs.org).
 
 ## Tips
 - 每個 docs/md 文件，勿使用 H1 標題 (因為不會顯示在 table on contents)
-  - 所以從 H2 標題開始撰寫文件內容
+  - 因為 MKdocs 預設 md 文件的置頂標題就是 H1 標題，所以從 H2 標題開始撰寫文件內容
 
 ## References
 

@@ -1,9 +1,10 @@
 Node.js Learn
 ===
 自主學習 Node.js 的觀念和指令後做的統整 & 學習筆記
----
 
-### 安裝方式
+[TOC]
+
+## 安裝方式
 - 官方網站會先分成LTS.Current兩個版本
   + `LTS`(Long-term support): Recommended for most users
   + `Current`: Latest features
@@ -31,25 +32,25 @@ Node.js Learn
     * $ `nvm --version` 
   + 可參考[Node Version Manager](https://github.com/nvm-sh/nvm#troubleshooting-on-macos)
 
-#### Windows 系統
+### Windows 系統
   + 連結: https://nodejs.org/en/download/
   + 安裝完成後,可以用CLI指令檢查 **Node** & **NPM** 的版本
     * $ `node --version` 
     * $ `npm --version`
-#### MacOS 系統
+### MacOS 系統
   + 連結: https://nodejs.org/en/download/package-manager/#macos
     * 指令: `brew install node`
   + 安裝完成後,可以用CLI指令檢查 **Node** & **NPM** 的版本
     * $ `node --version` 
     * $ `npm --version`
-#### Linux 系統 (以 Ubuntu 為例)
+### Linux 系統 (以 Ubuntu 為例)
   + 連結: https://github.com/nodesource/distributions/blob/master/README.md
   + 指令: 
     * $ `sudo apt-get install -y nodejs`
 
 ---
-### Node.js 核心觀念
-#### Introduction to Node.js
+## Node.js 核心觀念
+### Introduction to Node.js
 `先備知識`
 > `One process`: 一個全域的Object,可以在任何地方被執行,並保有執行時的資料<br>
 > `One thread`: single-thread,在一個`process`中只能執行一件事<br>
@@ -99,7 +100,7 @@ Node.js Learn
   + 最後,會關閉response,並將內容作為參數添加到res.end()中<br>
     => `res.end('Hello World\n')`
 
-#### A brief history of Node.js
+### A brief history of Node.js
 - Node.js最初是由Ryan Lienhart Dahl,於2010/05月初次發表,相比於Javascript(1995/12月)與網際網路的誕生(1989年)來說,在技術領域中,並不算是很長的時間,但目前看來Node會持續存在下去
   + ![](../assets/pics/nodejs/NodeJS%20logo.png)
   + ![](../assets/pics/nodejs/NodeJS作者%20Ryan%20Lienhart%20Dahl.jpg)
@@ -150,7 +151,7 @@ Node.js Learn
     * Node.js 14發布
     * Node.js 15發布
 
-#### How to install Node.js?
+### How to install Node.js?
 - Node有很多種安裝方式,最常見的方式是透過套件管理包(package manager)下載,在這種情況下,每個作業系統有自己的安裝方式
   + 可參考 **安裝方式** 的章節
 - NVM(Node Version Manager)是一種執行Node.js的流行方法
@@ -161,7 +162,7 @@ Node.js Learn
 - 如果使用macOS,推薦使用[Homebrew](https://brew.sh/)來安裝Node
 - 當安裝完Node之後,就可以使用`$ node xxx.js`在CLI中執行Node程式
 
-#### How much JavaScript do you need to know to use Node.js?
+### How much JavaScript do you need to know to use Node.js?
 - 身為一個初學者,我們常常難以判斷要到什麼樣的程度才是對程式設計的能力足夠有自信的
 - 當我們剛開始學習Javascript,我們可能會對Javascript的結束位置,以及Node的起始位置與結束位置感到很困惑
 - 建議先理解Javascript的主要觀念後,在開始投入於Node的研究中
@@ -189,7 +190,7 @@ Node.js Learn
   + [閉包](https://developer.mozilla.org/zh-TW/docs/Web/JavaScript/Closures)(Closures)
   + [事件迴圈](https://developer.mozilla.org/zh-TW/docs/Web/JavaScript/EventLoop) (The Event Loop)
 
-#### Differences between Node.js and the Browser
+### Differences between Node.js and the Browser
 - 瀏覽器與Node.js都是使用Javascript程式語言來開發的
 - 建構出一個運行在瀏覽器的應用程式與建構出一個運行在Node的應用程式完全不同; 儘管都是使用Javascript程式語言來開發,卻仍存在一些關鍵差異,使體驗完全不同
 - Node改變的是整個生態系統(ecosystem),因為它讓我們可以使用一種程式語言-Javascript,就可以完成我們所有的網頁開發工作(包含前端 & 後端),這是一個獨特的優勢地位
@@ -205,7 +206,7 @@ Node.js Learn
     * require() => 在Node.js中
     * import => 在瀏覽器中
 
-#### The V8 JavaScript Engine
+### The V8 JavaScript Engine
 - [V8](https://v8.dev/)是用來支持Google Chrome瀏覽器的Javascript engine。當我們使用Chrome瀏覽器時,它需要我們的Javascript程式碼並執行它們 
 - V8負責提供Javascript執行時所需要的執行環境(runtime)。`DOM`和其他的Web APIs則由瀏覽器負責提供
 - Javascript engine是能獨立運作的,並不一定需要跟隨著託管(hosted)它的瀏覽器,這也促使Node的興起
@@ -224,13 +225,13 @@ Node.js Learn
   + 演變至今,我們的應用程式已經可以在瀏覽器持續執行數小時,而這也不僅限於單純的表單驗證規則(a few form validation rules)或是簡單的程式碼(simple scripts)
   + 在現代的新世界中,"編譯"Javascript是非常有意義的,因為雖然編寫Javascript仍然需要花費很多時間,但是一旦開發完成後,它將比起純直譯程式碼來的擁有更好的效能
 
-#### Run Node.js scripts from the command line
+### Run Node.js scripts from the command line
 - 當我們安裝好Node.js後,通常我們會用可在全域執行的`node`指令,接著傳遞要執行的檔名作為參數到CLI上
   + 假設我們的主要Node應用程式的檔名叫做`app.js` 
   + 例: $ `node app.js`
   + 提醒: 要在包含`app.js`的檔案路徑下執行該指令才行
 
-#### How to exit from a Node.js program?
+### How to exit from a Node.js program?
 - 有多種方法可以終止Node應用程式
   + CLI: $ `ctrl-C`
   + 程式碼: `process.exit()`
@@ -290,7 +291,7 @@ Node.js Learn
       * $ `process.kill(process.pid, 'SIGTERM')`
       * 也可以從其他執行中的Node應用程式or其他在我們的作業系統中正在執行的應用程式,來得知我們想要終止的應用程式的ID(process ID, pid)
 
-#### How to read environment variables from Node.js?
+### How to read environment variables from Node.js?
 - `process`核心模組提供了`env`屬性,`process.env`屬性會託管當啟動Node進程(process)的時候的所有Node環境變數
 - 以下是一個預設在`development`環境下,存取`NODE_ENV`這個環境變數的範例
   + 提醒: 因為它是Node的核心模組,所以`process`模組不需要事先匯入(`require()`),可以直接開始使用
@@ -303,7 +304,7 @@ Node.js Learn
     ```
 - 當然我們也可以利用上述的方式再設定我們需要的自定義環境變數
 
-#### How to use the Node.js REPL?
+### How to use the Node.js REPL?
 - 我們可以利用$ `node`指令來執行我們寫好的Node腳本(script)
   + 例: $ `node script.js`
 - 如果我們省略要執行的腳本名稱這個參數的話,就會進入`REPL模式`
@@ -355,7 +356,7 @@ Node.js Learn
         ``` 
     * 如果我們這時候在一行的句尾加上`.break`時,該多行表達式的模式將會停止並不會被執行
 
-#### Node.js, accept arguments from the command line
+### Node.js, accept arguments from the command line
 - 我們可以將不限制數量的參數(arguments)傳遞給Node應用程式,參數的形式可以使用以下2種形式
   + 獨立的參數值(standalone)
     * $ `node app.js joe`
@@ -393,7 +394,7 @@ Node.js Learn
   + 這次我們就要在每個參數的鍵(key)之前使用雙破折號(double dashes)
     * 例: $ `node app.js --name=joe`
 
-#### Output to the command line using Node.js
+### Output to the command line using Node.js
 > npm的 chalk 套件---可設定終端機輸出文字的樣式與顏色<br>
 > npm的[progress](https://www.npmjs.com/package/progress)套件---可以在`CLI console`畫面上創造進度條的套件<br>
 
@@ -542,7 +543,7 @@ Node.js Learn
     * 以上的範例程式碼會建立一個含有10個步驟(steps)的進度條(progress bar),每100毫秒就會執行一次
     * 當進度條完成時,就會清除這個間隔(clear the interval)
 
-#### Accept input from the command line in Node.js
+### Accept input from the command line in Node.js
 > npm的[readline-sync](https://www.npmjs.com/package/readline-sync)套件---提供一個能透過console(TTY)與使用者進行對話的互動式執行地同步讀取行(synchronous readline for interactively running)<br>
 > npm的[inquirer](https://www.npmjs.com/package/inquirer)---收集了常見的`CLI`指令<br>
 
@@ -590,7 +591,7 @@ Node.js Learn
     * `inquirer`這個套件讓我們可以做許多事情像是詢問選擇題(multiple choices),提供單選按鈕(radio button),確認(confirmation),...等等
     * 值得一提的是所有的替代方案(alternatives),尤其是那些Node提供的內建替代方案還不錯。但如果我們想要將`CLI`互動式輸入提供到另一個更高的水平上時,`inquirer.js`是一個最理想(optimal)的選擇
 
-#### Expose functionality from a Node.js file using exports
+### Expose functionality from a Node.js file using exports
 - Node擁有內建的模組系統,並能透過匯入(import)來使用由其它Node.js的檔案公開(exposed)出來的功能
 - 假如我們想要匯入某些我們想使用的東西
   + 範例程式碼
@@ -650,7 +651,7 @@ Node.js Learn
   + `module.exports`會公開(exposes)它指向(points to)的對象(object)
   + `exports`會公開(exposes)它所指向(points to)的對象(object)的屬性(properties)
 
-#### An introduction to the npm package manager
+### An introduction to the npm package manager
 > [npm install](https://docs.npmjs.com/cli/v7/commands/npm-install) - Install a package<br>
 
 - `npm`介紹
@@ -711,7 +712,7 @@ Node.js Learn
     * $ `npm run dev`
     * $ `npm run prod`
     
-#### Where does npm install the packages?
+### Where does npm install the packages?
 - 當我們利用`npm`套件管理工具來安裝一個套件時,可以選擇執行以下2種類型的安裝方式
   + 本地端安裝(a local install)
   + 全域安裝(a global install)
@@ -729,7 +730,7 @@ Node.js Learn
   + 然而,如果我們使用`nvm`來管理Node版本的話,全域安裝的路徑位置就會有所不同
   + 以我使用`nvm`的情況來說,我的套件會被全域安裝在`/Users/joe/.nvm/versions/node/v8.9.0/lib/node_modules`
 
-#### How to use or execute a package installed using npm?
+### How to use or execute a package installed using npm?
 > npm的[cowsay](https://www.npmjs.com/package/cowsay)套件---是一個由`Perl`語言所開發的套件,能提供一個終端機介面的程式,並以母牛(cow)的方式說話<br>
 
 - 當我們透過`npm`安裝套件到`node_modules/`資料夾時,或是全域安裝時,我們可以透過`require('<package name>')`的語法來引用該套件(package)
@@ -749,7 +750,7 @@ Node.js Learn
     * 例: $ `npx cowsay`
     * ![cow-say](../assets/pics/nodejs/cow-say.png)
 
-#### The package.json guide
+### The package.json guide
 - 如果您有使用過Javascript,或是曾經有和Javascript專案互動(interacted)過,或是您是一位Node.js後端開發人員,或是前端開發人員,您肯定認識`package.json`這個檔案
 - 接下來我們會討論`package.json`這個檔案的
   + 有什麼用途呢?
@@ -1055,7 +1056,7 @@ Node.js Learn
     * 例: `1.0.0 || >=1.1.0 <1.2.0`
     * 以上的組合範圍的版本表達方式就代表我們可以使用`1.0.0`以上 or 從`1.1.0`起,但低於`1.2.0`的版本
 
-#### The package-lock.json file
+### The package-lock.json file
 - 從`npm` v5.0.0開始, 就開始引進(introduced)`package-lock.json`檔案
 - `package-lock.json`檔案主要是用來追蹤(track)每個套件已安裝的確切(exact)版本,以便可以利用相同的方式來達到100%的複製出同樣的軟體產品,因此也不會受到套件維護者(maintainers)更新這些套件時而影響
 - 這解決了一個`package.json`檔案尚未解決的一個具體的問題。在`package.json`中,我們可以利用[semver](https://docs.npmjs.com/cli/v6/using-npm/semver)來設定(set)我們要升級(upgrade)到的版本,像是次要(minor)或是修補(patch)版本
@@ -1169,7 +1170,7 @@ Node.js Learn
     * `resolved`: 指向該套件(package)的下載位置
     * `integrity`: 可以用來驗證(verify)該套件的一段文字(通常會是`SHA512`形式的值)
 
-#### Find the installed version of an npm package
+### Find the installed version of an npm package
 > [npm list](https://docs.npmjs.com/cli/v7/commands/npm-ls) - List installed packages<br>
 > [npm view](https://docs.npmjs.com/cli/v7/commands/npm-view) - View registry info<br>
 
@@ -1191,7 +1192,7 @@ Node.js Learn
     * $ `npm view <package_name> version`
     * ![npm view <package_name> version](../assets/pics/nodejs/npm%20view%20<package_name>%20version.png)
 
-#### Install an older version of an npm package
+### Install an older version of an npm package
 - 我們可以透過`@`語法(syntax)來安裝較舊版本的`npm`套件(package)
   + $ `npm install <package>@<version>`
   + 例: $ `npm install cowsay@1.2.0`
@@ -1202,7 +1203,7 @@ Node.js Learn
     * ![npm view <package> versions](../assets/pics/nodejs/npm%20view%20<package>%20versions.png)
 
 
-#### Update all the Node.js dependencies to their latest version
+### Update all the Node.js dependencies to their latest version
 > [npm update](https://docs.npmjs.com/cli/v7/commands/npm-update) - Update a package<br>
 > [npm outdated](https://docs.npmjs.com/cli/v7/commands/npm-outdated) - Check for outdated packages<br>
 > npm的[check updates](https://www.npmjs.com/package/npm-check-updates)套件---upgrades your package.json dependencies to the latest versions, ignoring specified versions.<br>
@@ -1253,7 +1254,7 @@ Node.js Learn
 - 如果我們只是下載遠端儲存庫上的專案,而不包含其`node_modules/`資料夾中的相依套件的話,我們可以透過以下指令,來安裝最新的套件版本
   + $ `npm install`
 
-#### Semantic Versioning using npm
+### Semantic Versioning using npm
 > npm的[semver](https://docs.npmjs.com/cli/v7/using-npm/semver)套件---The semantic versioner for npm<br>
 
 - 在Node.js套件的世界中,有一件很棒的事情,那就是它們皆同意使用語意化版本規則(using Semantic Versionin)來作為他們的版本編號
@@ -1302,7 +1303,7 @@ Node.js Learn
     * 例: `1.2.1`
   + `latest`: 直接指定可用(available)且最新(latest)的該套件版本號
 
-#### Uninstalling npm packages
+### Uninstalling npm packages
 > [npm uninstall](https://docs.npmjs.com/cli/v7/commands/npm-uninstall) - Remove a package<br>
 
 - 要在本地環境(locally)解除安裝(uninstall)之前已安裝過,並且儲存在`node_modules/`資料夾中的套件(packages)。可以在該專案的根目錄(project root folder, => 也就是包含`node_modules/`資料夾的專案根目錄),並透過以下指令
@@ -1318,7 +1319,7 @@ Node.js Learn
     * `--global`(=> `-g`): `npm`會將該套件(package)從全域環境移除掉,而這時候也無需在意我們是在系統上的哪個目錄下執行該指令,因為我們是要 **全域** 解除安裝此套件
   + 例: $ `npm uninstall -g webpack`
 
-#### npm global or local packages
+### npm global or local packages
 > [npx](https://docs.npmjs.com/cli/v7/commands/npx) - Run a command from a local or remote npm package<br>
 
 - 本地(local)與全域(global)套件(package)的主要差別是
@@ -1348,7 +1349,7 @@ Node.js Learn
     * $ `npm list -g --depth 0`
       * ![npm list -g --depth 0](../assets/pics/nodejs/npm%20list%20-g%20--depth%200.png)
 
-#### npm dependencies and devDependencies
+### npm dependencies and devDependencies
 - 當我們透過$ `npm install <package-name>`指令來安裝一個`npm`上的套件時,這就是將其安裝為相依套件(dependency)
   + 這個被安裝的相依套件會自動地被列出在`package.json`檔案中
   + 如果我們加上`-D`或是`--save-dev`選項的話,`npm`就會視為要安裝作為開發環境使用的相依套件(development dependency),同時也會自動地新增到`package.json`檔案中的`devDependencies`鍵中
@@ -1358,7 +1359,7 @@ Node.js Learn
   + 這時就必須要加上`--production`選項來避免安裝到那些開發環境的相依套件(development dependencies)
     * $ `npm install --production <package-name>`
 
-#### The npx Node.js Package Runner
+### The npx Node.js Package Runner
 > npm的[npx](https://www.npmjs.com/package/npx)套件---execute npm package binaries<br>
 > [nvm](https://github.com/nvm-sh/nvm)---nvm is a version manager for node.js, designed to be installed per-user, and invoked per-shell<br>
 
@@ -1396,7 +1397,7 @@ Node.js Learn
     * 例: $ `npx https://gist.github.com/zkat/4bc19503fe9e9309e2bfaa2c58074d32`
     * 當我們需要執行我們無法控制的程式碼時,需要更小心地使用`npx`工具。因為越強大的功能,帶來越大的責任
 
-#### The Node.js Event Loop
+### The Node.js Event Loop
 - 事件迴圈(Event loop)是要理解Node的其中一個最重要的層面
 - 事件迴圈(Event loop)能解釋Node如何達到 **非同步(=> asynchronous)** 與 **非阻塞I/O(=> non-blocking I/O)** 。這也是讓Node能成為殺手級應用程式(killer app),並且能如此成功的原因
 - Node是用 **單執行緒(single thread)**  在執行Javascript的程式碼,在同一個時間只會發生一件事
@@ -1513,7 +1514,7 @@ Node.js Learn
       ```
   + 這是`Promises`(和基於`Promise`建構的`Async/ await`)<-->與透過`setTimeout()`或其它平台API的普通,舊的非同步函數(asynchronous functions)之間的巨大區別
 
-#### Understanding process.nextTick()
+### Understanding process.nextTick()
 > Node內建核心模組`Process`中的[process.nextTick(callback[, ...args])](https://nodejs.org/dist/latest-v15.x/docs/api/process.html#process_process_nexttick_callback_args)---process.nextTick() adds callback to the "next tick queue". This queue is fully drained after the current operation on the JavaScript stack runs to completion and before the event loop is allowed to continue. It's possible to create an infinite loop if one were to recursively call process.nextTick()<br>
 
 - 當我們嘗試理解Node的事件迴圈(event loop)時,`process.nextTick()`方法就是它一個重要的部分
@@ -1530,7 +1531,7 @@ Node.js Learn
   + 呼叫`setTimeout(() => {}, 0)`方法會在下一個`tick`結束之後才執行函式,比起使用`nextTick()`方法需要在下一個`tick`開始之前,優先呼叫和執行它,相對慢很多
   + 建議使用`process.nextTick()`方法來確保在下一次事件迴圈(event loop)迭代(iteration)中,已經執行了程式碼
 
-#### Understanding setImmediate()
+### Understanding setImmediate()
 > Node內建核心模組`Timers`中的[setImmediate(callback[, ...args])](https://nodejs.org/api/timers.html#timers_setimmediate_callback_args)---Schedules the "immediate" execution of the callback after I/O events' callbacks.<br>
 > Node內建核心模組`Timers`中的[setTimeout(callback[, delay[, ...args]])](https://nodejs.org/api/timers.html#timers_settimeout_callback_delay_args)---Schedules execution of a one-time callback after delay milliseconds.<br>
 
@@ -1546,7 +1547,7 @@ Node.js Learn
     * 這也意味著`process.nextTick()`方法總是會在`setTimeout()`方法 & `setImmediate()`方法之前被執行
     * 當設定`setTimeout(callback[, delay[, ...args]])`方法的延遲(`delay`)參數為`0`毫秒時,這時該方法會非常類似於`setImmediate()`方法。執行順序將取決於不同的因素所影響,但它們都會在下一次事件迴圈(event loop)的迭代中(current iteration)被執行
 
-#### Discover JavaScript Timers
+### Discover JavaScript Timers
 > Node內建核心模組`Timers`中的[setTimeout(callback[, delay[, ...args]])](https://nodejs.org/dist/latest-v15.x/docs/api/timers.html#timers_settimeout_callback_delay_args)---Schedules execution of a one-time callback after delay milliseconds.<br>
 > Node內建核心模組`Timers`中的[setInterval(callback[, delay[, ...args]])](https://nodejs.org/dist/latest-v15.x/docs/api/timers.html#timers_setinterval_callback_delay_args)---Schedules repeated execution of callback every delay milliseconds.<br>
 > Node內建核心模組`Timers`中的[clearTimeout(timeout)](https://nodejs.org/dist/latest-v15.x/docs/api/timers.html#timers_cleartimeout_timeout)---Cancels a Timeout object created by setTimeout().<br>
@@ -1647,7 +1648,7 @@ Node.js Learn
 - `setTimeout()`與`setInterval()`皆為Node的內建核心模組[Timers](https://nodejs.org/dist/latest-v15.x/docs/api/timers.html#timers_timers)的方法
   + Node也提供`setImmediate()`方法,這個方法就相當於使用`setTimeout(() => {}, 0)`,主要用來搭配Node的事件迴圈(event loop)使用
 
-#### JavaScript Asynchronous Programming and Callbacks
+### JavaScript Asynchronous Programming and Callbacks
 - 程式語言的非同步性(asynchronicity)
   + 電腦都是設計可以非同步的,非同步(asynchronous)意味著事件可以獨立於(independently)主程式流(the main program flow)發生(happen)
   + 在當前的消費者電腦(consumer computers)中,每個程式都會運行一個特定的時間段(time slot)後,然後停止運行,以讓其它程式可以繼續執行。這個循環運行得很快,以至於我們通常不會注意到,我們會以為是我們的電腦能同時(simultaneously)執行多個程式,事實上這只是一個幻覺(illusion)
@@ -1741,7 +1742,7 @@ Node.js Learn
     * `Promise`物件 (ES6)
     * `Async/Await`語法 (ES8)
 
-#### Understanding JavaScript Promises
+### Understanding JavaScript Promises
 > [Promise物件 (by MDN官方文件)](https://developer.mozilla.org/zh-TW/docs/Web/JavaScript/Reference/Global_Objects/Promise) --- The Promise object represents the eventual completion (or failure) of an asynchronous operation and its resulting value.<br>
 > [如何使用Promise物件 (by MDN官方文件)](https://developer.mozilla.org/zh-TW/docs/Web/JavaScript/Guide/Using_promises)<br>
 > [Fetch API (by MDN官方文件)](https://developer.mozilla.org/zh-TW/docs/Web/API/Fetch_API) --- The Fetch API provides an interface for fetching resources (including across the network). It will seem familiar to anyone who has used XMLHttpRequest, but the new API provides a more powerful and flexible feature set.<br>
@@ -1989,7 +1990,7 @@ Node.js Learn
   + 未處理的被拒絕的`Promise`物件警告(UnhandledPromiseRejectionWarning)
     * 這個錯誤表示我們呼叫的`Promise`物件被拒絕(rejected)了,但這時候找不到任何一個`catch()`陳述式來處理這個錯誤(error)。這時,我們可以新增一個`catch()`陳述式在引起問題(offending)的`then()`方法的後面來適當地(properly)處理這個錯誤(error)
 
-#### Modern Asynchronous JavaScript with Async and Await
+### Modern Asynchronous JavaScript with Async and Await
 - 介紹
   + Javascript在很短的時間內從回呼函式(callbacks)發展成`Promise`物件(=> 從ES6引入的),再演變成`async/await`語法(=> 從ES8引入的),來使Javascript的非同步(asynchronous)語法更簡化了
   + 非同步函式(Async functions)是由`Promise`物件們 & 生成器(generators)的結合(combination)。基本上,它們算是一種更高階的`Promise`物件的抽象(abstraction)
@@ -2115,7 +2116,7 @@ Node.js Learn
   + 要除錯(debugging)`Promise`物件是困難的,因為除錯器(debugger)不會跳過(step over)非同步程式碼(asynchronous code)
   + `async/await`語法讓除錯(debug)變得更容易,因為對於編譯器(compiler)來說,這就像是同步程式碼(synchronous code)
 
-#### The Node.js Event emitter
+### The Node.js Event emitter
 > Node內建核心模組[Events](https://nodejs.org/api/events.html#events_events)<br>
 
 - 如果我們在瀏覽器使用Javascript工作,就會知道透過多少事件(through events)來跟使用者進行互動(interaction),像是`mouse click`, `keyboard button presses`, `reacting to mouse movements`, ...等等
@@ -2162,7 +2163,7 @@ Node.js Learn
     * 等同於[emitter.off(eventName, listener)](https://nodejs.org/api/events.html#events_emitter_off_eventname_listener)
   + [emitter.removeAllListeners([eventName])](https://nodejs.org/api/events.html#events_emitter_removealllisteners_eventname): 刪除指定的事件中所有的事件監聽器(remove all listeners for an event)
 
-#### Build an HTTP Server
+### Build an HTTP Server
 > Node內建核心模組[HTTP](https://nodejs.org/api/http.html#http_http)<br>
 
 - 這是一個Hello World範例的HTTP web server
@@ -2204,7 +2205,7 @@ Node.js Learn
         res.end('Hello World\n')
         ```
 
-#### Making HTTP requests with Node.js
+### Making HTTP requests with Node.js
 > Node內建核心模組[HTTPS](https://nodejs.org/dist/latest-v15.x/docs/api/https.html#https_https)<br>
 
 - 完成一個`GET`請求(Perform a `GET` Request)
@@ -2268,7 +2269,7 @@ Node.js Learn
 - 完成一個`PUT`與`DELETE`請求(`PUT` and `DELETE`)
   + `PUT`與`DELETE`請求跟`POST`請求(request)的格式(format)相同,只要修改`options.method`這個屬性值就可以用了
 
-#### Make an HTTP POST request using Node.js
+### Make an HTTP POST request using Node.js
 > Node內建核心模組[HTTP](https://nodejs.org/api/http.html#http_http)<br>
 > [Axios套件](https://github.com/axios/axios)-Make http requests from node.js<br>
 
@@ -2325,7 +2326,7 @@ Node.js Learn
     req.end()
     ```
 
-#### Get HTTP request body data using Node.js
+### Get HTTP request body data using Node.js
 > [Express框架](https://expressjs.com/)<br>
 
 - 這是以`JSON`格式來提取(extract)請求內文(request body)的資料(data)的方式
@@ -2384,7 +2385,7 @@ Node.js Learn
         })
         ```
 
-#### Working with file descriptors in Node.js
+### Working with file descriptors in Node.js
 > Node內建核心模組[File system](https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_file_system)<br>
 
 - 在我們能夠代理(sits in)檔案系統(file system)來與檔案(file)互動(interact)之前,我們必須先獲得一個檔案描述符號(file descriptor)
@@ -2413,7 +2414,7 @@ Node.js Learn
     ```
     * 一旦(once)獲得那個檔案描述符號(file descriptor),我們便能運用任何(whatever)我們選擇使用的方式(way)來完成(perform)所有(all)需要(require)檔案描述符號(file descriptor)的操作(operations),像是呼叫(calling)`fs.open()`方法,以及許多其它用來跟檔案系統(file system)互動(interact with)的操作
 
-#### Node.js file stats
+### Node.js file stats
 - 每個檔案(file)都會帶有(comes with)一組細節(a set of details),可提供給Node用來檢查(inspect)它們所使用
   + 特別是使用Node內建的`File system`核心模組中的[fs.stat(path[, options], callback)](https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_fs_stat_path_options_callback)方法。我們呼叫這個方法時,可以傳遞(pass)一個檔案路徑(file path)作為參數,之後一旦Node獲得(get)檔案資訊的細節(file details)後,該方法就會呼叫(call)我們指定的回呼函式(callback function, 也就是該方法的`callback`參數),並且再提供給這個回呼函式以下的2個參數(parameters)
     * 一段錯誤訊息(an error message)
@@ -2458,7 +2459,7 @@ Node.js Learn
         })
         ```
 
-#### Node.js File Paths
+### Node.js File Paths
 > Node內建核心模組[Path](https://nodejs.org/dist/latest-v15.x/docs/api/path.html#path_path)<br>
 
 - 系統(system)中的每個檔案(every file)都有一個路徑(path)
@@ -2508,7 +2509,7 @@ Node.js Learn
     ```
 - 提醒! `path.resolve([...paths])`方法與`path.normalize(path)`方法皆不會檢查其各自的`path`參數值是否存在。它們僅會(just)根據(based on)它們各自獲得的路徑參數資訊(information)來做計算(calculate)出一個路徑(path)的值而已
 
-#### Reading files with Node.js
+### Reading files with Node.js
 > Node內建核心模組[File system](https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_file_system)<br>
 
 - 在Node中,要讀取一個檔案能使用的最簡單的方法是[fs.readFile(path[, options], callback)](https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_fs_readfile_path_options_callback)
@@ -2542,7 +2543,7 @@ Node.js Learn
   + 這也就意味(means)著,大檔案將會對我們的記憶體消耗(memory consumption)與程式的執行速度(speed of execution of the program)帶來重大的影響(major impact)
     * 在這種情況下(In this case),更好的選擇(better option)是透過串流(`streams`)來讀取檔案內容(read the file content)
 
-#### Writing files with Node.js
+### Writing files with Node.js
 > Node內建核心模組[File system](https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_file_system)<br>
 
 - 在Node中,要寫入檔案的最簡單的方法就是使用[fs.writeFile(file, data[, options], callback)](https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_fs_writefile_file_data_options_callback)這個API
@@ -2601,7 +2602,7 @@ Node.js Learn
     * 在非同步化版本(async version, 也就是指`fs.writeFile()`與`fs.appendFile()`這兩種方法)的方法中,這意味(means)著執行(executing)回呼函式(callback)
     * 在這種情況下(In this case),一個更好的選擇(better option)是透過 **串流** (streams)來寫入(write)到檔案內容(file content)中
 
-#### Working with folders in Node.js
+### Working with folders in Node.js
 > Node內建核心模組[File system](https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_file_system)<br>
 
 - Node內建核心(core)的`File system`模組(module)有提供(provides)了許多便利(handy)的方法(methods),讓我們可以處理檔案目錄(folders)
@@ -2714,7 +2715,7 @@ Node.js Learn
           const folder = '/Users/joe'
           removeFolder(folder)
           ```
-#### The Node.js fs module
+### The Node.js fs module
 > Node內建核心模組[File system](https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_file_system)<br>
 
 - `fs`模組提供(provides)了許多非常有用(useful)的功能(functionality)來存取(access) & 與檔案系統(file system)互動(interact)
@@ -2793,7 +2794,7 @@ Node.js Learn
         ```
     * 以上這兩種範例的主要(key)差別(difference)是, **第2個範例** 腳本(script)的 **執行(execution)將會被阻塞(block)** ,直到檔案(file)操作(operation)成功(succeeded)
 
-#### The Node.js path module
+### The Node.js path module
 > Node內建核心模組[Path](https://nodejs.org/api/path.html#path_path)<br>
 
 - Node的[Path](https://nodejs.org/api/path.html#path_path)內建核心模組,提供(provides)了許多非常有用(useful)的功能(functionality),來存取(access) & 與檔案系統(file system)互動(interact)
@@ -2880,7 +2881,7 @@ Node.js Learn
         path.resolve('/etc', 'joe.txt') //'/etc/joe.txt'
         ```
 
-#### The Node.js os module
+### The Node.js os module
 > Node內建核心模組[OS](https://nodejs.org/api/os.html#os_os)<br>
 
 - 這個模組會提供(provides)許多功能(functions)讓我們能夠跟底層作業系統(underlying operating system) & 該程式運行時所在的電腦(the computer the program runs on)做互動(interact)並檢索其資訊(retrieve information)
@@ -3009,7 +3010,7 @@ Node.js Learn
   + [os.userInfo([options])](https://nodejs.org/dist/latest-v15.x/docs/api/os.html#os_os_userinfo_options)
     * 該方法會回傳(returns)一個物件(object)包含了當前的使用者名稱(username), 使用者ID(uid), 群組ID(gid), shell, 家目錄(homedir), ...等等之類的
 
-#### The Node.js events module
+### The Node.js events module
 > Node內建核心模組[Events](https://nodejs.org/dist/latest-v15.x/docs/api/events.html#events_events)<br>
 
 - **`event`模組(module)會提供(provides)我們EventEmitter類別(class),這是在Node中處理事件們(events)的關鍵(key)**
@@ -3090,7 +3091,7 @@ Node.js Learn
       door.setMaxListeners(50)
       ```
 
-#### The Node.js http module
+### The Node.js http module
 > Node內建核心模組[HTTP](https://nodejs.org/api/http.html#http_http)<br>
 
 - `HTTP`核心模組(core module)是Node網路(networking)的關鍵模組(key module)
@@ -3285,7 +3286,7 @@ Node.js Learn
       * 底層插座(underlying socket)可以利用它自己的[message.socket](https://nodejs.org/api/http.html#http_message_socket)屬性
     * 由於(since)`http.IncomingMessage`物件實現(implements)了可讀取(readable)串流(stream)介面(interface),因此可透過串流(streams)來存取(accessed)資料(data)
 
-#### Node.js Buffers
+### Node.js Buffers
 > Node內建核心模組[Buffer](https://nodejs.org/dist/latest-v15.x/docs/api/buffer.html#buffer_buffer)<br>
 
 - `Buffer`是什麼? (What is a buffer?)
@@ -3383,7 +3384,7 @@ Node.js Learn
         console.log(slice.toString()) //Ho
         ```
 
-#### Node.js Streams
+### Node.js Streams
 > Node內建核心模組[Stream](https://nodejs.org/dist/latest-v15.x/docs/api/stream.html#stream_stream)<br>
 
 - 什麼是`streams`(串流)? (What are streams?)
@@ -3554,7 +3555,7 @@ Node.js Learn
       writableStream.end()
       ```
 
-#### Node.js, the difference between development and production
+### Node.js, the difference between development and production
 - 我們可以對生產環境(production environment)、開發環境(development environment)做不同的設定(configurations)
 - Node會假設(assumes)我們總是在開發環境中(development environment)執行。這時,我們可以透過設定Node的環境變數(environment variable)為"生產環境(production environment)",來向Node發出我們在生產環境執行(running)應用程式的信號(signal)
   + ```bash
@@ -3594,7 +3595,7 @@ Node.js Learn
       })
       ```
 
-#### Error handling in Node.js
+### Error handling in Node.js
 > Node內建核心模組[Errors](https://nodejs.org/api/errors.html#errors_errors)<br>
 
 - 在Node中,是透過(through)例外(`exceptions`)來處理(handled)錯誤(errors)的
@@ -3687,7 +3688,7 @@ Node.js Learn
     }
     ```
 
-#### How to log an object in Node.js
+### How to log an object in Node.js
 > Node內建核心模組[Console](https://nodejs.org/api/console.html#console_console)<br>
 
 - 當我們在瀏覽器(in the browser)的Javascript程式碼中輸入(type)`console.log()`語法時,就會在瀏覽器後台(browser console)建立(create)一個漂亮(nice)的條目(entry)
@@ -3744,7 +3745,7 @@ Node.js Learn
         * `colors`: 可以客製化地設定文字輸出的顏色
       * 但`util.inspect()`這個方法會遇到的問題是,超過(after)2層(level)以上的巢狀物件(nested objects)會被攤平(flattened),這也會使原本有就比較複雜(complex)結構的物件(objects)會變得更複雜
 
-#### Node.js with TypeScript
+### Node.js with TypeScript
 - 什麼是`Typescript`? (What is TypeScript)
   + `Typescript`是一個由Microsoft開發與維護的開源、熱門的程式語言,它受到全世界許多軟體開發者的喜愛和使用
   + 基本上(Basically), **`Typescript`是Javascript這個程式語言的一個超集(`superset`)** ,並新增了一些能力(capabilities)給這個程式語言。最著名(notable)的新增(addition)功能就是 **靜態型別定義(static type definitions)** ,而這是一般(plain)的Javascript所沒有的功能。受型別(types)所惠,我們可以宣告(declare) **我們預期什麼形式的參數** (what kind of arguments we are expecting)、 **函式確切會回傳什麼東西** (what is returned exactly in our functions)、 **我們建立的物件的確切樣子** (what's the exact shape of the object that we are creating)
@@ -3841,8 +3842,8 @@ Node.js Learn
 
 
 ---
-### Node.js 核心模組
-#### [HTTP](https://nodejs.org/api/http.html)
+## Node.js 核心模組
+### [HTTP](https://nodejs.org/api/http.html)
 - 要使用HTTP server & client,必須要先`require('http')`
 - Node的HTTP介面(interfaces)旨在支援HTTP協定的許多功能
 ,因為這些功能傳統上較難使用,尤其是在大量.大塊(chunk-encoded)的訊息
@@ -3930,7 +3931,7 @@ Node.js Learn
         * 如果data參數有給定的話,它實際上是去呼叫[response.write(data, encoding)](https://nodejs.org/dist/latest-v15.x/docs/api/http.html#http_response_write_chunk_encoding_callback),並接著執行res.end(callback)
         * 如果callback函式有給定的話,該callback函式會在回應串流(response stream)結束之後才會被呼叫並執行
 
-#### [Process](https://nodejs.org/dist/latest-v15.x/docs/api/process.html)
+### [Process](https://nodejs.org/dist/latest-v15.x/docs/api/process.html)
 - `process`是一個全域的物件,針對當前的Node應用程序的進程(process),提供資訊與控制
   + 讀: 獲取process資訊(資源使用、執行環境、執行狀態)
   + 寫: 執行process操作(監聽事件、排程任務、發出警吿)
@@ -4356,7 +4357,7 @@ Node.js Learn
   + `1`: 未捕獲的致命錯誤(Uncaught Fatal Exception),並且沒有受到`domain`或是[uncaughtException](https://nodejs.org/api/process.html#process_event_uncaughtexception)事件處理器來處理
   + 以下略...
 
-#### [Console](https://nodejs.org/api/console.html#console_console)
+### [Console](https://nodejs.org/api/console.html#console_console)
   + `console`模組提供了一組簡單的除錯控制台(debugging console),類似於網頁瀏覽器所提供的Javascript控制台機制
   + `console`模組會匯出(export)兩個特定的元件(specific components)
     * 第一個特定的元件是: [Console類別(class)](https://nodejs.org/api/console.html#console_class_console)的方法,像是`console.log()`&`console.error()`&`console.warn()`,它們可以被用來寫入到Node流(stream)中
@@ -4523,7 +4524,7 @@ Node.js Learn
         //    at REPLServer.Interface._ttyWrite (readline.js:826:14)
         ```
 
-#### [Readline](https://nodejs.org/api/readline.html#readline_readline)
+### [Readline](https://nodejs.org/api/readline.html#readline_readline)
 - `Readline`模組提供一個介面能從[Readable stream](https://nodejs.org/api/stream.html#stream_readable_streams)一次一行地讀取數據,它可以用以下的方式來存取
     ``` js
     const readline = require('readline');
@@ -4572,7 +4573,7 @@ Node.js Learn
         * 該方法會關閉`readline.createInterface()`實例,並放棄對輸入流(`input` streams)與輸出流(`output` streams)的控制(control over)。當被呼叫時,[close事件](https://nodejs.org/api/readline.html#readline_event_close)就會被發出(emitted)
         * 呼叫`readline.close()`方法不會立即停止其它被`readline.Interface`實例所發出的其它事件(包含[line事件](https://nodejs.org/api/readline.html#readline_event_line))
 
-#### [CommonJS modules](https://nodejs.org/api/modules.html#modules_modules_commonjs_modules)
+### [CommonJS modules](https://nodejs.org/api/modules.html#modules_modules_commonjs_modules)
 - 在Node的模組系統(module system)中,每個檔案都被視為一個分開的模組(separate module)
   + 以下的情境說明,我們假設有一個檔案,其檔案名稱為`foo.js`
     ``` js
@@ -4762,7 +4763,7 @@ Node.js Learn
             }
             ```
 
-#### [Timers](https://nodejs.org/dist/latest-v15.x/docs/api/timers.html#timers_timers)
+### [Timers](https://nodejs.org/dist/latest-v15.x/docs/api/timers.html#timers_timers)
 - `timer`模組會公開(exposes)一個全域的API,用來安排在將來的某個時段呼叫該函式所使用的。因為`timer`模組中的方法都是全域的,所以不用事先引用(`require('timers')`)模組後才能使用這些API
 - Node的`timer`模組中的方法會實作(implement)類似於網頁瀏覽器(web browsers)中`timers`API,但會使用不同的實作方法
   + 而Node的`timer`模組會圍繞在[事件迴圈(event loop)](https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick/#setimmediate-vs-settimeout)的基礎之上來實作不同的方法
@@ -4834,7 +4835,7 @@ Node.js Learn
         });
         ```
 
-#### [Events](https://nodejs.org/dist/latest-v15.x/docs/api/events.html#events_events)
+### [Events](https://nodejs.org/dist/latest-v15.x/docs/api/events.html#events_events)
 - 大部分Node中的核心API都是基於慣用的(idiomatic)非同步(asynchronous)事件驅動(event-driven)架構(architecture)。在這種架構中,某些類型的物件(被稱為`emitters`)會發出(emit)被命名的事件(named events),導致(cause)函式物件(`Function` object, => 也就是監聽器(listeners))被呼叫(to be called)
 - 舉例來說,每當有同級連接(peer connects)時,都會發出(emit)一次事件(event)到一個[net.Server](https://nodejs.org/dist/latest-v15.x/docs/api/net.html#net_class_net_server)物件(object); 當檔案被開啟(opened)時,會有一個[fs.ReadStream](https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_class_fs_readstream)實例(instance)會發出(emit)一個事件(event); 每當(whenever)有資料可以被讀取時,就會發出(emit)一個[stream](https://nodejs.org/dist/latest-v15.x/docs/api/stream.html)事件(event)
 - 發出的事件(emit events)中的所有物件(objects)都是[EventEmitter](https://nodejs.org/dist/latest-v15.x/docs/api/events.html#events_class_eventemitter)類別(class)的實例(instances)。這些物件會公開(expose)一個`emitter.on()`函式(function),這個函式允許(allows)一個或多個函式附加到(attached)由該物件(by object)所發出(emitted)的被命名的事件(named events)上。 **通常,事件名稱都是用駝峰命名法(camel-cased)來命名的字串(strings),但是可以使用任何有效的(valid)Javascript屬性鍵(property key)**
@@ -5055,7 +5056,7 @@ Node.js Learn
         //   a
         ```
 
-#### [Buffers](https://nodejs.org/api/buffer.html#buffer_buffer)
+### [Buffers](https://nodejs.org/api/buffer.html#buffer_buffer)
 - `Buffer`(緩存)物件(object)被用來代表(represent)一個固定長度(fixed-length)的字節序列(sequence of bytes)。有許多Node的官方API都有支援`Buffer`(緩存)
 - `Buffer`(緩存)類別(Class)是Javascript的[Uint8Array](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array)類別的子類別(subclass),並且`Buffer`類別有繼承(extends)了它的許多方法(methods),這些方法們都有涵蓋(cover)了額外(additional)的許多使用情境(use cases)
   + 因為Node的官方API能接受(accept)普通(plain)的`Uint8Array`類別,所以到不論在哪裡(wherever)也都會支持(supported)``Buffer`(緩存)類別
@@ -5382,7 +5383,7 @@ Node.js Learn
           // Prints: 2 bytes : ab
           ```
 
-#### [Stream](https://nodejs.org/api/stream.html#stream_stream)
+### [Stream](https://nodejs.org/api/stream.html#stream_stream)
 - `stream`(串流)是在Node中用來處理(working with)數據串流(streaming data)的抽象(abstract)介面(interface)
   + Node內建的`stream`(串流)模組(module)就是用來提供API來實作(implementing)`stream`
 - Node有提供許多的`stream`(串流)物件(objects)。舉例來說,以下2種都算是`stream`實例(instances)
@@ -5756,18 +5757,18 @@ Node.js Learn
               * 補充: 若有可讀取串流(readable stream)事件監聽器(event listener)的話,`readable.resume()`方法(method)將會 **無效** (no effect)
             
 ---
-### 參考資料來源
-#### 官方文件
+## 參考資料來源
+### 官方文件
 - [Node.js](https://nodejs.org/en/)
 - [Node Package Manager(NPM)](https://www.npmjs.com/)
 - [Yarn](https://classic.yarnpkg.com/en/)
 - [Node Version Manager(NVM)](https://github.com/nvm-sh/nvm)
 - [Express.js](https://expressjs.com/)
 
-#### 網路文章
+### 網路文章
 - [Understanding Worker Threads in Node.js](https://vagrantpi.github.io/2019/11/01/understanding-worker-threads-in-Node.js)
 - [深入理解 Node.js 的設計錯誤 — 從 Ryan Dahl 的演講中反思](https://medium.com/rytass/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3-node-js-%E7%9A%84%E8%A8%AD%E8%A8%88%E9%8C%AF%E8%AA%A4-%E5%BE%9E-ryan-dahl-%E7%9A%84%E6%BC%94%E8%AC%9B%E4%B8%AD%E5%8F%8D%E6%80%9D-cedbf32cb188)
 - [常見的五個開源專案授權條款,使用軟體更自由](https://noob.tw/open-source-licenses/)
 
-#### 網路影片
+### 網路影片
 - [10 Things I Regret About Node.js - Ryan Dahl - JSConf EU](https://www.youtube.com/watch?v=M3BM9TB-8yA&feature=emb_logo)
