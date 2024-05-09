@@ -1,14 +1,13 @@
 Java
 ===
 
-# Java
 ## 基本概念
 
 ### 資料型別
 
-- **原生**型別 (**Primitive** Data Type)
+- 原生型別 (Primitive Data Type)
   -  boolean, char, int, short, byte, long, float, and double
-- **參考**型別 (**Reference** Data Types)
+- 參考型別 (Reference Data Types)
   - **Integer**, **String**, Class, Interface, **Array** ...等
 
 > **Java 使用 Unicode 系統**; 而不像 C++ 使用 ASCII code 系統
@@ -37,7 +36,7 @@ Java
 
   - 限制
     
-    - 僅能**往前迭代(iterate forward)**，且**一次前進一格(single step)**
+    - 僅能 **往前迭代(iterate forward)**，且 **一次前進一格(single step)**
     
       ```java
       // cannot be converted to a for-each loop
@@ -47,7 +46,7 @@ Java
       }
       ```
     
-    - **無法**修改原陣列中的元素值
+    - **無法** 修改原陣列中的元素值
     
       ```java
       for (int num: marks)
@@ -57,7 +56,7 @@ Java
       }
       ```
     
-    - **無法**追蹤 index
+    - **無法** 追蹤 index
     
       ```java
       for (int num: numbers) 
@@ -69,7 +68,7 @@ Java
       }
       ```
     
-    - **無法**同時存取兩個不同的 Array (因為無法追蹤 index)
+    - **無法** 同時存取兩個不同的 Array (因為無法追蹤 index)
     
       ```java
       // cannot be easily converted to a for-each loop 
@@ -100,9 +99,9 @@ Java
 
 - 一旦宣告後，為固定大小 (fixed-size)
 
-- Array 類別**繼承 Object 類別**
+- Array 類別 **繼承 Object 類別**
 
-- Array 類別**實作 Cloneable & java.io.Serializable 介面**
+- Array 類別 **實作 Cloneable & java.io.Serializable 介面**
 
 ### 宣告(declaring) & 初始化 (initializing)
 
@@ -200,8 +199,8 @@ Java
 
 ### 基本概念
 
-- ArrayList 類別**繼承 Collection 類別**，且屬於 java.util package 的其中一個類別
-  - ArrayList 類別**實作 List 介面**
+- ArrayList 類別 **繼承 Collection 類別**，且屬於 java.util package 的其中一個類別
+  - ArrayList 類別 **實作 List 介面**
   - 類似 C++ 的 vector
   
   ![arraylist_extends_collection](../assets/pics/java/arraylist_extends_collection.png)
