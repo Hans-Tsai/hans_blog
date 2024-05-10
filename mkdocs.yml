@@ -170,6 +170,8 @@ nav:
   - Version Control:
     - Git: version_control/git.md
   - Coding Interview:
+    - Geeks for Geeks:
+      - DSA Tutorial: coding_interview/geeks_for_geeks/dsa_tutorial.md
     - LeetCode:
       - LeetCode 75: coding_interview/leetcode/leetcode75.md
     - NeetCode:
