@@ -2,8 +2,11 @@
 
 [TOC]
 
-## 基本概念
+## 學習路線
+- 2024 年
+![java_learning_roadmap](../assets/pics/java/java_learning_roadmap.png)
 
+## 基本概念
 ### 資料型別
 
 - 原生型別 (Primitive Data Type)
@@ -218,7 +221,7 @@
 		String strObject = new String("hello world");
 		// 使用 String.intern() 內建方法將字串值移動到 string pool
 		String strLiteral = strObject.intern();
-
+		
 		System.out.println(strObject == strLiteral); // false
 		```
 
@@ -362,15 +365,15 @@
 	String str2 = "hello";
 	String str3 = "heck";
 	String str4 = "hello world";
-
+	
 	// 用法 1 (字典順序): 當兩個字串不相等時，比較的是字元的 Unicode 值
 	// 例如:str1 和 str3 的比較首先會比較第一個不同的字元（'l' 和 'c'），由於 'l' 的 Unicode 值大於 'c' 的，因此返回一個正值
 	System.out.println(str1.compareTo(str3));  // 9 (正值)
-
+	
 	// 用法 2 (長度問題): 當一個字串是另一個字串的前綴時，比較結果基於長度差異
 	// 例如: str1 和 str4 的比較。str1 較短，所以返回一個負值，其值通常是兩個字串長度的差
 	System.out.println(s1.compareTo(s4));  // -6 (負值)
-
+	
 	// 因為 str1 和 str2 完全相同
 	System.out.println(str1.compareTo(str2));  // 0
 	```
@@ -484,7 +487,7 @@ StringBuffer buffer3 = new StringBuffer(50);
 	```java
 	StringBuffer sb = new StringBuffer("hello");
 	sb.reverse();
-
+	
 	System.out.println(sb); // olleh
 	```
 
@@ -632,7 +635,7 @@ StringBuilder sb3 = new StringBuilder(50);
 	```java
 	StringBuilder sb = new StringBuilder("abcde");
 	sb.delete(1, 3); // 表示要刪除 "bc"
-
+	
 	System.out.println(sb); // "ade"
 	```
 
@@ -641,6 +644,18 @@ StringBuilder sb3 = new StringBuilder(50);
 - [GeeksForGeeks-StringBuilder class in Java](https://www.geeksforgeeks.org/stringbuilder-class-in-java-with-examples/)
 
 ## Array
+
+- Array vs. ArrayList
+
+  | Features\資料型別               |        Array        |                  ArrayList                  |
+  | ------------------------------- | :-----------------: | :-----------------------------------------: |
+  | 長度                            |        固定         |                    變動                     |
+  | 記憶體分配                      |        連續         |                   不連續                    |
+  | 元素的資料型別                  | 原生資料型別 & 物件 |                    物件                     |
+  | 操作元素                        |   使用 `[ ]` 運算子   | 使用 `add()`, `set()`, `remove()` ...等方法 |
+  | 執行速度                        |        較快         |                    較慢                     |
+  | 資料型别安全<br />(thread-safe) |        不是         |                     是                      |
+  | 維度                           |     一維 ～ 多維     |                   一維                     |
 
 ### 基本概念
 
@@ -703,7 +718,7 @@ StringBuilder sb3 = new StringBuilder(50);
 		```java
 		int[] arr = new int[5]; // 宣告一個含有 5 格容量(capacity)的 Array
 		System.out.println(arr.length); // 5
-
+		
 		String[] strArr = { "GEEKS", "FOR", "GEEKS" };
 		System.out.println(strArr.length); // 3
 		```
@@ -743,7 +758,7 @@ StringBuilder sb3 = new StringBuilder(50);
 			```java
 			int intArray[][] = {{ 1, 2, 3 }, { 4, 5 }};
 			int cloneArr[] = arr.clone();
-
+			
 			System.out.println(intArray == cloneArray); // false
 			System.out.println(intArray[0] == cloneArray[0]); // true (sub-arrays are shared)
 			System.out.println(intArray[1] == cloneArray[1]); // true (sub-arrays are shared)
@@ -869,3 +884,7 @@ StringBuilder sb3 = new StringBuilder(50);
 - [GeeksForGeeks-ArrayList in Java](https://www.geeksforgeeks.org/arraylist-in-java/)
 - [GeeksForGeeks-Array vs. ArrayList in Java](https://www.geeksforgeeks.org/array-vs-arraylist-in-java/)
 - [GeeksForGeeks-How to find length or size of an Array in Java?](https://www.geeksforgeeks.org/how-to-find-length-or-size-of-an-array-in-java/)
+
+
+## 參考資料
+- [Developer Roadmaps-Java Developer](https://roadmap.sh/java)

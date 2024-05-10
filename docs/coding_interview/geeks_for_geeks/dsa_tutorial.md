@@ -31,7 +31,7 @@
         - 陣列 = [][] 陣列的陣列，且矩陣中每格的數 index 具有相同的大小
         - 水平條目 = 行 (row)
         - 垂直條目 = 列 (column)
-    - 矩陣的大小 = 行數 x 列數
+    - 矩陣維度 = 行數 x 列數
     - 矩陣 index 表示方式: (row, column) 或 `arr[row][column]`
         ![matrix_introduction](../../assets/pics/dsa_tutorial/matrix_introduction.webp)
         ![matrix_representation](../../assets/pics/dsa_tutorial/matrix_representation.webp)
