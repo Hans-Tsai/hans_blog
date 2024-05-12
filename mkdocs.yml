@@ -161,7 +161,7 @@ nav:
     - Java: programming_language/java.md
   - Backend:
     - Framework:
-      - Spring: backend/framework/spring.md
+      - Spring: backend/framework/spring_boot.md
     - System Design:
       - DDD: backend/system_design/ddd.md
   - Cloud:
