@@ -5,6 +5,9 @@ DDD 的基本觀念 & 實作範例
 
 [TOC]
 
+## DDD 學習路徑
+![Domain Driven Design --- Roadmap](../../assets/pics/ddd/ddd_roadmap.png)
+
 ## 術語表 :bulb:
 ### Strategic Design 戰略設計
 - **Domain (領域):**
@@ -24,6 +27,7 @@ DDD 的基本觀念 & 實作範例
 ### Tactical Design 戰術設計
 #### 領域物件 (Domain Object)
 > 主要是針對程式碼實作中 Domain layer 內的 class
+
 - **實體 (Entity):** 
 	-能被識別出來的物件 有 id。 Entity 的狀態會在其生命週期中持續追蹤其變化。
 - **值物件 (Value Object):** 
@@ -56,8 +60,9 @@ DDD 的基本觀念 & 實作範例
 > - <font color=green>綠色(小張長方形)：Opportunity 機會</font>
 > - <font color=lime>綠色(正方形)：Read Model 資料讀取模型</font>
 > - 白色(大張正方形)：Uset Interface 使用者介面
-> - ![color_puzzle_thinking](../../assets/pics/ddd/color_puzzle_thinking.png)
-> - ![event_storming_with_stickers](../../assets/pics/ddd/event_storming_with_stickers.png)
+
+![color_puzzle_thinking](../../assets/pics/ddd/color_puzzle_thinking.png)
+![event_storming_with_stickers](../../assets/pics/ddd/event_storming_with_stickers.png)
 
 - **<font color=DarkOrange>事件 (Event):</font>**
     - 代表 **已經發生過的事情**，通常會使用 **過去式** (英文加 -ed ，中文加「已」)，例如: 如訂單已成立、貨物已送出、早餐已買到 等等。
@@ -71,12 +76,13 @@ DDD 的基本觀念 & 實作範例
     - 可以加上 **原因**。例如:「因為密碼輸入錯誤三次，所以帳號已被鎖住」。
     
       > 根據 Alberto Brandolini 本人的敘述，使用 **過去式代表著系統的狀態**。如果你今天使用的是「註冊」這類詞時，你代表的是一個流程。相對的，用「註冊已開始」、「註冊已完成」會有更好的清晰度且顆粒度，避免過度設計。
-	- ![event_storming_sample](../../assets/pics/ddd/event_storming_sample.png)
+
+      ![event_storming_sample](../../assets/pics/ddd/event_storming_sample.png)
     
 - **<font color=deepskyblue>命令 (Command):</font>** 
     - **是什麼行為觸發** 了事件或事件流
     - 大部分的 Command 與 Event 都像是對稱的存在。例如: 「已經買早餐」Event 前面就會加上一個「買早餐」Command。當然，Command 一定由某個使用者（實際的人、虛擬的系統）所發出，因此可以在小張的黃色 Actor 寫上使用者名稱然後貼在對應的 Command。
-    - ![Command_and_event_relationship](../../assets/pics/ddd/command_and_event_relationship.png)
+    ![Command_and_event_relationship](../../assets/pics/ddd/command_and_event_relationship.png)
 
 - **<font color=mediumpurple>政策 (Policy):</font>**
     - 就是我們的 **系統對於特定 Event 如何回應**。
@@ -88,7 +94,7 @@ DDD 的基本觀念 & 實作範例
       > - 當「訂單已對帳」Event 發出後就會觸發 Policy 「凡訂單已對帳，就寄信通知」
       > - 「凡訂單已對帳，就更改訂單帳款資訊」
     - Fun Fact: Policy 的紫色 (lilac) 代表 Event 與 Command 顏色混合。
-	- ![Policy](../../assets/pics/ddd/policy.png)
+    ![Policy](../../assets/pics/ddd/policy.png)
 - **<font color=yellow>角色 (Actor):</font>**
   - 代表 **使用者**，可以是 **真實的人**(e.g. 客戶、管理員、編輯)，或是 **虛擬的系統**。
   - 通常會在 Command 上貼上 Actor 的名稱，表示這個 Command 是由誰發出的。
@@ -96,14 +102,14 @@ DDD 的基本觀念 & 實作範例
 - **<font color=gold>聚合 (Aggregate):</font>**
     - 一旦所有的 Event、Command 都被表示出來，參與者就可以開始考慮 **將相關的概念組織起來**。
     - 聚合會 **接收命令**，並 **產生事件**。
-    - ![aggregate_with_command_and_event](../../assets/pics/ddd/aggregate_with_command_and_event.png)
+    ![aggregate_with_command_and_event](../../assets/pics/ddd/aggregate_with_command_and_event.png)
 
 - **<font color=lightpink>外部系統 (External System):</font>**
-  - **在系統開發中，難免會需要與外部系統合作完成功能，以擴充模型**。這個外部可能是公司裡的另一個系統、第三方服務、甚至是法條(e.g. GDPR)。
-  - System 通常是由 Command 所觸發(e.g. 第三方金流外部服務由「付款」觸發)，然後 System 會再產生新的 Event。
-  - 這邊 **領域專家需要注意**，他 **要將屬於外部系統不屬於自己系統關注的 Event 移出**，比如說外部物流系統可能有「買家揀貨」、「超商拒收」、「超商驗貨」、「送貨中」、「商品已到指定超商」等等 Event，但 **事實上你的系統可能只在乎他最後到貨的 Event。**
-  - 同時， **System 也會觸發不同分支的 Event** ，就像是 **外部系統總有成功 or 失敗的可能**，此時領域專家與與會者就要一起思考失敗的處理路線是否是系統所關注的。
-  - ![external_system](../../assets/pics/ddd/external_system.png)
+    - **在系統開發中，難免會需要與外部系統合作完成功能，以擴充模型**。這個外部可能是公司裡的另一個系統、第三方服務、甚至是法條(e.g. GDPR)。
+    - System 通常是由 Command 所觸發(e.g. 第三方金流外部服務由「付款」觸發)，然後 System 會再產生新的 Event。
+    - 這邊 **領域專家需要注意**，他 **要將屬於外部系統不屬於自己系統關注的 Event 移出**，比如說外部物流系統可能有「買家揀貨」、「超商拒收」、「超商驗貨」、「送貨中」、「商品已到指定超商」等等 Event，但 **事實上你的系統可能只在乎他最後到貨的 Event。**
+    - 同時， **System 也會觸發不同分支的 Event** ，就像是 **外部系統總有成功 or 失敗的可能**，此時領域專家與與會者就要一起思考失敗的處理路線是否是系統所關注的。
+    ![external_system](../../assets/pics/ddd/external_system.png)
 
 - <font color=red>熱點 (hotspot):</font>
     - 如果過程中某個節點卡住太久，很有可能是因為領域專家也不太了解這個問題，也有可能是目前資料量不足以做出決定。可以先貼上一張 45 度角旋轉後的紅色的 Hotspot **待日後解決**。
@@ -153,7 +159,7 @@ DDD 的基本觀念 & 實作範例
 - 需要整合 **第三方物流** 讓客人知道物流進度
 - **營收分析系統** 需要與購物系統共享資料
 #### 以下是可能的 Context Mapping 圖 (設計沒有正確答案)
-- ![Ecommerce Bounded Context](../../assets/pics/ddd/Ecommerce_bounded_context.png)
+![Ecommerce Bounded Context](../../assets/pics/ddd/Ecommerce_bounded_context.png)
 
 ### 保險公司
 #### 題目
@@ -174,7 +180,7 @@ DDD 的基本觀念 & 實作範例
     - 代表一個外部系統讓許多內部的 Bounded Context 可以透過 API 來使用。他處理那些需要列印的文件如債務 (Debt)、保單等等
 
 #### 官方圖解
-- ![保險公司範例_官方圖解](../../assets/pics/ddd/保險公司範例_官方圖解.png)
+![保險公司範例_官方圖解](../../assets/pics/ddd/保險公司範例_官方圖解.png)
 
 ### 電影院
 #### 題目
@@ -189,7 +195,7 @@ DDD 的基本觀念 & 實作範例
 - Domain
   - Core Domain: Movie(放映廳)
   - Supporting Subdomain: Ticket(售票)、Food(食物)
-- ![電影院範例_Bounded_Context](../../assets/pics/ddd/電影院範例_Bounded_Context.png)
+  ![電影院範例_Bounded_Context](../../assets/pics/ddd/電影院範例_Bounded_Context.png)
 
 #### 關鍵使用案例
 - 售票亭可以售票給客人，客人可以選擇電影、時刻、座位以及是否添加套餐
@@ -205,12 +211,12 @@ DDD 的基本觀念 & 實作範例
 - Concession Stand Context 飲食部
 - Inventory Context 庫存管理
 - Auditorium Context 放映廳
-- ![電影院範例_詳細_Bounded_Context](../../assets/pics/ddd/電影院範例_詳細_Bounded_Context.png)
+![電影院範例_詳細_Bounded_Context](../../assets/pics/ddd/電影院範例_詳細_Bounded_Context.png)
 
 #### 補充
 - 接者當你開始在 Bounded Context 中開發 Domain Model 時，可以發現一件有趣的事情:
     - 一個電影票券在不同的 Bounded Context 中有不一樣的行爲 (一個 Ticket 各自表述)
-    - ![ticket_in_different_context](../../assets/pics/ddd/ticket_in_different_context.png)
+    ![ticket_in_different_context](../../assets/pics/ddd/ticket_in_different_context.png)
 
 ## 事件風暴
 
@@ -231,22 +237,19 @@ DDD 的基本觀念 & 實作範例
 
 ### 請說出 Context Mapping 的所有模式以及大致的功能?
 - **Shared Kernel**: 共用程式碼
-  + ![shared_kernel](../../assets/pics/ddd/shared_kernel.png)
+    ![shared_kernel](../../assets/pics/ddd/shared_kernel.png)
 - **Partnership**: 雙方雙向合作
-  + ![partnership](../../assets/pics/ddd/partnership.png)
+    ![partnership](../../assets/pics/ddd/partnership.png)
 - **Anti-corruption Layer**: 為下游方建立一層資料轉換層以消化來自上游的資料
-  + ![anti_corruption_layer ](../../assets/pics/ddd/anti_corruption_layer.png)
+    ![anti_corruption_layer ](../../assets/pics/ddd/anti_corruption_layer.png)
 - **Open Host Service/Published Language**: 在上游方建立一個開放的 API 讓想使用的下游方使用
-  + ![ohs_pl](../../assets/pics/ddd/ohs_pl.png)
+    ![ohs_pl](../../assets/pics/ddd/ohs_pl.png)
 - **Separate Way**: 兩者沒有直接的合作關係
 - **Big Ball of Mud**: 將一團混亂的大系統畫下邊界，在邊界內不要躁進改變，在邊界外要做好 ACL 轉換
 - **Customer-Supplier**: 有上下游關係但上游方對下游方仍保有一定責任
-  + ![customer_supplier](../../assets/pics/ddd/customer_supplier.png)
+    ![customer_supplier](../../assets/pics/ddd/customer_supplier.png)
 - **Conformist**: 有上下游關係但上游方對於下游方沒有責任
-  + ![conformist](../../assets/pics/ddd/conformist.png)
-
-## DDD 學習路徑
-![Domain Driven Design --- Roadmap](../../assets/pics/ddd/ddd_roadmap.png)
+    ![conformist](../../assets/pics/ddd/conformist.png)
 
 ## 參考資料
 - [iT 邦幫忙: Think in Domain-Driven Design 系列](https://ithelp.ithome.com.tw/users/20111997/ironman/2730)
