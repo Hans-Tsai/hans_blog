@@ -76,6 +76,7 @@ project-name
 
 ### Annotation (註解)
 - `@SpringBootApplication`: 加在 class 上，執行 Spring Boot 程式用
+    
     ```java
     @SpringBootApplication
     public class DemoApplication {
@@ -86,6 +87,8 @@ project-name
     
     }
     ```
+
+- 若有多個 annotation，其之間沒有順序性
 
 ## Spring Core 核心觀念
 
@@ -260,6 +263,76 @@ public class MyBean {
     - **方便測試程式** (more testable)
 
 ### Spring AOP
+
+- **AOP** (Aspect-Oriented Programming, **切面導向程式設計**): 將所有 method 要執行的共同邏輯寫在切面中，並且讓該切面橫貫所有 method，替所有 method 去執行這個共同的邏輯
+
+- 設定 AOP
+
+  - 在 `pom.xml` 中設定後，按右鍵 Maven -> Reload Project 重新載入新的設定
+
+  ```xml
+  <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-aop</artifactId>
+  </dependency>
+  ```
+
+- **@Aspect 註解**: 加在 **帶有 @Component 註解的 class** 上 (= bean)，用來 **宣告這個 class 是一個切面**
+
+- **切入點(pointcut)** 表達式: 要用到時再查就可以了
+
+- **@Before 註解**: 加在 **切面 class 的 method** 上，於 **切入點的 method 執行之前** 所執行
+
+- **@After 註解**: 加在 **切面 class 的 method** 上，於 **切入點的 method 執行之後** 所執行
+
+- **@Around 註解**: 加在 **切面 class 的 method** 上，於 **切入點的 method 執行之前、後** 所執行
+
+  - `Object obj = pjp.proceed()`: 執行切入點的方法
+
+- **@AfterThrowing 註解**: 加在 **切面 class 的 method** 上，於 **切入點的 method 拋出異常後** 才會執行
+
+    - 較少使用
+
+- **@AfterReturning 註解**: 加在 **切面 class 的 method** 上，於 **切入點的 method 執行成功後** 才會執行
+
+    - 較少使用
+
+```java
+@Aspect
+@Component
+public class MyAspect {
+  // 2. @Before 在執行 A 方法之前   // 1. 我們指定的方法 A
+  @Before("execution(* com.example.demo.HpPrinter.*(..))")
+  // 3. 先讓 Spring 執行這個 before() 方法
+  public void before() {
+    System.out.println("I'm before");
+  }
+  
+  public void after() {
+    System.out.println("I'm after");
+  }
+}
+```
+
+```java
+@Aspect
+@Component
+public class MyAspectAround {
+  @Around("execution(* com.example.demo.HpPrinter.*(..))")
+  public Object around(ProceedingJoinPoint pjp) throws Throwable {
+    System.out.println("I'm around before.");
+    // 執行切入點的方法 (e.g. hpPrinter.print();)
+    Object obj = pjp.proceed();
+    System.out.println("I'm around after.");
+    return obj;
+  }
+}
+```
+
+- AOP 使用情境
+    - 權限驗證: **Spring Security**
+    - 統一的 Exception 處理: **@ControllerAdvice**
+    - Log 紀錄
 
 ## Spring MVC
 
