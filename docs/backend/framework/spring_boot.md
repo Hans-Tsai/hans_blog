@@ -829,6 +829,14 @@ public class MyController {
 ## Spring JDBC
 - 在 Spring Boot 中執行 **原始 SQL 語法**，去操作資料庫
 
+| Spring JDBC | Spring Data JPA |
+| :--: | :--: |
+| 以 **SQL** 為中心 | 以 **Java object** 為中心 |
+| 需要 **自己寫** SQL 語法 | **不需寫** SQL 語法，Hibernate 會自動生成 SQL 語法，去操作資料庫 |
+| 開發效率 **低** | 開發效率 **高** |
+| 執行效能較 **好** | 執行效能較 **差** |
+| **可寫出** 複雜 SQL 語法 | **較難** 寫出複雜 SQL 語法 |
+
 ### IntelliJ 的資料庫 GUI
 - 點選 IntelliJ 的 Database 圖示 -> `+` -> Data Source -> MySQL
 - 設定連線資訊後，可以 test connection 後，再按 OK
@@ -1363,6 +1371,180 @@ public void transfer(Integer fromAccountId, Integer toAccountId, Integer money) 
 
 ## Spring Data JPA
 - **使用 ORM 的概念**，透過操作 Java object 的方式，去操作資料庫
+- ORM (Object-Relational Mapping): 將 Java object，去對應到資料庫的 table
+
+### JPA & Hibernate
+- **JPA** (Java Persistence API): **定義** 要如何操作資料庫
+    - 提供 @Entity, @Table, @Column ...等註解
+- **Hibernate**: 是一種 ORM 框架，**實作** JPA 的 API，(根據 JPA 的規範)，自動生成 SQL 語法，去操作資料庫
+
+### 使用 Spring Data JPA
+- 設定套件管理的設定檔 (`pom.xml`)
+    - 使用 Spring Boot 的 JDBC 功能
+    - 使用 MySQL 的 JDBC driver ([官網連結: MySQL Connector Java](https://mvnrepository.com/artifact/mysql/mysql-connector-java))
+	```xml
+	<!-- 使用 Spring Boot 的 Data JPA 功能 -->
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-data-jpa</artifactId>
+	</dependency>
+
+	<!-- 使用 MySQL 的 JDBC driver -->
+	<dependency>
+		<groupId>mysql</groupId>
+		<artifactId>mysql-connector-java</artifactId>
+		<version>8.0.33</version>
+	</dependency>
+	```
+- 設定 Spring Data JPA 的連線資訊 (`application.properties`)
+    - 以下的 Spring Data JPA 連線設定不用特別背，要用時再來看就好
+	```properties
+	# 選新版 (有 cj 的那個)
+	spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+	# 資料庫名稱: myjpa (大小寫敏感的)
+	spring.datasource.url=jdbc:mysql://localhost:3306/myjpa?serverTimezone=Asia/Taipei&characterEncoding=utf-8
+	spring.datasource.username=root
+	spring.datasource.password=
+
+	# 在 console 畫面中，顯示 Hibernate 動態產生的 SQL 語法
+	spring.jpa.show-sql=true
+	```
+- **`CrudRepository`** interface: 基本的 CRUD 操作 (最常用)
+    - `save()`: 新增 or 更新數據
+    - `findById()`: 根據 id 查詢數據
+    - `deleteById()`: 根據 id 刪除數據
+- **`PagingAndSortingRepository`** interface: 新增分頁、排序的操作
+- **`JpaRepositor`** interface: 能力最強，新增了 JPA 相關的 flush 操作
+![spring_data_repository_interface](../../assets/pics/framework/spring_data_repository_interface.jpeg)
+[圖片出處](https://www.javatpoint.com/spring-boot-crud-operations#:%7E:text=CrudRepository%20does%20not%20provide%20any,works%20as%20a%20marker%20interface)
+
+- CrudRepository 基本 CRUD 操作
+
+```sql
+CREATE DATABASE myjpa;
+
+
+CREATE TABLE student (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(30)
+)
+```
+
+```java
+// Student.java
+@Entity
+@Table(name = "student") // 對應到資料庫的表格名稱
+public class Student {
+
+    @Id // Primary Key
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // id 值是由資料庫自動產生的
+    @Column(name = "id") // 對應到資料庫的欄位名稱
+    Integer id;
+
+    @Column(name = "name")
+    String name;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+```
+
+```java
+// StudentRepository.java (interface)
+package com.example.demo;
+
+import org.springframework.data.repository.CrudRepository;
+
+public interface StudentRepository extends CrudRepository<Student, Integer> {
+
+}
+```
+
+```java
+// StudentController.java
+@RestController
+public class StudentController {
+    @Autowired
+    private StudentRepository studentRepository;
+
+    @GetMapping("/students/{studentId}")
+    public Student read(@PathVariable Integer studentId) {
+        // 因為 CrudRepository.findById() 預設返回 Optional 型別，因此加上 orElse(null) 可使其返回 Student 型別
+        // `orElse(null)`: 若於資料庫中找不到相對應的數據時，就返回 null
+        Student student = studentRepository.findById(studentId).orElse(null);
+        return student;
+    }
+
+    @PostMapping("/students")
+    public String insert(@RequestBody Student student) {
+        studentRepository.save(student);
+        return "執行資料庫的 Create 操作";
+    }
+
+    @PutMapping("/students/{studentId}")
+    public String update(@PathVariable Integer studentId,
+                         @RequestBody Student student) {
+        Student s = studentRepository.findById(studentId).orElse(null);
+        if (s != null) {
+            s.setName(student.getName());
+            studentRepository.save(s);
+            return "執行資料庫的 Update 操作";
+        } else {
+            return "Update 失敗，數據不存在";
+        }
+    }
+
+    @DeleteMapping("/students/{studentId}")
+    public String delete(@PathVariable Integer studentId) {
+        studentRepository.deleteById(studentId);
+        return "執行資料庫的 Delete 操作";
+    }
+}
+```
+- 自定義查詢條件
+	```java
+	// StudentRepository.java (interface)
+	package com.example.demo;
+
+	import org.springframework.data.repository.CrudRepository;
+
+	public interface StudentRepository extends CrudRepository<Student, Integer> {
+		// sql: SELECT * FROM Student WHERE name = ?
+		List<Student> findByName(String name);
+
+		// sql: SELECT * FROM Student WHERE id = ? AND name = ?
+		// 參數會按照"順序"傳入，而參數名字不重要
+		Student findByIdAndName(Integer id, String name);
+	}
+	```
+- @Query 註解: 用來解決 `findByXxx` 無法 **寫出複雜的查詢邏輯的問題** (e.g. JOIN 許多 table)
+    - 用途: 在 Spring Data JPA 中，**執行原生的 SQL 語法**
+        - `nativeQuery = true` 參數: 表示要執行原生的 SQL 語法; false: 表示要執行 JPQL 語法
+    - 實務上，會優先使用 `findByXxx` 的命名規則，若無法滿足需求時，才會使用 @Query 註解
+	```java
+	// StudentRepository.java (interface)
+	package com.example.demo;
+
+	import org.springframework.data.jpa.repository.Query;
+
+	public interface StudentRepository extends CrudRepository<Student, Integer> {
+		@Query(value = "SELECT * FROM student WHERE id = ?1 AND name = ?2", nativeQuery = true)
+		Student test1(Integer id, String name);
+	}
+	```
 
 ## 參考資料
 - [Spring 官方網站-Guides](https://spring.io/guides)
