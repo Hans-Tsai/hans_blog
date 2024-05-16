@@ -59,7 +59,10 @@ project-name
 
 - Spring Boot 設定檔 (**application.properties**)
 
-    - 存放 Spring Boot 的設定值
+    - 存放 Spring Boot 的設定值，用於定義 Spring Boot 應用程式的配置參數
+        - 應用程式參數: log, port ...等
+		- 環境配置: dev, test, prod ...等
+		- 自定義參數
     - 使用 properties 語法: `key=value`
     	- `=` 的前後不需加上空白鍵
     	- key 可以有 `.` 符號，相當於中文 "的"
@@ -73,7 +76,8 @@ project-name
 	# this is a comment
 	```
 
-- 專案設定檔 (**pom.xml**)
+- 套件管理的設定檔 (**pom.xml**)
+    - Maven 管理套件的設定檔，用於管理套件的設定、版本、依賴關係
 
     - 設定 Spring Boot 版本。更新後，需按右鍵 Maven -> Reload Project
 	```xml
@@ -122,7 +126,7 @@ public class DemoApplication {
 
     - 較常使用
 
-- **@Autowired 註解**: 加在 **變數** 上，根據**變數的型別**，去 Spring 容器中尋找相對應的 bean
+- **@Autowired 註解**: 加在 **變數** 上，根據 **變數的型別**，去 Spring 容器中尋找相對應的 bean
 
     - 變數型別盡量使用 Interface，讓 Java 可透過多型進行向上轉型，提高程式碼重用性
 
@@ -348,6 +352,15 @@ public class MyAspectAround {
 ## Spring MVC
 
 - 屬於 Spring 框架的一部分，採用 **Model-View-Controller (MVC) 的設計模式**，以開發網頁應用程式的框架
+    - 將一個系統，去拆分成「Model、View、Controller」三個部分，並且讓每一個部分都各自負責不同的功能
+    - 分類我們所寫的程式
+    - 優點: 
+        - **職責分離**，更容易維護程式
+		- 使程式結構更直覺，有利於 **團隊分工**
+		- **可重複使用** 寫好的程式
+
+	![spring_mvc_illustration](../../assets/pics/framework/spring_mvc_illustration.png)
+	[圖片出處](https://ithelp.ithome.com.tw/articles/10338883)
 
 - **@Controller 註解、@RestController 註解**: 用在 class 上，**將 class 變成 bean 儲存**，並且可以使用 @RequestMapping 註解於其內部的 method 上
 
@@ -813,8 +826,546 @@ public class MyController {
 	}
 	```
 
-## 參考資料
+## Spring JDBC
+- 在 Spring Boot 中執行 **原始 SQL 語法**，去操作資料庫
 
+### IntelliJ 的資料庫 GUI
+- 點選 IntelliJ 的 Database 圖示 -> `+` -> Data Source -> MySQL
+- 設定連線資訊後，可以 test connection 後，再按 OK
+- console 畫面可以直接輸入 SQL 語法，並執行: 播放按鈕 or `command + enter`
+- 可以檢視 table 的資料: 按滑鼠左鍵點選 table 兩下
+    - 所有更動資料後，都要記得 submit (:arrow_up:)
+    - 在 submit 之前，都可以復原更動: 重新整理 (:recycle:)
+- 若遇到每筆資料的欄位過多，在 console 畫面要來回移動時: 可以點選右上角的 `View as` 按鈕，選擇 transpose (行、列轉置)顯示
+
+- 複習 MySQL 語法
+```sql
+# 建立資料庫
+CREATE DATABASE myjdbc;
+
+# 建立資料表
+CREATE TABLE student (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(30)
+);
+
+# 插入、查詢、更新、刪除資料
+INSERT INTO student(id, name) VALUE (1, 'Judy');
+SELECT * FROM student;
+UPDATE student SET name = 'Amy' WHERE id = 1;
+DELETE FROM student WHERE id = 1;
+```
+
+### 使用 Spring JDBC
+- 設定套件管理的設定檔 (`pom.xml`)
+    - 使用 Spring Boot 的 JDBC 功能
+    - 使用 MySQL 的 JDBC driver ([官網連結: MySQL Connector Java](https://mvnrepository.com/artifact/mysql/mysql-connector-java))
+	```xml
+	<!-- 使用 Spring Boot 的 JDBC 功能 -->
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-jdbc</artifactId>
+	</dependency>
+
+	<!-- 使用 MySQL 的 JDBC driver -->
+	<dependency>
+		<groupId>mysql</groupId>
+		<artifactId>mysql-connector-java</artifactId>
+		<version>8.0.33</version>
+	</dependency>
+	```
+- 設定 Spring JDBC 的連線資訊 (`application.properties`)
+    - Spring JDBC 會在 Spring container 建立一個 **NamedParameterJdbcTemplate** 的 bean
+    - 以下的 Spring JDBC 連線設定不用特別背，要用時再來看就好
+	```properties
+	# 選新版 (有 cj 的那個)
+	spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+	# 資料庫名稱: myjdbc (大小寫敏感的)
+	spring.datasource.url=jdbc:mysql://localhost:3306/myjdbc?serverTimezone=Asia/Taipei&characterEncoding=utf-8
+	spring.datasource.username=root
+	spring.datasource.password=
+	```
+- **NamedParameterJdbcTemplate** bean
+    - 在 Spring JDBC 中，會根據 sql 的語法去區分成兩大類，分別是 update 系列、 query 系列
+		![spring_jdbc_sql_query_two_types](../../assets/pics/framework/spring_jdbc_sql_query_two_types.png)
+			[圖片出處](https://ithelp.ithome.com.tw/articles/10337891)
+		- **update** 系列的方法: **改變** 資料庫中儲存的數據
+    		- 執行 INSERT、UPDATE、DELETE 這三種 sql 語法
+			![spring_jdbc_update_sql_map](../../assets/pics/framework/spring_jdbc_update_sql_map.png)
+			[圖片出處](https://ithelp.ithome.com.tw/articles/10337891)
+			- `update()` 進階用法
+    			- 取得 DB table 中，會自動增加(`AUTO_INCREMENT`)的欄位值 (e.g. `id`): 使用 `KeyHolder`
+    			- 批次執行 INSERT, UPDATE, DELETE 的 SQL 語法: 使用 `batchUpdate()` method
+
+		```java
+		@RestController
+		public class StudentController {
+			@Autowired
+			private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+
+			@PostMapping("/students")
+			public String insert(@RequestBody Student student) {
+				// `:` 表示動態變數
+				String sql = "INSERT INTO student(name) VALUE (:studentName)";
+				// 在 Spring JDBC 中，Map 通常會這樣宣告
+				Map<String, Object> map = new HashMap<>();
+				map.put("studentName", student.getName());
+
+				// 取得當前 AUTO_INCREMENT 的 id 值
+				KeyHolder keyHolder = new GeneratedKeyHolder();
+				// 每次執行都會 call DB，因此若遇到批次處理時，效能較差
+				namedParameterJdbcTemplate.update(sql, new MapSqlParameterSource(map), keyHolder);
+				// 因為 schema 宣告 id 為 INT 型別
+				int id = keyHolder.getKey().intValue();
+				System.out.println("mysql 自動生成的 id 為: " + id);
+
+				return "執行 INSERT sql";
+			}
+
+			// 前端可以在 JSON array 中，可以加入多個 Student object，批次傳給後端
+			@PostMapping("/students/batch")
+			public String insertList(@RequestBody List<Student> studentList) {
+				String sql = "INSERT INTO student(name) VALUE (:studentName)";
+				// 不用背，要用時再來看就好
+				MapSqlParameterSource[] parameterSources = new MapSqlParameterSource[studentList.size()];
+				for (int i=0; i < studentList.size(); i++) {
+					Student student = studentList.get(i);
+
+					parameterSources[i] = new MapSqlParameterSource();
+					// 因為 :studentName 變數
+					parameterSources[i].addValue("studentName", student.getName());
+				}
+				// batchUpdate() 的第二個參數 parameterSources 寫法會較複雜，但是只會 call DB 一次，故效能較佳
+				namedParameterJdbcTemplate.batchUpdate(sql, parameterSources);
+				return "執行一批 INSERT sql";
+			}
+
+			@DeleteMapping("/students/{studentId}")
+			public String delete(@PathVariable Integer studentId) {
+				String sql = "DELETE FROM student WHERE id = :studentId";
+				Map<String, Object> map = new HashMap<>();
+				map.put("studentId", studentId);
+				namedParameterJdbcTemplate.update(sql, map);
+
+				return "執行 DELETE sql";
+			}
+		}
+		```
+
+		- **query** 系列的方法: **查詢** 資料庫中的數據
+    		- 只能執行 SELECT 這一種 sql 語法
+        		- `query()`: 適用在所有使用 `SELECT` sql 查詢的情況，回傳 List<> 型別，裡面可能包含 0 ~ n 筆資料
+        		- `queryForObject()`: 僅適用在 `SELECT count(*)` sql 語法，回傳一個 Java object
+			![spring_jdbc_sql_query](../../assets/pics/framework/spring_jdbc_sql_query.png)
+			[圖片出處](https://ithelp.ithome.com.tw/articles/10338405)
+			- **RowMapper**: 將數據從資料庫格式，轉換成 Java object 格式
+    			- 注意! `mapRow()` method 的返回型別，必須與 RowMapper<> 泛型的型別一致
+    			- `rs` 參數: 包含的 column，即為 SQL select 出來的那些欄位
+  			- **ResultSetExtractor** class: 能 **同時操作多個 row 的資料**
+				- 用法: `namedParameterJdbcTemplate.query(sql, new ResultSetExtractor<>() { ... })`
+				- 用法: `namedParameterJdbcTemplate.query(sql, new ResultSetExtractor<>() { ... })`
+			- DB schema type 對照 Java object type
+    			- 若 SQL 欄位有使用 `AS` 別名，在 RowMapper 中要使用新的欄位別名
+        			- e.g. SQL: `SELECT id AS student_id FROM student;`
+        			- e.g. RowMapper: `rs.getInt("student_id")`
+  
+				| DB schema type | Java object type | RowMapper method |
+				| :------------: | :--------------: | :--------------: |
+				| INT | Integer | rs.getInt("id") |
+				| VARCHAR | String | rs.getString("name") |
+				| BIGINT | Long | rs.getLong("age") |
+				| DOUBLE | Double | rs.getDouble("height") |
+				| FLOAT | Float | rs.getFloat("weight") |
+				| BOOLEAN | boolean | rs.getBoolean("isEducated") |
+				| TIMESTAMP | Date | rs.getTimestamp("create_date") |
+
+		```java
+		// StudentRowMapper.java
+		public class StudentRowMapper implements RowMapper<Student> {
+			// rs: 從資料庫中取得的數據; rowNum: 取到第幾筆數據
+			// (轉換)回傳 Student 型別的 Java object
+			@Override
+			public Student mapRow(ResultSet rs, int rowNum) throws SQLException {
+		//        // 從資料庫中取得數據
+		//        Integer a = rs.getInt("id");
+		//        String b = rs.getString("name");
+		//
+		//        // 將數據轉換為 Java object
+		//        Student student = new Student();
+		//        student.setId(a);
+		//        student.setName(b);
+
+				// 實務上通常會這樣寫
+				Student student = new Student();
+				student.setId(rs.getInt("id"));
+				student.setName(rs.getString("name"));
+
+				return student;
+			}
+		}
+		```
+
+		```java
+		// StudentController.java
+		@RestController
+		public class StudentController {
+    		@Autowired
+    		private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+
+			// query() 的用法
+			@GetMapping("/students")
+			public List<Student> select() {
+				// 需列舉所有想查詢的欄位，少用 `*` 表示，因為 `*` 的查詢效能較差
+				// 缺點 1: 可能會回傳不必要的資料
+				// 缺點 2: 較難提升查詢的速度
+				String sql = "SELECT id, name FROM student";
+				// 定義 sql 的外傳變數用
+				Map<String, Object> map = new HashMap<>();
+				List<Student> list = namedParameterJdbcTemplate.query(sql, map, new StudentRowMapper());
+
+				return list;
+			}
+
+			@GetMapping("/students/{studentId}")
+			public Student select(@PathVariable Integer studentId) {
+				// 定義 sql 的外傳變數用
+				Map<String, Object> map = new HashMap<>();
+				map.put("studentId", studentId);
+				List<Student> list = namedParameterJdbcTemplate.query(sql, map, new StudentRowMapper());
+
+				if (list.size() > 0) {
+					return list.get(0);
+				} else {
+					return null;
+				}
+			}
+
+			// queryForObject() 的用法
+			@GetMapping("/students/count")
+			public Integer select() {
+				String countSql = "SELECT count(*) FROM student";
+				Map<String, Object> countMap = new HashMap<>();
+				Integer count = namedParameterJdbcTemplate.queryForObject(countSql, countMap, Integer.class);
+
+				return count;
+			}
+		}
+		```
+
+### Controller-Service-Dao 三層式架構
+- MVC 架構算是抽象概念，具體要怎麼實作，就會依照不同的框架，而有不同寫法
+- 在 Spring Boot 裡面，我們會將 MVC 的架構模式，去轉化成是 **Controller-Service-Dao 的三層式架構** 來實作
+![spring_boot_controller_service_dao](../../assets/pics/framework/spring_boot_controller_service_dao.png)
+![spring_boot_controller_service_dao_with_code](../../assets/pics/framework/spring_boot_controller_service_dao_with_code.png)
+[圖片出處](https://ithelp.ithome.com.tw/articles/10338883)
+- 命名風格: 通常會以 Controller, Service, Dao 做結尾，用來表示該 class 的功能
+- 將 Controller, Service, Dao 這些 class 變成 bean，並使用 @Autowired 來注入
+	- 法 2: 使用 **@RestController, @Service, @Repository 註解** 來表示，其效果如同 @Component 註解，也會產生 bean
+- Controller 不能直接呼叫 Dao，必須透過 Service 來呼叫
+- Dao 只能負責執行 SQL，來存取資料庫內部的數據，不能包含商業邏輯
+- 通常每個 model 會對應到一個 dao，負責該 table 的 SQL 操作
+
+- 實作練習
+```markdown
+demo
+├── .idea
+├── .mvn
+├── src
+│   └── main
+│       └── java
+│           └── com.example.demo
+│               ├── controller
+│               	└── StudentController
+│               ├── dao
+│               	├── StudentDao  <!-- interface -->
+│               	└── StudentDaoImpl  <!-- implementation -->
+| 			 	├── model
+|					├── Student  <!-- DB table mapping -->
+|			    ├── mapper
+|					└── StudentRowMapper  <!-- RowMapper -->
+│               ├── service
+│               	├── StudentService  <!-- interface -->
+│               	└── StudentServiceImpl  <!-- implementation -->
+│               ├── DemoApplication
+└── resources
+```
+	- 實務上，通常會宣告三個 controller, service, dao 三個 **package**
+	- 並於 dao, service 中，分別宣告 **interface, implementation** 兩個 class。為了讓 **Spring Boot 做依賴注入** 時，能夠 **以 interface 為準，降低 class 之間的耦合度**
+
+```java
+// StudentController.java
+@RestController
+public class StudentController {
+    // 就不會使用 namedParameterJdbcTemplate 這個 bean 了
+    @Autowired
+    private StudentService studentService;
+
+    @PostMapping("/students")
+    public String insert(@RequestBody Student student) {
+        studentService.insert(student);
+        return "執行 INSERT sql";
+    }
+
+    @PostMapping("/students/batch")
+    public String insertList(@RequestBody List<Student> studentList) {
+        studentService.batchInsert(studentList);
+        return "執行一批 INSERT sql";
+    }
+
+    @DeleteMapping("/students/{studentId}")
+    public String delete(@PathVariable Integer studentId) {
+        studentService.deleteById(studentId);
+        return "執行 DELETE sql";
+    }
+
+    @GetMapping("/students/{studentId}")
+    public Student select(@PathVariable Integer studentId) {
+        return studentService.getById(studentId);
+    }
+}
+```
+
+```java
+// StudentService.java
+public interface StudentService {
+    void insert(Student student);
+    void batchInsert(List<Student> studentList);
+    void deleteById(Integer studentId);
+    Student getById(Integer studentId);
+}
+```
+
+```java
+// StudentServiceImpl.java
+@Component
+public class StudentServiceImpl implements StudentService {
+    @Autowired
+    private StudentDao studentDao;
+
+    @Override
+    public void insert(Student student) {
+        studentDao.insert(student);
+    }
+
+    @Override
+    public void batchInsert(List<Student> studentList) {
+        studentDao.batchInsert(studentList);
+    }
+
+    @Override
+    public void deleteById(Integer studentId) {
+        studentDao.deleteById(studentId);
+    }
+
+    @Override
+    public Student getById(Integer studentId) {
+        return studentDao.getById(studentId);
+    }
+}
+```
+
+```java
+// StudentDao.java
+public interface StudentDao {
+    void insert(Student student);
+    void batchInsert(List<Student> studentList);
+    void deleteById(Integer studentId);
+    Student getById(Integer studentId);
+}
+```
+
+```java
+// StudentDaoImpl.java
+@Component
+public class StudentDaoImpl implements StudentDao{
+    @Autowired
+    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+
+    @Override
+    public void insert(Student student) {
+        String sql = "INSERT INTO student(name) VALUE (:studentName)";
+        Map<String, Object> map = new HashMap<>();
+        map.put("studentName", student.getName());
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        namedParameterJdbcTemplate.update(sql, new MapSqlParameterSource(map), keyHolder);
+        int id = keyHolder.getKey().intValue();
+        System.out.println("mysql 自動生成的 id 為: " + id);
+    }
+
+    @Override
+    public void batchInsert(List<Student> studentList) {
+        String sql = "INSERT INTO student(name) VALUE (:studentName)";
+        MapSqlParameterSource[] parameterSources = new MapSqlParameterSource[studentList.size()];
+        for (int i=0; i < studentList.size(); i++) {
+            Student student = studentList.get(i);
+
+            parameterSources[i] = new MapSqlParameterSource();
+            // 因為 :studentName 變數
+            parameterSources[i].addValue("studentName", student.getName());
+        }
+        // batchUpdate() 的第二個參數 parameterSources 寫法會較複雜，但是只會 call DB 一次，故效能較佳
+        namedParameterJdbcTemplate.batchUpdate(sql, parameterSources);
+    }
+
+    @Override
+    public void deleteById(Integer studentId) {
+        String sql = "DELETE FROM student WHERE id = :studentId";
+        Map<String, Object> map = new HashMap<>();
+        map.put("studentId", studentId);
+        namedParameterJdbcTemplate.update(sql, map);
+    }
+
+    @Override
+    public Student getById(Integer studentId) {
+        String sql = "SELECT id, name FROM student WHERE id = :studentId";
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("studentId", studentId);
+        List<Student> list = namedParameterJdbcTemplate.query(sql, map, new StudentRowMapper());
+
+        if (list.size() > 0) {
+            return list.get(0);
+        } else {
+            return null;
+        }
+    }
+}
+```
+
+### 交易管理
+- **@Transactional 註解**: 加在 class 或 **method** 上，使用交易來管理這個 method 中的資料庫操作
+    - 通常會加在 **Service 層的 method 上面**
+- 交易管理的特性: 需滿足 ACID 特性的資料庫，才能夠執行交易管理
+	- **ACID 特性**
+		- **A**: Atomicity (原子性)
+			- 一個交易中的所有操作，**要麼全部成功，要麼全部失敗**
+		- **C**: Consistency (一致性)
+			- 交易前後，**數據的完整性必須保持一致**
+		- **I**: Isolation (隔離性)
+			- 交易之間 **互不干擾**
+		- **D**: Durability (持久性)
+			- 交易一旦提交，**對資料庫的修改是永久性的**
+	- 回滾 (rollback): 交易失敗時，會自動回滾 (rollback)
+	- 提交 (commit): 交易成功時，會自動提交 (commit)
+	- 默認的隔離級別
+		- **READ COMMITTED**: 可以讀取到其他交易已經提交的數據，但是不能讀取到其他交易未提交的數據
+	
+```java
+@Transactional
+@Override
+public void transfer(Integer fromAccountId, Integer toAccountId, Integer money) {
+	// User A 扣除轉帳金額
+	accountDao.decreaseMoney(fromAccountId, money);
+	// 交易失敗，噴出 exception，會自動回滾 (rollback)
+	Integer a = 1/0;
+	// User B 收到轉帳金額
+	accountDao.increaseMoney(toAccountId, money);
+}
+```
+
+- 多個資料庫的連線設定
+    - `application.properties`
+        - spring.datasource **後面要指定 DB 名稱**
+        - spring.datasource.test1.jdbc-url **在指定 DB 名稱後面，使用 `jdbc-url`**，而不是 `url`
+	- @Configuration 註解的 class 內的 @ConfigurationProperties 註解，使用 **prefix** 來指定 DB 名稱
+	- @RestController 註解，指定要載入的 `JdbcTemplate` 的 bean 名稱
+
+	```properties
+	# 多個資料庫的連線設定
+	spring.datasource.test1.driver-class-name=com.mysql.cj.jdbc.Driver
+	spring.datasource.test1.jdbc-url=jdbc:mysql://localhost:3306/test1?serverTimezone=Asia/Taipei&characterEncoding=utf-8
+	spring.datasource.test1.username=root
+	spring.datasource.test1.password=springboot
+
+	spring.datasource.test2.driver-class-name=com.mysql.cj.jdbc.Driver
+	spring.datasource.test2.jdbc-url=jdbc:mysql://localhost:3306/test2?serverTimezone=Asia/Taipei&characterEncoding=utf-8
+	spring.datasource.test2.username=root
+	spring.datasource.test2.password=springboot
+
+	# 單個資料庫的連線設定
+	#spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+	#spring.datasource.url=jdbc:mysql://localhost:3306/myjdbc?serverTimezone=Asia/Taipei&characterEncoding=utf-8
+	#spring.datasource.username=root
+	#spring.datasource.password=springboot
+	```
+
+	```java
+	@Configuration
+	public class DataSourceConfiguration {
+
+		// 連線到 test1 資料庫的 DataSource 和 NamedParameterJdbcTemplate
+		@Bean
+		@ConfigurationProperties(prefix = "spring.datasource.test1")
+		public DataSource test1DataSource() {
+			return DataSourceBuilder.create().build();
+		}
+
+		@Bean
+		public NamedParameterJdbcTemplate test1JdbcTemplate(
+				@Qualifier("test1DataSource") DataSource dataSource) {
+			return new NamedParameterJdbcTemplate(dataSource);
+		}
+
+
+		// 連線到 test2 資料庫的 DataSource 和 NamedParameterJdbcTemplate
+		@Bean
+		@ConfigurationProperties(prefix = "spring.datasource.test2")
+		public DataSource test2DataSource() {
+			return DataSourceBuilder.create().build();
+		}
+
+		@Bean
+		public NamedParameterJdbcTemplate test2JdbcTemplate(
+				@Qualifier("test2DataSource") DataSource dataSource) {
+			return new NamedParameterJdbcTemplate(dataSource);
+		}
+	}
+	```
+
+	```java
+	@RestController
+	public class StudentController {
+
+		@Autowired
+		@Qualifier("test1JdbcTemplate")
+		private NamedParameterJdbcTemplate test1JdbcTemplate;
+
+		@Autowired
+		@Qualifier("test2JdbcTemplate")
+		private NamedParameterJdbcTemplate test2JdbcTemplate;
+
+
+		@PostMapping("/test1/students")
+		public String test1Insert(@RequestBody Student student) {
+			String sql = "INSERT INTO student(name) VALUE (:studentName)";
+
+			Map<String, Object> map = new HashMap<>();
+			map.put("studentName", student.getName());
+
+			test1JdbcTemplate.update(sql, map);
+
+			return "插入數據到 test1 資料庫";
+		}
+
+		@PostMapping("/test2/students")
+		public String test2Insert(@RequestBody Student student) {
+			String sql = "INSERT INTO student(name) VALUE (:studentName)";
+
+			Map<String, Object> map = new HashMap<>();
+			map.put("studentName", student.getName());
+
+			test2JdbcTemplate.update(sql, map);
+
+			return "插入數據到 test2 資料庫";
+		}
+	}
+	```
+
+## Spring Data JPA
+- **使用 ORM 的概念**，透過操作 Java object 的方式，去操作資料庫
+
+## 參考資料
 - [Spring 官方網站-Guides](https://spring.io/guides)
 - [Developer Roadmaps-Spring Boot Developer](https://roadmap.sh/spring-boot)
 - Hahow-Spring Boot 零基礎入門課程 (古君葳)
+    - 另有在 [iT 邦幫忙鐵人賽-Spring Boot 零基礎入門 系列](https://ithelp.ithome.com.tw/users/20151036/ironman/6130) 發表文章
