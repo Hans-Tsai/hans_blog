@@ -12,6 +12,10 @@
 ## 建立 Spring Boot 專案
 
 - **Spring Boot 框架** 實際上背後仍是使用 Spring 框架的功能，只是包裝得更簡單，希望達到 **開箱即用**
+- Spring Boot 特性
+	- Convention over configuration: **約定大於配置 or 慣例優於設定**
+    	- **不需添加任何設定**，只要知道運作規則，就能直接使用
+    	- 所有 project 皆遵循 **一致的標準化設定**
 - IDE: IntelliJ Ulitimate 版本
 - New Project -> Spring Initializr
     - Type(套件管理包工具): Gradle 或 Maven
@@ -34,27 +38,26 @@
     - MacOS 選取多個檔案: 按住 command 鍵
     - MacOS 深入檢視 method, interface: 按住 command 鍵 + 滑鼠點選該 method, interface
     - 輸入 `sout` = `System.out.println();`
+    - 輸入 `psvm` = `public static void main(String[] args) {}`
     - 快速產生 class 的 constructor(), getter(), setter() 方法: `右鍵 -> generate -> 選擇要產生的 method 類型`
 
 ### 專案目錄結構
 
 ```markdown
 project-name
-|
-|--- .idea/
-|
-|--- .mvn/
-|
-|--- src/
-|--- main/
-|--- java/ 放 Java 程式
-|--- resources/ 放 Spring Boot 設定檔
-|--- static/
-|--- templates/
-|--- application.properties 最重要的 Spring Boot 設定檔
-|--- test/
-|--- java/ 放測試用的 Java 程式
-|--- resources/ 放測試用的 Spring Boot 設定檔
+├── .idea/
+├── .mvn/
+├── src/
+│   ├── main/
+│   	├── java/               # 放 Java 程式
+│   	├── resources/          # 放 Spring Boot 設定檔
+│   	├── static/
+│   	├── templates/
+│   	└── application.properties  # 最重要的 Spring Boot 設定檔
+│   ├── test/
+│   	├── java/               # 放測試用的 Java 程式
+│   	└── resources/          # 放測試用的 Spring Boot 設定檔
+└── pom.xml                		# Maven 管理套件的設定檔
 ```
 
 - Spring Boot 設定檔 (**application.properties**)
@@ -1545,6 +1548,434 @@ public class StudentController {
 		Student test1(Integer id, String name);
 	}
 	```
+
+## Spring Boot 單元測試
+- 單元測試: **自動化** 測試程式碼的正確性
+    - **一次只會測試一個功能點** (= 一個 method 或 API)
+    - 各個單元測試 **互相獨立**，彼此之間不能有依賴關係 (e.g. 先後順序)
+    - 測試的結果是穩定的，**不受外部服務影響**
+    - 測試的程式: 會放在 `test/` 資料夾中 (必須遵守的)
+    - 命名風格: 測試的 class，會以 **原 class 的名字加上 Test 作為結尾** 來命名 (e.g. `StudentTest`)
+    - 測試的 class 的 package，會與原 class 的 package 相對路徑保持一致 (差別在一個位於 `main/`，另一個位於 `test/` 資料夾中)
+- 設定套件管理的設定檔 (`pom.xml`)
+	- 使用 Spring Boot 的 Test 功能 (Spring Boot initializer 預設會幫忙加入)
+	```xml
+	<!-- 使用 Spring Boot 的 Test 功能 -->
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-test</artifactId>
+		<scope>test</scope>
+	</dependency>
+	```
+### JUnit 單元測試
+- JUnit: Java 中，單元測試的必備工具
+    - Spring Boot 與 JUnit 的版本相容性
+	![sprint_boot_and_junit_compatibility](../../assets/pics/framework/sprint_boot_and_junit_compatibility.png)
+- **@Test 註解**: 加在 method 上，即可生成一個單元測試
+    - 只能用在 `test/` 資料夾中使用，可以將該 method 變成一個測項(test case)
+    - method 必須為 `public void xxx()`，並且沒有任何參數
+    - method 名稱可任意命名，但是最好 **能夠表達出該 method 想測試哪個功能點**
+- **Assert** 常見用法
+    - `assertNull(A)`: 斷言 A 為 null
+    - `assertNotNull(A)`: 斷言 A 不為 null
+    - `assertEquals(expected, actual)`: 斷言 expected 與 actual 相等，會使用 `equals()` 方法去判斷
+    - `assertTrue(A)`: 斷言 A 為 true
+    - `assertFalse(A)`: 斷言 A 為 false
+    - `assertThrows(exception, method)`: 斷言執行 method 時，會拋出 exception
+- **@BeforeEach 註解、@AfterEach 註解**
+	- @BeforeEach: 在 **每次** @Test 開始前，**都會執行一次**
+	- @AfterEach: 在 **每次** @Test 結束後，**都會執行一次**
+- @BeforeAll 註解、@AfterAll 註解 (**必須是 static method**，因此無法存取 bean，所以較少使用)
+	- @BeforeAll: 在 **所有** @Test 開始前，**只會執行一次**
+	- @AfterAll: 在 **所有** @Test 結束後，**只會執行一次**
+- @Disabled: 加在 method 上，忽略該 @Test 不執行
+- @DisplayName: 加在 method 上，自定義測試的顯示名稱 (可使用中文命名)
+
+```java
+// main/java/com/example/demo/Calculator.java
+public class Calculator {
+    public int add(int x, int y) {
+        return x + y;
+    }
+
+    public int divide(int x, int y) {
+        return x / y;
+    }
+
+    public static void main(String[] args) {
+        Calculator calculator = new Calculator();
+        int result = calculator.add(1, 2);
+        System.out.println("結果為: " + result);
+    }
+}
+```
+
+```java
+// test/java/com/example/demo/CalculatorTest.java
+public class CalculatorTest {
+    @Disabled
+    @Test
+    public void add() {
+        Calculator calculator = new Calculator();
+        int result = calculator.add(1, 2);
+
+        assertNotNull(result);
+        // 斷言(我認為)相等
+        assertEquals(3, result, "加法有問題");
+        assertTrue(result > 1);
+    }
+
+    @DisplayName("測試除法問題")
+    @Test
+    public void divide() {
+        Calculator calculator = new Calculator();
+        assertThrows(ArithmeticException.class, () -> {
+            calculator.divide(1, 0);
+        });
+    }
+}
+```
+
+```java
+// test/java/com/example/demo/MyTest.java
+public class MyTest {
+    @BeforeEach
+    public void beforeEach() {
+        System.out.println("執行 @beforeEach");
+    }
+
+    @AfterEach
+    public void afterEach() {
+        System.out.println("執行 @afterEach");
+    }
+
+    @BeforeAll
+    public static void beforeAll() {
+        System.out.println("執行 @BeforeAll");
+    }
+
+    @AfterAll
+    public static void afterAll() {
+        System.out.println("執行 @AfterAll");
+    }
+
+    @Test
+    public void test1() {
+        System.out.println("執行 test1");
+    }
+
+    @Test
+    public void test2() {
+        System.out.println("執行 test2");
+    }
+}
+
+// 結果
+// 執行 @BeforeAll
+// 執行 @beforeEach
+// 執行 test1
+// 執行 @afterEach
+// 執行 @beforeEach
+// 執行 test2
+// 執行 @afterEach
+// 執行 @AfterAll
+```
+### Service 層、Dao 層的單元測試
+- @SpringBootTest 註解: 加在 class 上，表示這是一個 Spring Boot 的測試類別
+    - 相當於直接啟動 Spring Boot 的應用程式
+	- 會自動載入 Spring Boot 的所有配置 (@Configuration, Interceptor 都會生效)
+	- 會 **自動載入所有的 bean** (可使用 @Autowired 來注入)
+- @Transactional 註解: 加在帶有 @Test 註解的 class 或 **method** 上，在**單元測試結束後，會強制回滾(rollback)所有資料庫操作，將數據恢復原狀**
+
+| 比較 | @Transactional 在 `main/` 資料夾 | @Transactional 在 `test/` 資料夾 |
+| :--: | :---------------------: | :----------------------: |
+| 說明 | 正常程式 | 單元測試 |
+| 目的 | 交易管理 | 避免測試影響到資料庫中的數據 |
+| 回滾機制(rollback) | 當程式運行 **中途發生錯誤** 時，**才會回滾** 已經執行的資料庫操作，將數據恢復元狀 | 在該單元測試結束後，**強制 rollback** 所有執行的資料庫操作，將數據恢復原狀 |
+
+- Service 層、Dao 層的單元測試 --- 基本範例
+```java
+// test/java/com/example/demo/StudentDaoImplTest.java
+// 測試 Dao 層
+@SpringBootTest
+public class StudentDaoImplTest {
+    @Autowired
+    private StudentDao studentDao;
+
+    @Test
+    public void getById() {
+        Student student = studentDao.getById(3);
+        assertNotNull(student);
+        assertEquals("Judy", student.getName());
+        assertEquals(100.0, student.getScore());
+        assertTrue(student.isGraduate());
+        assertNotNull(student.getCreateDate());
+    }
+
+    @Transactional
+    @Test
+    public void deleteById() {
+        studentDao.deleteById(3);
+
+        Student student = studentDao.getById(3);
+        assertNull(student);
+    }
+
+    // (略) 其它 method 的單元測試
+    @Transactional
+    @Test
+    public void insert() {
+        Student student = new Student();
+        student.setName("Kevin");
+        student.setScore(66.2);
+        student.setGraduate(true);
+
+        Integer studentId = studentDao.insert(student);
+
+        Student result = studentDao.getById(studentId);
+        assertNotNull(result);
+        assertEquals("Kevin", result.getName());
+        assertEquals(66.2, result.getScore());
+        assertTrue(result.isGraduate());
+        assertNotNull(result.getCreateDate());
+    }
+
+    @Transactional
+    @Test
+    public void update() {
+        Student student = new Student();
+        student.setName("John");
+
+        studentDao.update(student);
+    }
+}
+```
+
+### Controller 層的單元測試
+- 模擬前端的行為，測試 API 是否運行正確
+	- 不能直接注入 bean 來測試，需要透過模擬真實的 API call 來測試
+- MockMVC: 模擬真實的 API call
+    - @SpringBootTest 註解: 加在 class 上，表示這是一個 Spring Boot 的測試類別
+	- @AutoConfigureMockMvc 註解: 加在 class 上，表示啟動 MockMVC
+	- @Autowired: 注入 MockMVC bean
+	- @Test: 建立測試 method
+
+```java
+@SpringBootTest
+@AutoConfigureMockMvc
+public class StudentControllerTest {
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    // 因為 perform() method 可能會拋出 Exception，將 Exception 再給拋出去
+    public void getById() throws Exception {
+        // step 1: 建立 requestBuilder，設定要發起的 http request 相關的 request 參數
+        RequestBuilder requestBuilder = MockMvcRequestBuilders
+                .get("/students/{studentId}", 3)
+                .header("headerName", "headerValue")
+                .queryParam("graduate", "true");
+
+        // step 2: 執行該 http request
+        MvcResult mvcResult = mockMvc.perform(requestBuilder)
+                // 將 API 執行結果印出來，方便對照寫出 jsonPath() 驗證
+                .andDo(print())
+                // step 3: 驗證回傳的結果
+                .andExpect(status().is(200))
+                // 驗證回傳的 JSON 結果 (`$`: 表示最外層)
+                .andExpect(jsonPath("$.id", equalTo(3)))
+                .andExpect(jsonPath("$.name", notNullValue()))
+                // `andReturn()`: (只能加在驗證結果的最後一行)，取得完整的 API 執行結果
+                .andReturn();
+
+        // 輸出 mvc 回傳結果的 response body
+        String body = mvcResult.getResponse().getContentAsString();
+        System.out.println("返回的 response body 為: " + body);
+    }
+
+    @Test
+    public void create() throws Exception {
+        RequestBuilder requestBuilder = MockMvcRequestBuilders
+                .post("/students")
+                // 在該 http request 加上 content type 的 header，而這個 header 的值就是 application/json
+                .contentType(MediaType.APPLICATION_JSON)
+                // 要帶入的 request body 內容
+                .content("{\n" +
+                        "  \"name\": \"Hank\",\n" +
+                        "  \"score\": 14.6,\n" +
+                        "  \"graduate\": false\n" +
+                        "}");
+        
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().is(201));
+    }
+}
+```
+	
+### Mock 測試
+- 目的: 避免為了測試某一個單元測試，而去建構了整個 bean 的 dependency 
+- 作法: 創造一個 **假的 bean，去替換掉** Spring container 中原有的 bean
+    - 使用 **@MockBean 註解**: 建立一個假的 bean
+        - 沒有定義的 method，**預設回傳 null**
+    - 使用 @SpyBean 註解: Spring container 中的 bean 仍舊是正常的 bean，**只替換其中幾個方法**
+        - 沒有定義的 method，**預設使用真實 bean 的 method**
+- 使用 **Mockito 框架**: 在 Spring Boot 中進行 **Mock 測試的工具**
+    - 模擬方法的返回值
+        - 法 1: 使用 `when().thenReturn()` 方法
+        - 法 2: 使用 `doReturn().when()` 方法
+    - 模擬拋出的 Exception
+        - 法 1: 使用 `when().thenThrow()` 方法
+        - 法 2: 使用 `doThrow().when()` 方法
+    - 模擬方法的使用次數、順序
+        - 法 1: 使用 `verify().times()` 方法
+- 使用 Mockito 框架的 **限制**
+    - **不能** mock static method
+    - **不能** mock private method
+    - **不能** mock final class
+
+```java
+// test/java/com/example/demo/StudentServiceImplMockTest.java
+@SpringBootTest
+public class StudentServiceImplMockTest {
+	@Autowired
+	private StudentServiceImpl studentService;
+
+	@MockBean
+	private StudentDao studentDao;
+
+	@BeforeEach
+	public void beforeEach() {
+		Student mockStudent = new Student();
+		mockStudent.setId(100);
+		mockStudent.setName("I'm mock");
+
+		Mockito.when(studentDao.getById(Mockito.any())).thenReturn(mockStudent);
+	}
+
+	@Test
+	public void getById() {
+		Student student = studentService.getById(3);
+		assertNotNull(student);
+		assertEquals("Judy", student.getName());
+		assertEquals(100.0, student.getScore());
+		assertTrue(student.isGraduate());
+		assertNotNull(student.getCreateDate());
+	}
+
+	@Test
+	public void getById2() {
+		Student student = studentService.getById(2);
+		assertNotNull(student);
+		assertEquals(100, student.getId());
+		assertEquals("I'm mock", student.getName());
+	}
+}
+```
+
+```java
+// test/java/com/example/demo/StudentServiceImplSpyTest.java
+@SpringBootTest
+public class StudentServiceImplSpyTest {
+	@Autowired
+	private StudentServiceImpl studentService;
+
+	@SpyBean
+	private StudentDao studentDao;
+
+	@Test
+	public void insert() {
+		// 當使用 @SpyBean 時，建議使用 doReturn().when() 的寫法，以避免不必要的錯誤
+		Mockito.doReturn(100).when(studentDao).insert(Mockito.any());
+
+		Student student = new Student();
+		student.setName("Kevin");
+		student.setScore(50.0);
+		student.setGraduate(false);
+		Integer studentId = studentService.insert(student);
+
+		assertEquals(100, studentId);
+	}
+
+	@Test
+	public void getById() {
+		Student student = studentService.getById(3);
+		assertNotNull(student);
+		assertEquals(3, student.getId());
+		assertEquals("Judy", student.getName());
+	}
+}
+```
+
+### H2 資料庫
+- H2 資料庫: 是一種 **嵌入式資料庫**，可以再啟動 Spring Boot 時被生成出來，在運行結束時被銷毀，**用完即丟**
+    - 避免執行測試時，受到外部資料庫的影響 (e.g. MySQL)
+    - 常用在 **單元測試** 中，不需要額外安裝任何軟體，都可以運行該單元測試
+- 設定套件管理的設定檔 (`pom.xml`)
+    - 使用 H2 資料庫 ([官網連結: maven h2](https://mvnrepository.com/artifact/com.h2database/h2))
+		```xml
+		<!-- 使用 H2 資料庫 -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>2.2.224</version>
+			<scope>test</scope>
+		</dependency>
+		```
+- 使用 H2 資料庫的連線設定 (`test/` 資料夾中的 `application.properties`)
+	```properties
+	# 使用 H2 資料庫
+	spring.datasource.driver-class-name=org.h2.Driver
+	# 連線到 H2 資料庫的 testdb
+	spring.datasource.url=jdbc:h2:mem:testdb
+	# 實務上，常用 `sa` 作為測試用帳密
+	spring.datasource.username=sa
+	spring.datasource.password=sa
+
+	# 若使用 Spring Data JPA，要加上以下這行，以避免 Spring Boot 在執行 H2 sql 語法時，影響到 Hibernate 的設定
+	# spring.jpa.hibernate.ddl-auto: none
+	```
+- 建立 H2 資料庫的測試用 schema, data
+    - `schema.sql` 必須放在 `test/resources/` 資料夾中，**建立 table**
+	```sql
+	# 記得加上 IF NOT EXISTS，避免重複建立 table
+	CREATE TABLE IF NOT EXISTS student (
+		id INT PRIMARY KEY AUTO_INCREMENT,
+		name VARCHAR(30),
+		score DOUBLE,
+		graduate BOOLEAN,
+		create_date TIMESTAMP
+	);
+	```
+	- `data.sql` 必須放在 `test/resources/` 資料夾中，**用於插入數據**
+	```sql
+	# 需注意 H2 sql 語法與 MySQL 語法，可能會有些許不同
+	INSERT INTO student (name, score, graduate, create_date) VALUES ('Amy', 90.3, true, '2021-09-01 10:20:33');
+	INSERT INTO student (name, score, graduate, create_date) VALUES ('Rom', 34.6, false, '2021-08-10 17:21:14');
+	INSERT INTO student (name, score, graduate, create_date) VALUES ('Judy', 100.0, true, '2021-09-05 12:19:48');
+	INSERT INTO student (name, score, graduate, create_date) VALUES ('Mike', 87.2, true, '2021-09-03 15:01:15');
+	```
+### 單元測試經驗談
+- 單元測試的數量，**不是越多越好**
+    - 單元測試也是程式，程式越多，就表示維護成本也越高
+    - **單元測試的重要程度 = 影響使用者的程度**，使用頻率越高的功能，越需要單元測試
+- 視產業、專案類型，來決定要寫多少單元測試
+    - 金融業: 能測多細就多細，錢很重要
+    - 軟體業: 使用 MockMvc 測試各個 API 的功能是否運作正常
+    - 重要的 Service 層，可以加一些專屬的單元測試
+    - Dao 層比較少測，但如果有複雜的 sql 語法，可以額外添加測試
+- **從 User story 的角度出發**，來思考該如何寫單元測試
+	- 經驗: 不要在實作完直接寫單元測試，可以休息一下載回來寫，免得鑽牛角尖
+- **一定要記得測試 Error case!**
+    - e.g. 在測試 `getById()` method 時，可以測試當 id 不存在時怎麼處理? 當 id 的長度超過限制時怎麼處理?
+    - 實作 Error handling 是開發中最難的一部分
+- 善用 **Run Test With Coverage**，查看單元測試的覆蓋範圍
+    - 不要為了單純提升測試覆蓋率而寫單元測試，而是要反過來思考是否有哪些使用場景還沒考慮到
+    - 不要被數字迷惑，並不是一定要 100% 覆蓋率才是完美，只要確保重要的功能有被測到即可
+- 如果測試中使用的 @SpyBean 過多，**表示功能切分的不夠好**
+    - 盡量從功能面去區分 Service (e.g. ProductService, OrderService, UserService)
+    - 和外部服務有關的 API call，獨立成一個 Service
+		- e.g. 與 YouTube 有關的 API call，就統一放在 YouTubeService 裡面
+    - 靠經驗多累積，才能夠更好的切分功能
 
 ## 參考資料
 - [Spring 官方網站-Guides](https://spring.io/guides)
