@@ -25,6 +25,252 @@
 - 功能: 提供了一種有效管理和操作資料的方法，以實現更快的存取、插入、刪除操作
 - 目的: 設計高效演算法和最佳化軟體效能的基礎
 
+### 陣列 (Array) & ArrayList
+- Array vs. ArrayList
+
+| Features\資料型別               |        Array        |                  ArrayList                  |
+| ------------------------------- | :-----------------: | :-----------------------------------------: |
+| 長度                            |        固定         |                    變動                     |
+| 記憶體分配                      |        連續         |                   不連續                    |
+| 元素的資料型別                  | 原生資料型別 & 物件 |                    物件                     |
+| 操作元素                        |   使用 `[ ]` 運算子   | 使用 `add()`, `set()`, `remove()` ...等方法 |
+| 執行速度                        |        較快         |                    較慢                     |
+| 資料型别安全<br />(thread-safe) |        不是         |                     是                      |
+| 維度                           |     一維 ～ 多維     |                   一維                     |
+
+#### Array
+- 基本概念
+    - 在記憶體中連續儲存 (store a collection of elements sequentially)
+    - 使用 index 來隨機存取元素 (randomly access)
+
+    ![array_basic_concept](../../assets/pics/dsa_tutorial/array_basic_concept.png)
+
+    - 可儲存原生型別 or 物件型別，但各元素需為相同型別
+
+    - 一旦宣告後，為固定大小 (fixed-size)
+
+    - Array 類別 **繼承 Object 類別**
+
+    - Array 類別 **實作 Cloneable & java.io.Serializable 介面**
+
+- 常見應用情境
+    - 儲存資料，以便後續處理
+    - 實作其它資料結構 (e.g. Stack, Queue, Tree, Graph)
+    - 資料格式的表示方法: 表格、矩陣
+
+- 宣告 & 初始化
+
+    - 宣告 (有 2 種寫法)
+
+    	- 原生型別
+
+    		- ```java
+    			int[] arr; // 推薦這個寫法，較直覺
+    			```
+    		- ```java
+    			int arr[];
+    			```
+
+    	- 參考型別
+
+    		- ```java
+    			Student[] arr = new Student[5]; // student is a user-defined class
+    			```
+
+    	- 多維陣列 (e.g. 2D Array)
+
+    		```java
+    		int[][] arr = new int[3][3];
+    		```
+
+    - 初始化 (分配記憶體給該 Array)
+
+    	```java
+    	arr = new int[5];
+    	```
+
+    - 同時宣告 + 初始化
+
+    	```java
+    	int[] arr = new int[5];
+    	```
+
+- 基本操作
+
+    - 取得陣列容量(capacity)
+
+    	- `arr.length` 屬性
+
+		```java
+		int[] arr = new int[5]; // 宣告一個含有 5 格容量(capacity)的 Array
+		System.out.println(arr.length); // 5
+		
+		String[] strArr = { "GEEKS", "FOR", "GEEKS" };
+		System.out.println(strArr.length); // 3
+		```
+
+- 存取元素
+
+	- 視情況可用 for loop, for-each loop 來存取 Array 元素
+
+		- for loop 的 Array index 從 0 (首個元素) ~ -1 (最末項元素)
+
+	- 若存取合法 index 範圍外的元素 => JVM 會拋出 **ArrayIndexOutOfBoundsException**
+
+- 複製陣列
+
+	- 1D Array
+
+		- 採用 deep copy: 另外複製一個含有相同元素們的陣列
+
+			![1d_array_clone](../../assets/pics/dsa_tutorial/1d_array_clone.png)
+
+		- 基本範例
+
+			```java
+			int arr[] = { 1, 2, 3 };
+			int cloneArr[] = arr.clone();
+			System.out.println(intArr == arr); // false
+			```
+
+	- Multi-D Array
+
+		- 採用 shallow copy: 僅複製原始物件的最外層結構(外殼)，裡面的元素仍是指向原資料的記憶體位置
+
+			![multi_d_array_clone](../../assets/pics/dsa_tutorial/multi_d_array_clone.png)
+
+		- 基本範例
+
+			```java
+			int intArray[][] = {{ 1, 2, 3 }, { 4, 5 }};
+			int cloneArr[] = arr.clone();
+			
+			System.out.println(intArray == cloneArray); // false
+			System.out.println(intArray[0] == cloneArray[0]); // true (sub-arrays are shared)
+			System.out.println(intArray[1] == cloneArray[1]); // true (sub-arrays are shared)
+			```
+
+- 參考資料
+
+    - [GeeksForGeeks-Arrays in Java](https://www.geeksforgeeks.org/arrays-in-java/?ref=lbp)
+
+#### ArrayList
+
+- 基本概念
+
+    - ArrayList 類別 **繼承 Collection 類別**，且屬於 java.util package 的其中一個類別
+
+    	- ArrayList 類別 **實作 List 介面**
+    	- 類似 C++ 的 vector
+
+    	![arraylist_extends_collection](../../assets/pics/dsa_tutorial/arraylist_extends_collection.png)
+
+    - 使用 index 來隨機存取元素 (randomly access)
+    	![arraylist_basic_concept](../../assets/pics/dsa_tutorial/arraylist_basic_concept.png)
+
+    - 可變大小 (dynamic size): 表示新增, 刪除元素會自動調整 `ArrayList.size()`
+
+    - ArrayList 僅能裝 wrapper class，而不能裝原生型別
+
+    - 非 Synchronized: 當 Multi-thread 同時修改同一個 ArrayList 時，無法保證 thread-safe (數據一致性)
+
+- 宣告 & 初始化
+
+    - 基本範例
+
+    	```java
+    	ArrayList<Integer> arrL = new ArrayList<Integer>(2);
+    	```
+
+    - 基本操作
+
+        - 取得 ArrayList 的元素數
+
+        	- `ArrayList.size()` 方法
+
+            ```java
+            int sz = arrL.size();  // 4
+            ```
+
+- 新增元素
+
+  	- 若 ArrayList 的 size 滿了，預設會自動 doubled size 來儲存更多的元素
+	- ArrayList 可以接受 null, 重複值
+
+	```java
+	ArrayList<String> arrL = new ArrayList<>();
+	// 法 1: 正常加入元素
+	arrL.add("Alice");
+	arrL.add("Bob");
+	// 法 2: 指定 index，插入元素
+	arrL.add(1, "and")
+	System.out.println(al); // [Alice, and, Bob]
+	```
+
+- 設定/更新元素值
+
+	```java
+	arrL.set(2, "John");
+	System.out.println(arrL); // [Alice, and, John]
+	```
+
+- 刪除元素
+
+	```java
+	// 法 1: 刪除指定元素 (若 ArrayList 中存在相同的物件，則刪除第一個出現的物件)
+	arrL.remove("John");
+	// 法 2: 刪除指定 index 上的元素
+	arrL.remove(0);
+	System.out.println(arrL); [and]
+	```
+
+- 迭代元素
+
+	```java
+	ArrayList<String> arrL = new ArrayList<>();
+	// 初始化時，賦值多個元素值 (Java 9+)
+	ArrayList<String> arrL = new ArrayList<>(List.of("Alice", "and", "Bob"));
+
+	// 法 1: 使用 for loop
+	for (int i = 0; i < arrL.size(); i++) {
+		System.out.print(al.get(i) + ", "); // Alice, and, Bob
+	}
+	// 法 2: 使用 for-each loop
+	for (String str: arrL) {
+		System.out.print(str + ", "); // Alice, and, Bob
+	}
+	```
+
+- 排列元素
+
+	```java
+	ArrayList<Integer> arrL = new ArrayList();
+	list.add(2);
+	list.add(4);
+	list.add(3);
+	list.add(1);
+
+	System.out.println("Before sorting list:");
+	System.out.println(arrL);
+	// 運用 Collection 類別的 sort() 方法
+	Collections.sort(arrL); // [2, 4, 3, 1]
+
+	System.out.println("after sorting list:");
+	System.out.println(arrL); // [1, 2, 3, 4]
+	```
+
+- 取得元素
+
+	```java
+	Integer n = list.get(1); // and
+	```
+
+- 參考資料
+
+    - [GeeksForGeeks-ArrayList in Java](https://www.geeksforgeeks.org/arraylist-in-java/)
+    - [GeeksForGeeks-Array vs. ArrayList in Java](https://www.geeksforgeeks.org/array-vs-arraylist-in-java/)
+    - [GeeksForGeeks-How to find length or size of an Array in Java?](https://www.geeksforgeeks.org/how-to-find-length-or-size-of-an-array-in-java/)
+
 ### 矩陣(Matrix) / 網格(Grid)
 - 基本概念
     - 定義: 矩陣資料結構是由行、列組成的二維陣列。它是由水平條目、垂直條目所排列而成
