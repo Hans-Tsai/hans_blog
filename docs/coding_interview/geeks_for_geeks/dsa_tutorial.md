@@ -25,7 +25,7 @@
 - 功能: 提供了一種有效管理和操作資料的方法，以實現更快的存取、插入、刪除操作
 - 目的: 設計高效演算法和最佳化軟體效能的基礎
 
-### 陣列 (Array) & ArrayList
+### 陣列(Array) & ArrayList
 - Array vs. ArrayList
 
 | Features\資料型別               |        Array        |                  ArrayList                  |
@@ -550,6 +550,81 @@
 - 參考資料
     - [GeeksForGeeks-Matrix Data Structure](https://www.geeksforgeeks.org/matrix/)
     - [GeeksForGeeks-Introduction to Matrix or Grid Data Structure – Two Dimensional Array](https://www.geeksforgeeks.org/introduction-to-matrix-or-grid-data-structure-and-algorithms-tutorial/)
+
+### 樹(Tree)
+- 基本概念
+    - 階層式資料結構: 由節點(node)、邊(edge)組成，以邊連結節點，節點之間有階層關係
+    - 易於搜尋元素
+    ![tree_structure](../../assets/pics/dsa_tutorial/tree_structure.webp)
+    [圖片出處](https://www.geeksforgeeks.org/introduction-to-tree-data-structure-and-algorithm-tutorials/)
+- 術語表
+    - 子樹 (subtree): 包含所有子節點的樹
+    - 根節點 (root node): 樹的最上層節點
+    - 父節點 (parent node): 某節點的 **先繼** 節點
+    - 子節點 (child node): 某節點的 **直接後繼** 節點
+    - 葉節點 (leaf node/external node): 沒有子節點的節點
+    - 內部節點 (internal node): 至少有一個子節點的節點
+    - 祖先 (ancestor): 從根到該節點的路徑上的任何先繼節點，都稱為該節點的祖先
+        - e.g. { A, B } 是節點 { E } 的祖先節點
+    - 後代 (descendant): 從該節點到任何葉節點的路徑上的所有後繼節點，都稱為該節點的後代
+        - e.g. 節點 { E } 是 { A, B } 的後代節點
+    - 兄弟 (sibling): 具有相同父節點的節點們
+    - 鄰居 (neighbor): 該節點的父節點 or 子節點
+- Tree 的屬性
+    - 層級 (level): 從根節點 ～ 該節點的路徑上的邊數
+        - e.g. **root level 可為 0 或 1**
+    - 分叉度 (degree): 每個節點的子節點數
+        - e.g. **葉節點的 degree = 0**
+    - 樹的邊數 (edges): 兩個節點之間的連接，從樹的每個節點到任何其他節點只有一條路徑
+        - e.g. **若一棵樹有 N 個節點，那麼它將有 N-1 條邊**
+    - 節點深度 (depth): 用於描述 **節點在樹中的層次** (從根節點 ～ 當前節點，所經過的邊數)
+    - 節點高度 (height): 用於描述 **從節點 ～ 其後代中最遠葉節點的距離** (從當前節點 ～ 最遠葉節點，所經過的邊數)
+
+        ![node_depth_and_height](../../assets/pics/dsa_tutorial/node_depth_and_height.png)
+        [圖片出處](https://www.geeksforgeeks.org/height-and-depth-of-a-node-in-a-binary-tree/)
+
+- Tree 的分類
+    ![types_of_tree_data_structure](../../assets/pics/dsa_tutorial/types_of_tree_data_structure.webp)
+    [圖片出處](https://www.geeksforgeeks.org/introduction-to-tree-data-structure-and-algorithm-tutorials/)
+- Tree 走訪 (traversal)
+![tree_traversal](../../assets/pics/dsa_tutorial/tree_traversal.webp)
+![tree_traversal_category](../../assets/pics/dsa_tutorial/tree_traversal_category.webp)
+[圖片出處](https://www.geeksforgeeks.org/tree-traversals-inorder-preorder-and-postorder/)
+    - 前序走訪 (Preorder)
+        - 根 -> 左 -> 右
+        ![binary_tree_preorder_traversal](../../assets/pics/dsa_tutorial/binary_tree_preorder_traversal.webp)
+        [圖片出處](https://www.geeksforgeeks.org/tree-traversals-inorder-preorder-and-postorder/)
+    - 中序走訪 (Inorder)
+        - 左 -> 根 -> 右
+        ![binary_tree_inorder_traversal](../../assets/pics/dsa_tutorial/binary_tree_inorder_traversal.webp)
+        [圖片出處](https://www.geeksforgeeks.org/tree-traversals-inorder-preorder-and-postorder/)
+    - 後序走訪 (Postorder)
+        - 左 -> 右 -> 根
+        ![binary_tree_postorder_traversal](../../assets/pics/dsa_tutorial/binary_tree_postorder_traversal.webp)
+        [圖片出處](https://www.geeksforgeeks.org/tree-traversals-inorder-preorder-and-postorder/)
+    - 層序走訪 (Level Order)
+        - 由上至下，由左至右
+        ![binary_tree_level_order_traversal](../../assets/pics/dsa_tutorial/binary_tree_level_order_traversal.webp)
+        [圖片出處](https://www.geeksforgeeks.org/tree-traversals-inorder-preorder-and-postorder/)
+- 特性
+    - 優點
+        - 高效搜尋: 根據樹的類型，平衡樹如 AVL 樹的平均搜尋時間為 O(logN)
+        - 層次結構表示: 使得組織, 尋找大量信息變得更容易
+        - 天然遞迴特性: 易於使用遞迴算法，進行遍歷、操作
+    - 缺點
+        - 不平衡樹: 樹的高度偏向一側，可能導致搜尋時間效率變差
+        - 內存需求: 相比於其它資料結構，如: Array, Linked List，Tree 會需要用到更多的記憶體空間，尤其是在樹非常大的情況下
+        - 實現複雜: 樹的實現, 操作較複雜，並且需要對演算法有良好的理解
+- 常見應用情境
+    - 檔案系統
+    - 資料庫索引: B-tree, B+ tree
+    - XML 文件
+    - 人工智慧
+    - 資料壓縮: Huffman tree
+- 參考資料
+    - [GeeksForGeeks-Tree Data Structure](https://www.geeksforgeeks.org/tree-data-structure/)
+    - [GeeksForGeeks-Introduction to Tree – Data Structure and Algorithm Tutorials](https://www.geeksforgeeks.org/introduction-to-tree-data-structure-and-algorithm-tutorials/)
+
 
 ## 演算法
 

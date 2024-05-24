@@ -328,7 +328,7 @@ Data Structure
     }
     ```
 
-- LC 88. (E) 合併已排序的陣列
+- LC 88. (E): 合併已排序的陣列
     - [Merge Sorted Array](https://leetcode.com/problems/merge-sorted-array/description/)
     - 思路: 使用雙指標，從右邊開始遍歷兩個陣列，將兩個陣列中的元素進行比較，並將較大的元素放入 nums1 陣列的最後一個位置
 
@@ -363,7 +363,7 @@ Data Structure
 
 #### 從右邊開始遍歷 (Traversing from the right)
 - 說明: 有時，我們可以 **從右邊開始遍歷陣列**
-- LC 739. (M) 每日溫度
+- LC 739. (M): 每日溫度
     - [Daily Temperatures](https://leetcode.com/problems/daily-temperatures/description/)
     - 思路: 使用 `hottest` 變數來記錄當前遍歷過程中的最高溫度，**從右向左遍歷** 陣列。對於每一天，找到下一個比當前溫度高的天數。如果當前溫度已經是最高溫度，則更新 `hottest` 並繼續。如果不是最高溫度，則使用結果陣列中的資訊來優化搜索過程，避免逐天檢查
 
@@ -411,7 +411,7 @@ Data Structure
     }
     ```
 
-- LC 1944. (H) 隊伍中的可見人數
+- LC 1944. (H): 隊伍中的可見人數
     - [Number of Visible People in a Queue](https://leetcode.com/problems/number-of-visible-people-in-a-queue/description/)
     ![number_of_visible_people_in_a_queue](../../assets/pics/tech_interview_handbook/number_of_visible_people_in_a_queue.jpeg)
     [圖片出處](https://leetcode.com/problems/number-of-visible-people-in-a-queue/description/)
@@ -453,7 +453,7 @@ Data Structure
 - 應用情境:
     - 當題目要求在一個完全排序 or 部分排序的陣列中，搜尋某個元素時
     - 當排序後可以使用 **binary search**，或其他高效搜尋方法來加速解題流程
-- LeetCode 56.(M) 合併區間
+- LeetCode 56.(M): 合併區間
     - [Merge Intervals](https://leetcode.com/problems/merge-intervals/description/)
     ![merged_intervals](../../assets/pics/tech_interview_handbook/merged_intervals.png)
     [圖片出處](https://leetcode.com/problems/merge-intervals/editorial/)
@@ -500,7 +500,7 @@ Data Structure
     }
     ```
 
-- LeetCode 435. (M) 非重疊區間
+- LeetCode 435. (M): 非重疊區間
     - [Non-overlapping Intervals](https://leetcode.com/problems/non-overlapping-intervals/description/)
     - 思路: 
         - **排序** 區間: 根據每個區間的結束時間進行排序
@@ -539,7 +539,7 @@ Data Structure
 
 #### 預先計算 (Precomputation)
 - 說明 & 應用情境: 對於 Subarray 求總和 or 乘法問題，可透過使用 hashing 快速查詢已經計算過的結果，以避免重複計算。亦能使用前綴/後綴和 (prefix/suffix sum) 或前綴/後綴乘積(prefix/suffix product) 來提升演算法的效率
-- LeetCode 238. (M) 連乘積陣列 (除了自己以外的所有數字)
+- LeetCode 238. (M): 連乘積陣列 (除了自己以外的所有數字)
     - [Product of Array Except Self](https://leetcode.com/problems/product-of-array-except-self/description/)
     ![product_of_array_except_self](../../assets/pics/tech_interview_handbook/product_of_array_except_self.png)
     [圖片出處](https://leetcode.com/problems/product-of-array-except-self/editorial/)
@@ -580,7 +580,8 @@ Data Structure
 #### 將陣列索引作為 HashMap 的 key 使用 (Index as a hash key)
 - 說明: 假設陣列中的值 1 ~ `n`，其中 `n` 是陣列長度，可用 index-1 <-> 值作為對映關係
 - 應用情境: 給予一個陣列，且面試官要求空間複雜度 O(1)，可能使用陣列本身作為 Hash table
-- LeetCode 41. (H) First Missing Positive
+- LeetCode 41. (H): 找出首個不在陣列中的正整數
+    - [First Missing Positive](https://leetcode.com/problems/first-missing-positive/description/)
     - 思路
         - 將數值放在應該在的 index 位置上 (e.g. 數值 1 放在 index 0, 數值 2 放在 index 1 ...依此類推)
         - 遍歷陣列，找出第一個不符合這個條件的 index 位置
@@ -624,6 +625,319 @@ Data Structure
 ### 參考資料
 - [Tech Interview Handbook --- Array cheatsheet for coding interviews](https://www.techinterviewhandbook.org/algorithms/array/)
 
+## Tree
+### 二元樹 (Binary Tree, BT)
+- 二元樹的種類
+    - 二元樹(binary tree): 每個節點 **最多有兩個子節點**
+    - 完全二元樹(full binary tree): 每個節點 **都有 0 或 2 個子節點**，最後一層的節點都靠左排列
+    - **完整二元樹(complete binary tree)**: 樹的每一層都有 **一組完整的節點**，最後一層是例外
+    - 完美二元樹(perfect binary tree): 樹的每一層 (包括最後一層) 都已完成
+    - **平衡二元樹(balanced binary tree)**: 所有節點 **左, 右子樹的深度相差不超過 1**
+    - 二元搜尋樹(binary search tree): **左子樹中的所有節點 < 每個節點 < 其右子樹中的所有節點**
+    ![binary_tree_types](../../assets/pics/dsa_tutorial/binary_tree_types.avif)
+    [圖片出處](https://blog.levelupcoding.com/p/luc-43-userfriendly-guide-binary-trees)
+
+### 二元搜尋樹 (Binary Search Tree, BST)
+- 算是 binary tree 的一種特殊形式，**左子樹中的所有節點 < 每個節點 < 其右子樹中的所有節點**
+- **中序遍歷(in-order traversal) 二元搜尋樹**，可以得到一個 **排序好的陣列 (由小 ～ 大)**
+- 通常，當面試官要求一個 **比 O(n) 更快的解法** 時，可以考慮 **使用二元搜尋樹**
+- **BST 各項操作** 的時間複雜度
+    - `N`: 節點數量
+
+    | 操作 | 時間複雜度 |
+    |:---------:|:----------:|
+    | 存取(Access)    | O(logN)  |
+    | 搜尋(Search)    | O(logN)  |
+    | 插入(Insert)    | O(logN)  |
+    | 移除(Remove)    | O(logN)  |
+
+- **BST 走訪** 的空間複雜度
+    - `h`: 樹高
+    - `n`: 節點數量
+
+    | 二元樹的類型 | 空間複雜度 |
+    |:---------:|:----------:|
+    | 平衡二元樹(balanced binary tree) | O(h) |
+    | 斜曲樹(skewed tree) | O(n) |
+
+### 注意事項 & 極端情況
+- 空樹
+- 單一節點
+- 兩個節點
+- 非常斜曲的樹 (如同 Linked List)
+
+### 常見慣例
+> 盡量熟悉以下的慣例，因為大多數的二元樹問題，都會使用這些慣例，混合應用來解題
+
+```java
+// binary tree node
+class TreeNode {
+    int val;
+    TreeNode left, right;
+    TreeNode(int x) { val = x; }
+}
+```
+
+- 插入值/刪除值
+    ```java
+    // Insert Value
+    class BinaryTree {
+        public TreeNode insert(TreeNode root, int value) {
+            if (root == null) {
+                return new TreeNode(value);
+            }
+            if (value < root.val) {
+                root.left = insert(root.left, value);
+            } else {
+                root.right = insert(root.right, value);
+            }
+            return root;
+        }
+    }
+    ```
+
+    ```java
+    // Delete Value
+    class BinaryTree {
+        public TreeNode delete(TreeNode root, int key) {
+            if (root == null) return null;
+            if (key < root.val) {
+                root.left = delete(root.left, key);
+            } else if (key > root.val) {
+                root.right = delete(root.right, key);
+            } else {
+                if (root.left == null) return root.right;
+                if (root.right == null) return root.left;
+                root.val = minValue(root.right);
+                root.right = delete(root.right, root.val);
+            }
+            return root;
+        }
+
+        private int minValue(TreeNode root) {
+            int minVal = root.val;
+            while (root.left != null) {
+                root = root.left;
+                minVal = root.val;
+            }
+            return minVal;
+        }
+    }
+    ```
+
+- **搜尋特定值** 是否在樹中
+    ```java
+    // Whether a Value is in the Tree
+    class BinaryTree {
+        public boolean contains(TreeNode root, int value) {
+            if (root == null) return false;
+            if (root.val == value) return true;
+            return value < root.val ? contains(root.left, value) : contains(root.right, value);
+        }
+    }
+    ```
+
+- 計算樹中的節點數
+    ```java
+    class BinaryTree {
+        public int countNodes(TreeNode root) {
+            if (root == null) return 0;
+            return 1 + countNodes(root.left) + countNodes(root.right);
+        }
+    }
+    ```
+
+- 計算樹的高度
+    ```java
+    // Calculate Height of the Tree
+    class BinaryTree {
+        public int height(TreeNode root) {
+            if (root == null) return 0;
+            return 1 + Math.max(height(root.left), height(root.right));
+        }
+    }
+    ```
+
+- **二元搜尋樹** 類型
+    - **判斷** 是否為二元搜尋樹
+    - 取得 **最大值**
+    - 取得 **最小值**
+
+    ```java
+    // Determine if it is a Binary Search Tree
+    class BinaryTree {
+        public boolean validate(TreeNode root) {
+            return isBST(root, null, null);
+        }
+
+        private boolean isBST(TreeNode node, Integer min, Integer max) {
+            if (node == null) return true;
+            if ((min != null && node.val <= min) || (max != null && node.val >= max)) return false;
+            return isBST(node.left, min, node.val) && isBST(node.right, node.val, max);
+        }
+
+        // Get Maximum Value in Binary Search Tree
+        public int getMaxValue(TreeNode root) {
+            while (root.right != null) {
+                root = root.right;
+            }
+            return root.val;
+        }
+
+        // Get Minimum Value in Binary Search Tree
+        public int getMinValue(TreeNode root) {
+            while (root.left != null) {
+                root = root.left;
+            }
+            return root.val;
+        }
+    }
+    ```
+
+### 解題技巧
+- 遞迴法 (Recursion): 是遍歷樹最常見的方法。當發現 **子樹問題可以用來解決整個問題** 時，請 **嘗試使用遞迴法**
+    - 請務必記住檢查特殊情況，通常是節點值 = null
+    - 有時，遞迴函式可能需要回傳兩個值
+
+    ```java
+    // 計算二元樹的節點總數
+    class BinaryTree {
+        public int countNodes(TreeNode root) {
+            if (root == null) return 0; // 基本情況
+            return 1 + countNodes(root.left) + countNodes(root.right); // 遞歸計算
+        }
+    }
+    ```
+
+- 使用廣度優先搜尋法(**BFS**)，來達到 **level order traversal**
+    ```java
+    // 按層次遍歷二元樹
+    class BinaryTree {
+        public void levelOrderTraversal(TreeNode root) {
+            if (root == null) return;
+            Queue<TreeNode> queue = new LinkedList<>();
+            queue.add(root);
+            
+            while (!queue.isEmpty()) {
+                TreeNode current = queue.poll();
+                System.out.print(current.val + " ");
+                
+                if (current.left != null) queue.add(current.left);
+                if (current.right != null) queue.add(current.right);
+            }
+        }
+    }
+    ```
+
+- 節點值總和: 若題目涉及求所有節點值的總和，請務必 **檢查節點值可否為負數**
+    ```java
+    // 計算二元樹所有節點值的總和
+    class BinaryTree {
+        public int sumOfNodes(TreeNode root) {
+            if (root == null) return 0;
+            return root.val + sumOfNodes(root.left) + sumOfNodes(root.right);
+        }
+    }
+    ```
+
+### 基本題型
+- LeetCode 104. (E): 求二元樹的最大深度
+    - [Maximum Depth of Binary Tree](https://leetcode.com/problems/maximum-depth-of-binary-tree/description/)
+    - 思路: 
+        - 使用遞迴法，分別計算左、右子樹的深度
+        - 計算整棵二元樹的深度 = 左子樹深度 + 右子樹深度 + 1 (root 也要算進去)
+    ![lc_104_illustration](../../assets/pics/dsa_tutorial/lc_104_illustration.png)
+    [圖片出處](https://leetcode.com/problems/maximum-depth-of-binary-tree/editorial/)
+
+    ```java
+    import java.lang.*;
+
+    /**
+     * 時間: O(n)，其中 n 是二元樹的節點數量
+     * 空間: O(n)，若最差情況下，遞迴深度等於二元樹的高度
+     */
+    class Solution {
+        public int maxDepth(TreeNode root) {
+            // 若為空樹，深度為 0
+            if (root == null) {
+                return 0;
+            } else {
+                // 分別計算左、右子樹的深度
+                int leftDepth = maxDepth(root.left);
+                int rightDepth = maxDepth(root.right);
+                // 整棵二元樹的深度 = 左子樹深度 + 右子樹深度 + 1 (root 也要算進去)
+                return Math.max(leftDepth, rightDepth) + 1;
+            }
+        }
+    }
+    ```
+
+- LeetCode 226. (E): 反轉二元樹
+    - [Invert Binary Tree](https://leetcode.com/problems/invert-binary-tree/description/)
+    - 思路: 
+        - 使用遞迴法，分別反轉左、右子樹
+        - 反轉子樹的所有左、右節點
+
+    ![lc_226_illustration](../../assets/pics/dsa_tutorial/lc_226_illustration.jpeg)
+    [圖片出處](https://leetcode.com/problems/invert-binary-tree/description/)
+
+    ```java
+    // 時間: O(n)，其中 n 是二元樹的節點數量
+    // 空間: O(n)，若最差情況下，遞迴深度等於二元樹的高度
+    class Solution {
+        public TreeNode invertTree(TreeNode root) {
+            // base case: 若為空樹的情況下，不做任何遞迴反轉
+            if (root == null) {
+                return null;
+            } else {
+                // 遞迴反轉左、右子樹
+                invertTree(root.left);
+                invertTree(root.right);
+
+                // 反轉子樹的所有左、右節點
+                TreeNode temp = root.left;
+                root.left = root.right;
+                root.right = temp;
+            }
+
+            return root;
+        }
+    }
+    ```
+
+- LeetCode 235. (M): 求二元搜尋樹的最近共同祖先節點
+    - [Lowest Common Ancestor of a Binary Search Tree](https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/description/)
+    - 思路: 採迭代搜尋法，從根節點開始，逐步向下搜尋，直到找到最近共同祖先節點
+    ![lc_235_illustration_1](../../assets/pics/dsa_tutorial/lc_235_illustration_1.png)
+    ![lc_235_illustration_2](../../assets/pics/dsa_tutorial/lc_235_illustration_2.png)
+    [圖片出處](https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/editorial/)
+
+    ```java
+    // 時間: O(n)，其中 n 是二元搜尋樹的節點數量
+    // 空間: O(1)，因為採用迭代遍歷法，不需像遞迴法一樣需要額外的 stack 空間來儲存 recursive function call 的狀態
+    class Solution {
+        public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+            // 迭代往下搜尋，直到找到最近共同祖先節點
+            while (root != null) {
+                // 表示 p, q 節點都在 root 的左子樹中，則往當前 node 的左子樹繼續搜尋 LCA
+                if ((p.val < root.val) && (q.val < root.val)) {
+                    return root.left;
+                // 表示 p, q 節點都在 root 的右子樹中，則往當前 node 的右子樹繼續搜尋 LCA
+                } else if ((p.val > root.val) && (q.val > root.val)) {
+                    return right;
+                // 表示 p, q 節點分別在 root 的左、右子樹中，則當前 node 即為 LCA
+                } else {
+                    return root;
+                }
+            }
+
+            return null;
+        }
+    }
+    ```
+
+### 參考資料
+- [Tech Interview Handbook --- Tree cheatsheet for coding interviews](https://www.techinterviewhandbook.org/algorithms/tree/)
 
 ## 參考資料
 - [LeetCode: Code templates](https://leetcode.com/explore/interview/card/cheatsheets/720/resources/4723/)
