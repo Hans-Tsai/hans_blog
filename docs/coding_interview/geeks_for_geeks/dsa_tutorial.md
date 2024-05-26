@@ -673,6 +673,5 @@
 
 ## 演算法
 
-
 ## 參考資料
 - [Learn Data Structures and Algorithms | DSA Tutorial](https://www.geeksforgeeks.org/learn-data-structures-and-algorithms-dsa-tutorial/?ref=ghm)
