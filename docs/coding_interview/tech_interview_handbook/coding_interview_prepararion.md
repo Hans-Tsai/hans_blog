@@ -1,7 +1,9 @@
-Data Structure
-=============
+Coding Interview Preparation
+===
+- 由 Blind 75 作者所整理 coding interview 的常考 75 題
+- 本篇採 Java 作為主要使用的程式語言
 
-由 Blind 75 作者所整理 coding interview 的常考 75 題，本篇採 Java 作為主要使用的程式語言
+[TOC]
 
 ## Array
 ### 專有名詞
@@ -938,6 +940,102 @@ class TreeNode {
 
 ### 參考資料
 - [Tech Interview Handbook --- Tree cheatsheet for coding interviews](https://www.techinterviewhandbook.org/algorithms/tree/)
+
+## Heap
+### Heap 的類型
+- 最小堆積(Min Heap): **每個節點值** 在其 **整個子樹中必須是最小的**
+- 最大堆積(Max Heap): **每個節點值** 在其 **整個子樹中必須是最大的**
+
+### 實作方式
+| 程式語言    | 函式庫                       |
+|:----------:|:---------------------------:|
+| C++        | `std::priority_queue`       |
+| Java       | `java.util.PriorityQueue`   |
+| Python     | `heapq`                     |
+| JavaScript | N/A                         |
+
+### 各項操作的時間複雜度
+| 各項操作 | 時間複雜度         |
+|:----------:|:---------------:|
+| 找出最大值/最小值 | O(1)    |
+| 插入元素    | O(logN)      |
+| 刪除元素    | O(logN)      |
+| Heapify (使用給定的陣列來建立 heap) | O(N) |
+
+### PriorityQueue 的各項操作
+- 建立 & 初始化 PriorityQueue
+    ```java
+    // 建立最小堆積 (預設)
+    PriorityQueue<Integer> minHeap = new PriorityQueue<>();
+    // 建立最大堆積
+    PriorityQueue<Integer> maxHeap = new PriorityQueue<>(Collections.reverseOrder());
+    ```
+
+    ```java
+    // 指定初始容量(capacity)，可選填，預設為 11
+    PriorityQueue<Map.Entry<Integer, Integer>> minHeap = new PriorityQueue<>(initialCapacity);
+    // 指定比較器(Comparator)，可選填
+    PriorityQueue<Map.Entry<Integer, Integer>> minHeap = new PriorityQueue<>((a, b) -> a.getValue() - b.getValue());
+    ```
+
+- `add(element)`: 向優先級佇列中新增元素
+- `offer(element)`: 向優先佇列列中新增元素，**與 `add()` 相似，但在佇列容量已滿時不會拋出異常**
+- `peek()`: **檢視但不移除** 佇列頭部的元素; 若佇列為空，回傳 null
+- `poll()`: **檢視並移除** 佇列頭部的元素; 若佇列為空，回傳 null
+- `isEmpty()`: 檢查佇列是否為空
+
+### 解題技巧
+- 找出 **第 k 大/小的元素**，可以使用 **最小堆** 或 **最大堆** 來解決問題，每當 heap 的大小超過 k，就移除最小元素，這樣能確保 heap 中只有 k 個最大元素
+- 當我們需要重複地移除最大值/最小值時，可以使用 **heap** 來解決問題
+
+### 基本題型
+- LeetCode 347. (M): 出現頻率前 K 高的元素
+    - [Top K Frequent Elements](https://leetcode.com/problems/top-k-frequent-elements/description/)
+    - 思路
+        - 處理極端情況: 若 `k`  == 陣列長度，表示所有元素都是高頻元素，直接返回 `nums` 陣列
+        - 計算頻率: 使用 HashMap 計算每個元素的頻率
+        - 初始化 **minHeap**: 利用 PriorityQueue 來實現最小堆，**按照頻率排序**
+        - 維護 minHeap 的大小: 遍歷 `countMap` 中的所有 key，將其添加到 minHeap 中，並且當 minHeap 大小超過 `k` 時移除堆頂元素
+        - 構建結果陣列: 從堆中提取 `k` 個頻率最高的元素，並放入結果陣列中
+
+    ```java
+    // 時間: O(NlogK)，其中 `N` 是 nums 陣列的長度; `K` 為返回的前 K 高頻元素
+    // 空間: O(N)，用於儲存 countMap O(N) + minHeap O(K)
+    class Solution {
+        public int[] topKFrequent(int[] nums, int k) {
+            // 若 k 等於 nums 的長度，則所有元素都是高頻元素，直接返回 nums
+            if (k == nums.length) return nums;
+
+            // 建立一個 hash map，記錄每個數字出現的頻率
+            Map<Integer, Integer> countMap = new HashMap<>();
+            for (int num: nums) {
+                countMap.put(num, countMap.getOrDefault(num, 0)+1);
+            }
+
+            // 初始化一個 minHeap，根據頻率來排序 (頻率較小的元素在堆頂)
+            PriorityQueue<Integer> minHeap = 
+                new PriorityQueue<>((num1, num2) -> countMap.get(num1) - countMap.get(num2));
+
+            // 保持 minHeap 的大小為 k，當堆的大小超過 k 時，移除堆頂元素
+            // 時間: O(NlogK)
+            for (int key: countMap.keySet()) {
+                minHeap.add(key);
+                if (minHeap.size() > k) minHeap.poll();
+            }
+
+            // 從高頻 ～ 低頻的順序排列
+            int[] res = new int[k];
+            for (int i = k-1; i >= 0; i--) {
+                res[i] = minHeap.poll();
+            }
+
+            return res;
+        }
+    }
+    ```
+
+### 參考資料
+- [Tech Interview Handbook --- Heap cheatsheet for coding interviews](https://www.techinterviewhandbook.org/algorithms/heap/)
 
 ## 參考資料
 - [LeetCode: Code templates](https://leetcode.com/explore/interview/card/cheatsheets/720/resources/4723/)

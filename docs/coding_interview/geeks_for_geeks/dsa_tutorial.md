@@ -3,6 +3,7 @@
 - 以 Java 程式語言為主
 
 [TOC]
+
 ## 總覽
 ![dsa_overview](../../assets/pics/dsa_tutorial/dsa_overview.png)
 
@@ -624,6 +625,50 @@
 - 參考資料
     - [GeeksForGeeks-Tree Data Structure](https://www.geeksforgeeks.org/tree-data-structure/)
     - [GeeksForGeeks-Introduction to Tree – Data Structure and Algorithm Tutorials](https://www.geeksforgeeks.org/introduction-to-tree-data-structure-and-algorithm-tutorials/)
+
+### 堆積 (Heap)
+- 基本概念
+    - 是一棵完整二元樹(Complete Binary Tree)，且滿足 **堆積性質**
+        - 堆積性質: **每個節點值都 >= 或 <= 其子節點值**，且 **根節點值** 為 **最大(Max Heap)** 或 **最小(Min Heap)**
+    - 通常用於實作 **優先佇列(Priority Queue)**
+    - 在 Java 中，可使用 **java.util.PriorityQueue** class 來建立 Heap
+- Heap 的類型
+    - 最小堆積(Min Heap): **每個節點值** 在其 **整個子樹中必須是最小的**
+    - 最大堆積(Max Heap): **每個節點值** 在其 **整個子樹中必須是最大的**
+    ![heap_illustration](../../assets/pics/dsa_tutorial/heap_illustration.png)
+    [圖片出處](https://www.geeksforgeeks.org/heap-data-structure/)
+- Heap 的基本操作
+    - Heapify: 將任意一個二元樹轉換為 Heap
+        ![heapify_min_heap_bottom_up](../../assets/pics/dsa_tutorial/heapify_min_heap_bottom_up.webp)
+        [圖片出處](https://www.geeksforgeeks.org/introduction-to-min-heap-data-structure/)
+    - 新增元素: 將元素插入 Heap，並保持 Heap 的性質
+        ![insertion_min_heap](../../assets/pics/dsa_tutorial/insertion_min_heap.png)
+        [圖片出處](https://www.geeksforgeeks.org/introduction-to-min-heap-data-structure/)
+    - 取出最大值/最小值: 取出 Heap 的根節點值，並保持 Heap 的性質
+        ![pop_min_heap](../../assets/pics/dsa_tutorial/pop_min_heap.png)
+        [圖片出處](https://www.techiedelight.com/introduction-priority-queues-using-binary-heaps/)
+    - 更新特定節點值: 更新 Heap 中的特定節點值，並保持 Heap 的性質
+- 特性
+    - 優點
+        - 能快速找出最大/最小值: O(1)
+        - 高效的插入, 刪除元素: O(logN)
+        - 可用陣列來實作
+        - 適合即時應用程式
+    - 缺點
+        - 當搜尋非最大/最小值時，效率較差: O(N)
+        - 需要額外的記憶體空間，來建立 Heap
+        - 對於非 priority queue 應用，Heap 不適用 (比 Array, Linked List 慢)
+- 常見應用情境
+    - **實作 Priority Queue**
+    - 排序陣列中的元素: **heap sort**
+        - 由小 ～ 大: Min Heap
+        - 由大 ～ 小: Max Heap
+    - Graph 演算法
+        - 尋找最短路徑問題(finding the shortest paths ): **Dijkstra** 演算法
+        - 找出最小擴展樹(minimum spanning trees): **Prim** 演算法
+- 參考資料
+    - [GeeksForGeeks-Heap Data Structure](https://www.geeksforgeeks.org/heap-data-structure/)
+    - [GeeksForGeeks-Introduction to Heap – Data Structure and Algorithm Tutorials](https://www.geeksforgeeks.org/introduction-to-heap-data-structure-and-algorithm-tutorials/)
 
 
 ## 演算法
