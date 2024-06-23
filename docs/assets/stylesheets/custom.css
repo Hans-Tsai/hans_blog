@@ -1,0 +1,35 @@
+/* .md-sidebar {
+  display: none;
+} */
+
+.md-content {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 1600px;  /* 可根據需要調整寬度 */
+}
+
+.md-main__inner {
+  justify-content: center;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Arial", sans-serif;
+}
+
+/* 隱藏右側目錄列 */
+.md-sidebar--secondary {
+  transition: transform 0.3s ease;
+  transform: translateX(100%);
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100%;
+  background-color: #1a1a1a;  /* 根據你的主題顏色調整 */
+  z-index: 1000;
+}
+
+/* 當滑鼠移到右側時顯示目錄列 */
+.md-content:hover + .md-sidebar--secondary,
+.md-sidebar--secondary:hover {
+  transform: translateX(0);
+}
