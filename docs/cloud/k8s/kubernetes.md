@@ -519,7 +519,7 @@
 - **命令式 (Declarative)**: 透過 YAML manifest 設定檔來描述系統的期望狀態，系統會根據我們的目標，自動設定系統
     ![](../../assets/pics/k8s/declarative_yaml.png)
 
-> 思考: 若建立 pod 到一半，發生系統中斷問題時
+> 思考: 若建立 pod 到一半，發生系統中斷問題時？
 
 > - 宣告式語法: 需透過許多檢查、除錯指令，才能確定當前的 K8s 叢集狀態，以繼續執行 <br>
 > - 命令式語法: 能夠自動比對當前的 K8s 叢集狀態，根據 object configuration file, last-applied-configuration, live object configuration 的 YAML manifest 設定檔，自動調整以符合我們的目標狀態 <br>
@@ -531,9 +531,688 @@
     ![](../../assets/pics/k8s/last_applied_configuration_annotation.png)
 - K8s 叢集中現行物件設定檔 (live object configuration): 儲存在 Kubernetes memory 中，透過 lastProbeTime, status 來追蹤物件的當前狀態
 
-- 參考資料:
+- 參考資料
     - [Kubernetes Object Management](https://kubernetes.io/docs/concepts/overview/working-with-objects/object-management/)
     - [Declarative Management of Kubernetes Objects Using Configuration Files](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/declarative-config/)
+
+## Scheduling
+### Manual Scheduling
+> 思考: 若我們沒有 kube-scheduler 在我們的 K8s 叢集中，我們該如何將 pod 排程到指定的節點上？
+
+- 設定 nodeName 屬性: 指定 pod 要排程到哪個節點上
+    - `nodeName`: 每個 Pod 預設都不會有這個屬性，因為 K8s 叢集的 kube-scheduler 會負責將 pod 排程到適合的節點上
+    ```yaml
+    # pod-definition.yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+        name: nginx
+        labels:
+            name: nginx
+    
+    spec:
+        containers:
+        -   name: nginx
+            image: nginx
+            ports:
+            - containerPort: 8080
+        # 指定 pod 要排程到哪個節點上
+        nodeName: node02
+    ```
+    ![](../../assets/pics/k8s/manual_scheduling_with_setting_nodename.png)
+- 假如 <strong>K8s 叢集中沒有 kube-scheduler</strong>，若我們建立一個 Pod 時，卻未設定 nodeName => Pod 會維持在 Pending 狀態
+    - **Kubernetes 僅接受建立 Pod 之前，就要先在 YAML manifest 設定檔中指定 nodeName**，而不接受再建立 Pod 後才指定 nodeName
+    - 解決方案 1: 建立 Pod 之前，就要先在 YAML manifest 設定檔中指定 nodeName
+        ![](../../assets/pics/k8s/manual_scheduling_without_kube_scheduler.png)
+    - 解決方案 2: (若已建立 Pod)，可透過 Binding 物件，將 Pod 排程到指定的節點上
+        - 使用 POST 請求，將 request body 以 JSON 格式傳送到 kube-apiserver => 模擬 kube-scheduler 的實際排程 Pod 的行為
+            ```yaml
+            apiVersion: v1
+            kind: Binding
+            metadata:
+            name: nginx
+            target:
+            apiVersion: v1
+            kind: Node
+            name: node02
+            ```
+
+            ```yaml
+            apiVersion: v1
+            kind: Pod
+            metadata:
+                name: nginx
+                labels:
+                    name: nginx
+            spec:
+                containers:
+                -   name: nginx
+                    image: nginx
+                    ports:
+                    -   containerPort: 8080
+            ```
+
+        ![](../../assets/pics/k8s/manual_scheduling_without_kube_scheduler_binding.png)
+
+- 在 K8s 叢集中，我們<strong>不能將一個運行中的 Pod 移動到另一個節點上</strong>，因為 Pod 的 IP address 是固定的，且 Pod 的狀態是不可變的
+    - 觀念: **本質上，Pod (container) 算是系統上的一個 process，而 process 是不可移動的**
+    - 若我們想要將 Pod 移動到另一個節點上，我們必須先刪除 Pod，再重新建立 Pod，並指定 nodeName
+    - 法 1: 刪除 Pod，再重新建立 Pod
+        ```bash
+        kubectl delete pod nginx
+        kubectl create -f pod-definition.yaml
+        ```
+    - 法 2: **強制替換 Pod**
+        ```bash
+        kubectl replace --force -f pod-definition.yaml
+        ```
+
+### Labels & Selectors & Annotations
+- 在 K8s 叢集中，有許多資源/物件，我們可以透過 labels, selectors 來對過濾、分群這些資源/物件，以進行管理。例如採用以下方式做分類
+    - 根據<strong>資源類型</strong>做分類
+        ![](../../assets/pics/k8s/labels_and_selectors_by_resource_type.png)
+    - 根據<strong>應用程式類型</strong>做分類
+        ![](../../assets/pics/k8s/labels_and_selectors_by_application_type.png)
+    - 根據<strong>功能</strong>做分類
+        ![](../../assets/pics/k8s/labels_and_selectors_by_functionality.png)
+- 標籤 (labels): 會附加在 K8s 資源/物件上的 key-value pair，用來識別、分類
+    - 建立 labels
+        ```yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+            name: simple-webapp
+            # 建立 labels
+            labels:
+                app: App1
+                function: Front-end
+
+        spec:
+            containers:
+            -   name: simple-webapp
+                image: simple-webapp
+                ports:
+                - containerPort: 8080
+        ```
+    ![](../../assets/pics/k8s/labels.png)
+    ![](../../assets/pics/k8s/labels_yaml.png)
+- 選擇器 (selectors): 針對 labels，來選擇要管理的資源/物件
+    - 使用 selectors
+        ```bash
+        kubectl get pods --selector app=App1
+        ```
+    ![](../../assets/pics/k8s/selectors.png)
+- 註解 (annotations): 可附加在 K8s 資源/物件上的 key-value pair，**用來提供/記錄額外的資訊，通常不涉及資源/物件的選擇, 過濾**
+    ```yaml
+    # replicaset-definition.yaml
+    apiVersion: apps/v1
+    kind: ReplicaSet
+    metadata:
+        name: simple-webapp
+        labels:
+            app: App1
+            function: Front-end
+        # 建立 annotations
+        annotations:
+            buildversion: 1.34
+
+    spec:
+        replicas: 3
+        selector:
+            matchLabels:
+                app: App1
+    template:
+        metadata:
+            labels:
+                app: App1
+                function: Front-end
+    spec:
+        containers:
+        -   name: simple-webapp
+            image: simple-webapp   
+    ```
+    ![](../../assets/pics/k8s/annotations.png)
+- 對<strong>所有 K8s 叢集中的資源/物件</strong>，使用 labels 做分類
+    ![](../../assets/pics/k8s/get_all_objects_using_labels.png)
+- 對所有 K8s 叢集中的資源/物件，使用<strong>多個 labels 做分類</strong>
+    ![](../../assets/pics/k8s/using_multiple_labels_to_filter.png)
+- labels & selectors 應用
+    - ReplicaSet
+        ```yaml
+        apiVersion: apps/v1
+        kind: ReplicaSet
+        # ReplicaSet 的 metadata
+        metadata:
+            name: simple-webapp
+            # 建立 labels
+            labels:
+                app: App1
+                function: Front-end
+
+        spec:
+            replicas: 3
+            # 使用 selectors 來選擇要管理的物件
+            selector:
+                matchLabels:
+                    app: App1
+            template:
+                # Pod 的 metadata (較重要)
+                metadata:
+                        app: App1
+                    labels:
+                        function: Front-end
+            spec:
+                containers:
+                -   name: simple-webapp
+                    image: simple-webapp
+        ```
+
+        ![](../../assets/pics/k8s/replicaset_using_labels_and_selectors.png)
+    - Service
+        ```yaml
+        apiVersion: v1
+        kind: Service
+        metadata:
+            name: my-service
+
+        spec:
+            # 使用 selectors 來選擇要管理的物件
+        selector:
+                app: App1
+            ports:
+            -   protocol: TCP
+                port: 80
+                targetPort: 9376 
+        ```
+
+        ![](../../assets/pics/k8s/service_using_labels_and_selectors.png)
+
+### Taints & Tolerations
+- 為了<strong>限制 Node 接受某些 Pod 的排程</strong>，並讓可以 tolerate 特定 taint 的 Pod 被排程到該 Node 上
+    - 注意! taints & tolerations 並不會告訴 Pod 去特定的 Node 上，而是<strong>告訴 taint Node 僅能接受具有特定 tolerations 的 Pod</strong>
+    - taints & tolerations 與安全性或入侵無關，僅是用來限制 Pod 的排程
+    ![](../../assets/pics/k8s/taints_and_tolerations.png)
+- taints (污點)
+    - 設定於 **Node** 上
+    - 功能: 可以設定當不能 tolerate 的 Pod 被排程到該 Node 上時，該如何處理？
+        - NoSchedule: 表示新 Pod 不會被排程到這個節點上，除非這些 Pod 有相應的 toleration
+            - 用途: 用於<strong>強制性地避免</strong> Pod 被排程到特定節點上
+        - PreferNoSchedule: 表示 Kubernetes 會盡量避免將 Pod 排程到這個節點上，但這<strong>不是強制的</strong>。若沒有其他合適的節點，Pod 仍然可能會被排程到這個節點上
+            - 用途: 用於軟性地避免 Pod 調度到特定節點上，但在資源不足或其他情況下允許例外
+        - NoExecute: 表示不僅新 Pod 無法被調度到這個節點上，**已經在這個節點上的 Pod 也會被驅逐 (除非這些 Pod 有相應的 toleration)**
+            - 用途: 用於在節點狀態改變或需要進行維護時，驅逐不符合條件的 Pod
+    - 設定 taints
+        ```bash
+        kubectl taint nodes node1 app=blue:NoSchedule
+        ```
+
+    ![](../../assets/pics/k8s/taints.png)
+
+    - 去除 taints
+        ```bash
+        kubectl taint nodes node1 app=blue:NoSchedule-
+        ```
+
+- tolerations (容忍)
+    - 預設所有 Pod 都不會有 tolerations
+    - 功能: 設定於 **Pod** 上，概念上如同 taints，只是要寫在 Pod 的 YAML manifest 設定檔中
+    - 設定 tolerations
+        ```yaml
+        # pod-definition.yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+            name: myapp-pod
+        
+        spec:
+            containers:
+            -   name: nginx-container
+                image: nginx
+
+            # 設定 tolerations，以 key-value pair 表示，其中 value 需加上雙引號 " "
+            tolerations:
+            -   key: "app"
+                operator: "Equal"
+                value: "blue"
+                effect: "NoSchedule"
+        ```
+
+    ![](../../assets/pics/k8s/tolerations.png)
+
+- 為什麼 K8s 叢集的 master node 不會被排程 Pod？
+    - 因為在 K8s 叢集初始化時，**master node 會自動被設定 taints (預設為 NoSchedule)**，且 Pod 未設定 tolerations
+        ```bash
+        kubectl describe node kubemaster | grep Taint
+        ```
+
+        ![](../../assets/pics/k8s/master_node_with_taints.png)
+
+### Node Selectors
+- 用途: 用來限制 Pod 被排程到指定的 Node 上
+
+> 情境: 假設有三個 Node (node-1, node-2, node-3)，根據其資源配置分別為 large, medium, small，並分別為其設定 labels
+
+![](../../assets/pics/k8s/node_selectors.png)
+
+- 步驟 1: 分別為 Pod 設定 labels
+    ```bash
+    kubectl label nodes node-1 size=large
+    kubectl label nodes node-2 size=medium
+    kubectl label nodes node-3 size=small
+    ```
+    ![](../../assets/pics/k8s/node_selectors_label_nodes.png)
+- 步驟 2: 建立 Pod 的 YAML manifest 設定檔，並設定 nodeSelector
+    ```yaml
+    # pod-definition.yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+        name: myapp-pod
+
+    spec:
+        containers:
+        -   name: data-processor
+            image: data-processor
+        # 根據指定的 label，設定 nodeSelector，以限制 Pod 被排程到指定的 Node 上
+        nodeSelector:
+            size: Large
+    ```
+    ![](../../assets/pics/k8s/node_selectors_create_pods.png)
+- 步驟 3: 建立 Pod
+    ```bash
+    kubectl create -f pod-definition.yaml
+    ```
+- nodeSelector 的限制
+    - 僅能使用等於 (Equal) 運算子
+    - 若遇到更複雜的需求，就必須使用 Node Affinity 來解決 => e.g. Large or Medium, NOT Small
+    ![](../../assets/pics/k8s/node_selectors_limitations.png)
+
+
+### Node Affinity
+- 用途: 確保 Pod 能被排程到指定的 Node 上，以符合特定的需求
+- 設定 nodeAffinity
+    ```yaml
+    # pod-definition.yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+        name: myapp-pod
+    
+    spec:
+        containers:
+        -   name: data-processor
+            image: data-processor
+        # 設定 nodeAffinity
+        affinity:
+            nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                    # 可支援更複雜的需求 (表達式)
+                    -   matchExpressions:
+                        -   key: size
+                            # 運算子需使用 Pascal Case
+                            operator: In
+                            values: 
+                            -   Large
+                            -   Medium
+    ```
+
+    ```yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+        name: myapp-pod
+    
+    spec:
+        containers:
+        -   name: data-processor
+            image: data-processor
+        # 設定 nodeAffinity
+        affinity:
+            nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                    # 可支援更複雜的需求 (表達式)
+                    -   matchExpressions:
+                        -   key: size
+                            # 運算子需使用 Pascal Case
+                            operator: NotIn
+                            values: 
+                            -   Small
+    ```
+
+    ```yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+    name: myapp-pod
+    
+    spec:
+        containers:
+        -   name: data-processor
+            image: data-processor
+    
+        # 設定 nodeAffinity
+        affinity:
+            nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                        # 可支援更複雜的需求 (表達式)
+                        -   matchExpressions:
+                            -   key: size
+                                # 可使用 Exists 運算子
+                                operator: Exists
+    ```
+
+- nodeAffinity 的類型
+    - 目前已可用的
+        - Type 1 `requiredDuringSchedulingIgnoredDuringExecution`: 這是強制性的 Node Affinity。<strong>kube-scheduler 只會將 Pod 排程到滿足所有指定 Node Affinity 條件的節點上</strong>。若沒有滿足條件的節點，Pod 就無法被排程
+        - Type 2 `preferredDuringSchedulingIgnoredDuringExecution`: 這是有彈性的 Node Affinity。<strong>kube-scheduler 會盡量將 Pod 排程到滿足條件的節點上</strong>。但如果沒有符合條件的節點，Pod 仍然可以被排程到其他節點
+        ![](../../assets/pics/k8s/node_affinity_types_available.png)
+
+    - 未來正在規劃中的
+        - Type 3 `requiredDuringSchedulingRequiredDuringExecution`: 這是一個計劃中的功能，目前尚未實現。kube-scheduler <strong>只會</strong>將 Pod 排程到符合條件的節點上。<strong>而在 Pod 運行期間，若節點不再符合條件，Pod 會被驅逐</strong>
+        - Type 4 `preferredDuringSchedulingRequiredDuringExecution`: 這是一個計劃中的功能，目前尚未實現。kube-scheduler 會<strong>盡量</strong>將 Pod 排程到符合條件的節點上。<strong>而在 Pod 運行期間，如果節點不再符合條件，Pod 會被驅逐</strong>
+        ![](../../assets/pics/k8s/node_affinity_types_planned.png)
+
+- 參考資料
+    - [Schedule a Pod using required node affinity](https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes-using-node-affinity/#schedule-a-pod-using-required-node-affinity) 
+    - [Node affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity)
+
+### 結合 Taints & Tolerations & Node Affinity
+> 情境: 假設有五個 Node (Blue, Red, Green, Gray, Gray)，並且有五個 Pods (blue, red, green, gray, gray)。<br>
+> 我們希望將 blue Pod 排程到 Blue Node 上，red Pod 排程到 Red Node 上，green Pod 排程到 Green Node 上，gray Pod 排程到 Gray Node 上。<br>
+> 也就是說，在每個顏色的 Node 上，僅能排程對應顏色的 Pod。<br>
+
+![](../../assets/pics/k8s/taints_tolerations_node_affinity_circumstance.png)
+
+- Taints & Tolerations: **無法確保 Pod 僅會被排程到指定的 Node 上**，僅能限制不具備指定 tolerations 的 Pod 不會被排程到指定 taints 的 Node 上 (因此仍然可能會發生非預期的錯誤結果)
+    - 設定 Node 的 taints
+        ![](../../assets/pics/k8s/taints_on_color_nodes.png)
+    - 設定 Pod 的 tolerations
+        ![](../../assets/pics/k8s/tolerations_on_color_pods.png)
+    - 結果 (仍然可能會發生 Pod 排程到錯誤的 Node 上 => 非預期結果)
+        ![](../../assets/pics/k8s/taints_and_toleations_unworked_situation.png)
+- Node Selectors: 僅能限制指定的 Pod 會被排程到指定的 Node 上，但無法限制其他 Pod 也被排程到指定的 Node 上
+    ![](../../assets/pics/k8s/node_selectors_unworked-situation-1.png)
+    - 結果 (仍然可能會發生 Pod 排程到錯誤的 Node 上 => 非預期結果)
+        ![](../../assets/pics/k8s/node_selectors_unworked-situation-2.png)
+- 正確解法: 使用 Taints & Tolerations 防止其它 Pod 放到錯誤的 Node 上。再使用 Node Affinity 防止 Pod 放到錯誤的 Node 上
+    - 結果 (Pod 會被正確地排程到指定的 Node 上)
+        ![](../../assets/pics/k8s/taints_tolerations_node_affinity_worked-situation.png)
+
+### Resource requests & limits
+- 用途: 用來限制 Pod 使用的 CPU 和 memory 資源
+    - 資源類型
+        - CPU: 以 CPU 單位 (**vCPU**) 來表示
+            - 最佳實踐: 設定 CPU requests 就好
+            ![](../../assets/pics/k8s/set_cpu_requests.png)
+        - Memory: 以 memory 單位 (**MiB**) 來表示
+    - 資源請求與限制
+        - **requests**: 代表容器正常運行時，**所需的最低資源下限**
+            - K8s 預設每個 Pod 的 resource requests: CPU = 0.5 vCPU, memory = 256 MiB
+            ![](../../assets/pics/k8s/resource_requests.png)
+        - **limits**: 代表容器運行過程中，**能使用的最多資源上限**
+            - K8s 預設每個 Pod 的 resource limits: CPU = 1 vCPU, memory = 512 MiB
+            ![](../../assets/pics/k8s/resource_limits.png)
+
+        ![](../../assets/pics/k8s/k8s_resource_requests_and_limits_illustration.png) <br>
+        [圖片出處](https://www.densify.com/kubernetes-autoscaling/kubernetes-resource-quota/)
+
+        ```yaml
+        # pod-definition.yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+            name: simple-webapp-color
+            labels:
+                name: simple-webapp-color
+        
+        spec:
+            containers:
+            -   name: simple-webapp-color
+                image: simple-webapp-color
+                
+                ports:
+                -   containerPort:  8080
+
+                # 設定 resource requests & limits
+                resources:
+                    requests:
+                        memory: "1Gi"
+                        cpu: "1"
+                    limits:
+                        memory: "2Gi"
+                        cpu: "2"
+        ```
+
+- 設定 Resource LimitRange: 幫助我們<strong>定義每個 Pod 的預設資源請求與限制</strong>
+    - 會套用在未來建立的 Pod 上，但不會套用於正在執行中的 Pod 上
+
+    ```yaml
+    # limit-range-cpu.yaml
+    apiVersion: v1
+    kind: LimitRange
+    metadata:
+        name: cpu-resource-constraint
+
+    spec:
+        limits:
+        -  default: # limit
+                cpu: 500m # 0.5 vCPU
+            defaultRequest: # request
+                cpu: 500m # 0.5 vCPU
+            max: # limit
+                cpu: 1 # 1 vCPU
+            min: # request
+                cpu: 100m # 0.1 vCPU
+            type: Container
+    ```
+
+    ```yaml
+    # limit-range-memory.yaml
+    apiVersion: v1
+    kind: LimitRange
+    metadata:
+        name: memory-resource-constraint
+    
+    spec:
+        limits:
+        -   default: # limit
+                memory: 1Gi # 1 GiB
+            defaultRequest: # request
+                memory: 1Gi # 1 GiB
+            max: # limit
+                memory: 1Gi # 1 GiB
+            min: # request
+                memory: 500Mi # 500 MiB
+            type: Container
+    ```
+
+- 設定 Resource Quota: 用來<strong>設定整個 Namespace 的資源請求與限制</strong>
+    ```yaml
+    # resource-quota.yaml
+    apiVersion: v1
+    kind: ResourceQuota
+    metadata:
+        name: my-resource-quota
+    
+    spec:
+        hard:
+            pods: "10"
+            requests.cpu: "4"
+            requests.memory: 4Gi
+            limits.cpu: "10"
+            limits.memory: 10Gi
+    ```
+
+    ![](../../assets/pics/k8s/resource_quota_illustration.png)
+    ![](../../assets/pics/k8s/resource_quota.png)
+
+- 當超過 resource limits 的限制時
+    - **CPU**: 會被限制在指定的 CPU 數量上，**超過的部分會被暫停 (throttle)**
+        - Pod 會顯示處於 Pending 狀態，因為 kube-scheduler 找不到具有足夠 CPU 來排程
+        ![](../../assets/pics/k8s/pod_pending_with_insufficient_cpu.png)
+    - **Memory**: 會被限制在指定的 memory 上，**超過的部分會被刪除 (terminate)**
+        - 因為我們無法節流 (throttle) memory，因此當超過 memory limits 時，僅能透過刪除 Pod 來釋放 memory
+        - 會拋出 **OOM 錯誤 (Out Of Memory)**
+        ![](../../assets/pics/k8s/pod_pending_with_insufficient_memory.png)
+
+### DaemonSet
+- 用途: 類似 ReplicaSet，能幫助我們在各個 Node 上部署多個相同的 Pod 副本。但是 DaemonSet 僅會在各個 Node 上運行一個 Pod 副本
+    - 當有新的 Node 加入 K8s 叢集時，DaemonSet 會自動在新的 Node 上部署一個 Pod 副本
+    - 當有 Node 從 K8s 叢集中移除時，DaemonSet 會自動刪除該 Node 上的 Pod 副本
+    ![](../../assets/pics/k8s/daemonset_illustration.png)
+- 常見應用情境: **Monitoring solution, Logs viewer**, kube-proxy, Networking solution
+    ![](../../assets/pics/k8s/daemonset_use_cases.png)
+    ![](../../assets/pics/k8s/daemonset_use_cases_kube_proxy.png)
+    ![](../../assets/pics/k8s/daemonset_use_cases_networking.png)
+- 建立 DaemonSet
+    - 類似於 ReplicaSet 的 YAML manifest 設定檔，但是 kind 要改成 DaemonSet
+    ```yaml
+    # daemonset-definition.yaml
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+        name: monitoring-daemon
+        labels:
+            app: nginx
+    
+    spec:
+        selector:
+            matchLabels:
+                app: monitoring-agent
+        template:
+            metadata:
+                labels:
+                    app: monitoring-agent
+        spec:
+            containers:
+            -   name: monitoring-agent
+                image: monitoring-agent
+    ```
+
+    ```bash
+    kubectl create -f daemonset-definition.yaml
+    ```
+
+- 檢視在所有的 Namespace 中，目前所有的 DaemonSet
+    ```bash
+    kubectl get daemonsets -A
+    ```
+- 詳細檢視指定 DaemonSet 的資訊
+    ```bash
+    kubectl describe daemonsets monitoring-daemon
+    ```
+
+    ![](../../assets/pics/k8s/view_daemonsets.png)
+
+- DaemonSet 是如何將 Pod 分別排程到各個 Node 上的？
+    - 在 K8s v1.12 之前: 使用 nodeSelector
+    - 在 K8s v1.12 之後: 使用 Node Affinity, default kube-scheduler
+    ![](../../assets/pics/k8s/how_does_daemonset_works.png)
+
+### Static Pods
+- 假設沒有 K8s 叢集，也沒有 Master Node，也沒有 kube-apiserver。那麼 Worker Node 會如何運作？
+    - Ans: kubelet 會透過預設在 `/etc/kubernetes/manifests` 目錄下的 YAML manifest 設定檔，來建立 Static Pods
+        - 法 1: 透過 CLI 的 `--pod-manifest-path` 選項，通知 kubelet 建立 Static Pods
+            ![](../../assets/pics/k8s/static_pods_kubelet_service.png)
+        - 法 2: 編輯 kubeconfig.yaml 設定檔，加入 `staticPodPath: /etc/kubernetes/manifests` 設定，通知 kubelet 建立 Static Pods
+            ![](../../assets/pics/k8s/static_pods_kubeconfig.png)
+    - 這時候，若要檢視當前有哪些 Static Pods，因為我們沒有一個完整的 K8s 叢集，因此只能透過 Docker 指令來查看
+        ```bash
+        docker ps
+        ```
+
+        ![](../../assets/pics/k8s/view_static_pods_by_docker_ps.png)
+
+- kubelet 可以透過以下兩種方式，建立 Pod (兩種 Pods 都可以經由 `kubectl get pods` 查看)
+    - 由 **kube-apiserver** 運用 HTTP request，通知 kubelet 建立 **Pod**
+    - kubelet 根據 `/etc/kubernetes/manifests` 目錄下的 YAML manifest 設定檔，建立 **Static Pods**
+        - 其實，當建立 Static Pod 時，也會在 kube-apiserver 建立一個 read-only mirror object。因此，如果要編輯這個 Static Pod，還是必須到 Worker Node 的 `/etc/kubernetes/manifests` 目錄下編輯 YAML manifest 設定檔
+        ![](../../assets/pics/k8s/static_pods_on_kube_apiserver_mirror_object.png)
+
+- Static Pod 的應用情境
+    - kubeadm 設定 K8s 叢集的方式: 因為 Static Pod 不需要依賴 K8s 叢集的特性，因此可在各節點上，透過 kubelet 建立 Static Pod，來運行各種系統服務 (e.g. controller-manager, apiserver, etcd, scheduler)。並且 kubelet 會自動管理這些系統服務，確保其持續運行
+    ![](../../assets/pics/k8s/static_pods_use_cases.png)
+    ![](../../assets/pics/k8s/static_pods_use_cases_get_pods.png)
+
+- 檢視所有 Namespace 中有幾個 Static Pods
+    - 查看 **Pod name 的後綴，會帶有 Node name** 的就是 Static Pods
+        ![](../../assets/pics/k8s/static_pods_with_suffix_node_name.png)
+    - 檢視 Static Pods 的詳細資訊: **ownerReferences.kind = Node**
+        ![](../../assets/pics/k8s/static_pod_ownerreferences_kind.png)
+- Static Pod 的 YAML manifest 設定檔會存放在哪？
+    - 步驟 1: 檢視 kubelet 的 `/var/lib/kubelet/config.yaml` 設定檔內容，確認 **staticPodPath: /etc/kubernetes/manifests** 的路徑位置
+        - 預設會放在 Node 上的 `/etc/kubernetes/manifests` 目錄下
+    - 步驟 2: 到 staticPodPath 確認當前 kubelet 有哪些關於 Static Pod 的設定檔
+        ![](../../assets/pics/k8s/kubelet_static_pod_path.png)
+- Static Pods vs. DaemonSets
+    ![](../../assets/pics/k8s/static_pods_vs_daemonsets.png)
+
+### Multiple Schedulers
+- 用途: 可以在 K8s 叢集中，同時部署多個 scheduler
+    ![](../../assets/pics/k8s/multiple_schedulers.png)
+- 手動建立一個自定義的 scheduler
+    - 法 1: 透過 scheduler 的 binary 檔，建立 scheduler
+        - 下載 scheduler 的 binary 檔
+            ```bash
+            wget https://storage.googleapis.com/kubernetes-release/release/v1.12.0/bin/linux/amd64/kube-scheduler
+            ```
+        - 指定 scheduler 名稱，以及 scheduler 的 YAML manifest 設定檔
+            ![](../../assets/pics/k8s/deploy_additional_scheduler.png)
+    - 法 2: 將 scheduler 視為一個 Pod，先建立 scheduler-config 檔後，再宣告 `--config` 選項來指定 scheduler 的 YAML manifest 設定檔的路徑
+        - `leaderElect`: true 表示這個 scheduler 會選舉一個 leader，並且只有 leader 才會執行任務 (因為在 K8s 叢集中，一次只能有一個 scheduler 處於 active 狀態，以避免排程演算法的決策衝突問題)
+            ![](../../assets/pics/k8s/deploy_additional_scheduler_as_a_pod.png)
+        - 建立 scheduler Pod
+            ```bash
+            kubectl create -f my-custom-scheduler.yaml
+            ```
+- 檢視指定 Namespace 中的所有 Scheduler Pods
+    ```bash
+    kubectl get pods -n kube-system
+    ```
+- 運用剛剛建立的 scheduler，建立一個 Pod: 設定 `schedulerName` 參數值
+    ```yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+        name: nginx
+    
+    spec:
+        containers:
+        -   image: nginx
+            name: nginx
+        # 指定使用自定義的 scheduler
+        schedulerName: my-custom-scheduler
+    ```
+
+    ![](../../assets/pics/k8s/use_custom_scheduler.png)
+
+- 如何查詢哪個 scheduler 負責排程哪些 Pods？
+    ```bash
+    kubectl get events -o=wide
+    ```
+
+    ![](../../assets/pics/k8s/multiple_schedulers_view_events.png)
+
+- 如何查詢 scheduler 的排程記錄 log？
+    ```bash
+    kubectl logs my-custom-scheduler -n=kube-system
+    ```
+
+    ![](../../assets/pics/k8s/multiple_schedulers_view_scheduler_logs.png)
+
+### Configuring Scheduler Profiles
+- 每個 scheduler 都會具備以下幾個擴展點 (extension points)，能透過加入插件 (plugin) 的方式，來擴展 scheduler 的功能
+    - 擴展點 (extension points): 表示<strong>排程過程中的特定階段</strong>，這些階段能允許使用者插入自定義插件邏輯，以修改 or 擴展 scheduler 的行為
+    - 插件 (plugins): 附加在<strong>scheduler 的擴展點上，用來自定義 or 擴展 scheduler 的行為</strong>
+    ![](../../assets/pics/k8s/scheduling_framework_extension_points.png)
+    ![](../../assets/pics/k8s/scheduler_extension_points.png)
+- 從 K8s v.1.18 以後，能透過 **KubeSchedulerConfiguration** 物件，在同一份 scheduler 設定檔中，設定多個 scheduler profiles
+    - `profiles`: 能指定多個 schedulerName，以設定多個 scheduler profiles
+        - `plugins`: 可分別設定各個 scheduler 的 plugins 內容
+    ![](../../assets/pics/k8s/KubeSchedulerConfiguration.png)
 
 
 ## 考試資訊
@@ -552,22 +1231,35 @@
 	- [CNCF-CKA 考試要求](https://docs.linuxfoundation.org/tc-docs/certification/tips-cka-and-ckad)
 
 ## 考試技巧
-- 快速建立 YAML 範本: 
+- 根據 CLI 上的指令與選項，快速建立 YAML 範本: 
     - `--image`: 指定 container image
     - `--dry-run=client`: 告訴 kubectl 執行命令，但不會實際建立 Pod，只是模擬執行
-    - `-o yaml`: 指定輸出格式為 YAML
+    - `-o=yaml`: 指定輸出格式為 YAML
     - `> filename.yaml`: 將執行結果輸出 & 儲存到指定檔案，以便後續使用
     ```bash
-    kubectl run nginx --image=nginx --dry-run=client -o yaml > nginx-pod.yaml
+    kubectl run nginx --image=nginx --dry-run=client -o=yaml > nginx-pod.yaml
     ```
     - 參考資料: [kubectl Usage Conventions](https://kubernetes.io/docs/reference/kubectl/conventions/)
 - 考試時，建議使用宣告式語法來操作 K8s 物件
     ![](../../assets/pics/k8s/declarative_commands_for_exam_tips.png)
-- 監控 K8s 叢集狀態
-    - `--watch`: 實時監控狀態
-        ```bash
-        kubectl get pods --watch
-        ```
+- `--watch`: 實時監控 K8s 叢集狀態
+    ```bash
+    kubectl get pods --watch
+    ```
+- `wc -l`: 計算指定檔案中的行數
+    - wc = word count
+
+    ```bash
+    kubectl get pods --selector env=dev --no-headers | wc -l
+    ```
+
+    ![](../../assets/pics/k8s/exam_tips_wc.png)
+-- `--command`: 用於指定容器的指令
+    - Tips: `--command` 後面接的是對於容器的指令，因此習慣上我們會把 `--command` 放在最後面才宣告
+    ```bash
+    kubectl run static-busybox --image=busybox --dry-run=client -o=yaml --command -- sleep 1000
+    ```
+
 
 ## 學習資源
 - [Kubernetes 官方文件](https://kubernetes.io/docs/home/)

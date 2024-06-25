@@ -33,3 +33,24 @@ body {
 .md-sidebar--secondary:hover {
   transform: translateX(0);
 }
+
+/* 設置 sidebar 的背景顏色 */
+.md-sidebar--secondary {
+  background-color: #333333;  /* 你想要的背景顏色 */
+}
+
+/* 設置 sidebar 的文字顏色 */
+.md-sidebar--secondary .md-nav__link {
+  color: #ffffff;  /* 你想要的文本顏色 */
+}
+
+/* 可選: 設置鼠標懸停處的文字顏色 */
+.md-sidebar--secondary .md-nav__link:hover {
+  color: #ffcc00;  /* 你想要的鼠標懸停顏色 */
+}
+
+/* 隱藏左側 sidebar 中的站點名稱 */
+.md-nav__title {
+  display: none;
+}
+
