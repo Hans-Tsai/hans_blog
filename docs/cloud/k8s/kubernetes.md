@@ -1214,6 +1214,93 @@
         - `plugins`: 可分別設定各個 scheduler 的 plugins 內容
     ![](../../assets/pics/k8s/KubeSchedulerConfiguration.png)
 
+## Logging & Monitoring
+### Logging
+- Docker: 執行一個模擬產生 log 的程式，並實時查看 log 資訊
+    ![](../../assets/pics/k8s/loggin_event_simulator.png)
+
+    `-f` 參數: 表示 follow，用來實時追蹤 log 輸出資訊，類似於 Linux 中的 tail -f 命令
+    ![](../../assets/pics/k8s/logging_docker_logs.png)
+
+- Kubernetes: 建立並執行一個模擬產生 log 的 Pod，並實時查看 log 資訊
+    ```yaml
+    # pod-definition.yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+        name: event-simulator-pod
+    
+    spec:
+        containers:
+        -   name: event-simulator
+            image: kodekloud/event-simulator
+    ```
+
+    ```bash
+    $ kubectl logs -f event-simulator-pod
+    ```
+
+    ![](../../assets/pics/k8s/logging_k8s_logs.png)
+
+- 若在一個 Pod 中，有多個 container，則需指定 container name
+    ```bash
+    # kubectl logs -f <pod-name> -c <container-name>
+    kubectl logs -f even-simulator-pod -c event-simulator
+    ```
+
+    ![](../../assets/pics/k8s/logging_specified_container_in_pod.png)
+
+### Monitoring
+- 截至目前(2024)，K8s 官方並無內建的<strong>全功能監控工具</strong>，因此需要透過第三方開源工具來監控 K8s 叢集
+    ![](../../assets/pics/k8s/k8s_open_source_monitoring_tools.png)
+- Heapster 曾經是 K8s 官方的監控工具，但在 K8s v1.11 之後，已經被淘汰。**現已由 Metrics Server 取代**
+    ![](../../assets/pics/k8s/metrics_server.png)
+- Metrics Server
+    - 僅提供基本的監控功能 (e.g. CPU, Memory 使用率)，並不提供進階的監控功能 (log 收集、進階分析、視覺化顯示)
+    - 僅會將各個 Node 上的 metrics 資料，儲存在 **in-memory** 中，而不會儲存在硬碟中，因此我們無法透過 Metrics Server 查詢歷史監控資料
+    ![](../../assets/pics/k8s/metrics_server_in_memory.png)
+- 每個 Node 是如何收集監控指標的資料呢？
+    - 透過 kubelet 的 cAdvisor 來收集 Pod 的監控指標資料，並定期向 Metrics Server 回報
+    ![](../../assets/pics/k8s/metrics_server_cAdvisor.png)
+- 啟動 Metrics Server
+    - 法 1 (minikube):
+        ```bash
+        minikube addons enable metrics-server
+        ```
+    - 法 2 (其它情況):
+        ```bash
+        git clone https://github.com/kubernetes-incubator/metrics-server.git
+        ```
+
+        ```bash
+        kubectl create -f metric-server/deploy/1.8+/
+        ```
+
+    ![](../../assets/pics/k8s/metrics_server_enable.png)
+
+- 監控 Node-level 的指標
+    - 正在運行中的節點數量
+    - CPU 使用率
+    - Memory 使用率
+    - Disk 使用率
+    - Network 使用率
+
+    ```bash
+    kubectl top node
+    ```
+- 監控 Pod-level 的指標
+    - 正在運行中的 Pod 數量
+    - CPU 使用率
+    - Memory 使用率
+    - Disk 使用率
+    - Network 使用率
+
+    ```bash
+    kubectl top pod
+    ```
+
+    ![](../../assets/pics/k8s/k8s_monitoring_top_command.png)
+
 
 ## 考試資訊
 - 考試內容
