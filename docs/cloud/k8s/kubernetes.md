@@ -416,6 +416,7 @@
         ```bash
         kubectl create -f namespace-dev.yaml
         ```
+
     - 法 2: 使用 kubectl 指令
         ```bash
         kubectl create namespace dev
@@ -708,6 +709,7 @@
         ```
 
         ![](../../assets/pics/k8s/replicaset_using_labels_and_selectors.png)
+
     - Service
         ```yaml
         apiVersion: v1
@@ -1288,6 +1290,7 @@
     ```bash
     kubectl top node
     ```
+
 - 監控 Pod-level 的指標
     - 正在運行中的 Pod 數量
     - CPU 使用率
@@ -1300,6 +1303,533 @@
     ```
 
     ![](../../assets/pics/k8s/k8s_monitoring_top_command.png)
+
+## Application Lifecycle Management
+### Rolling Updates and Rollbacks in Deployments
+- 當我們第一次建立 Deployment，會觸發一個 Rollout，產生一個 Revision。而之後的每次更新，都會觸發一個新的 Rollout，產生一個新的 Revision
+    ![](../../assets/pics/k8s/rollout_and_versioning.png)
+
+#### Deployment-Rollout 策略
+- 建立 Deployment
+    ```bash
+    kubectl create deployment nginx --image=nginx
+    ```
+- 查看當前 Deployment 的滾動更新狀態，告訴我們新的 Pod 是否已經就緒
+    ```bash
+    kubectl rollout status deployment/myapp-deployment
+    ```
+- 查看 Deployment 的歷史記錄，包含每次變更的修訂版本、變更原因
+    ```bash
+    kubectl rollout history deployment/myapp-deployment
+    ```
+
+    ![](../../assets/pics/k8s/rollout_command.png)
+    ![](../../assets/pics/k8s/recreate_vs_rollingupdate.png)
+
+- Deployment 的兩種 Rollout 策略
+    - Recreate: 先刪除舊的 Pod，再建立新的 Pod
+    - **RollingUpdate** (預設): 滾動更新，逐步刪除舊的 Pod，並建立新的 Pod
+        - `maxUnavailable`: 一次最多刪除多少個 Pod
+        - `maxSurge`: 一次最多新增多少個 Pod
+        ![](../../assets/pics/k8s/deployment_strategy.png)
+
+- 更新 Deployment 的 Rollout 策略
+    - 法 1: 透過 `kubectl edit` 指令，編輯 Deployment 的 YAML manifest 設定檔
+        ```bash
+        kubectl edit deployment-definition.yaml
+        ```
+
+        ```yaml
+        # deployment-definition.yaml
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+            name: myapp-deployment
+            labels:
+                app: nginx
+        spec:
+            template:
+                metadata:
+                    name: myap-pod
+                    labels:
+                        app: myapp
+                        type: front-end
+                spec:
+                    containers:
+                    -   name: nginx-container
+                        image: nginx:1.7.1
+            
+            replicas: 3
+            selector:
+                matchLabels:
+                    type: front-end
+        ```
+
+        ```bash
+        kubectl apply -f deployment-definition.yaml
+        ```
+    - 法 2: 透過 `kubectl set` 指令，設定 Deployment 的 Rollout 策略
+        ```bash
+        kubectl set image deployment/myapp-deployment nginx=nginx:1.9.1
+        ```
+
+        ![](../../assets/pics/k8s/update_deployment_rollout_settings.png)
+
+- 升級 Deployment 的版本: K8s 叢集會建立一個新的 ReplicaSet 來建立新的 Pods
+    ![](../../assets/pics/k8s/upgrade_deployment.png)
+
+- 回滾 Deployment 的版本: 運用 `kubectl rollout undo` 指令，K8s 叢集會將新的 ReplicaSet 中的 Pods 刪除，並重新建立舊的 ReplicaSet 中的 Pods
+    ```bash
+    kubectl rollout undo deployment/myapp-deployment
+    ```
+
+    ![](../../assets/pics/k8s/rollback_deployment.png)
+
+- 統整: 關於 Deployment 的常見 kubectl 指令
+    ```bash
+    kubectl create -f deployment-definition.yaml
+    kubectl get deployments
+    kubectl apply -f deployment-definition.yaml
+    kubectl set image deployment/myapp-deployment nginx=nginx:1.9.1
+    kubectl rollout status deployment/myapp-deployment
+    kubectl rollout history deployment/myapp-deployment
+    kubectl rollout undo deployment/myapp-deployment
+    ```
+
+    ![](../../assets/pics/k8s/summarize_deployment_commands.png)
+
+### Configure Applications
+- 設定應用程式的 Command & Arguments
+    - container 不是用來託管作業系統（operating system）的，而是用來執行特定任務 or 進程（process），例如: 網頁伺服器、應用程式伺服器、資料庫伺服器...等
+        - 當任務完成後，container 會自動結束（亦即，containter 僅在其內部的 process 處於 active 狀態時，才會存在）
+        - 預設情況下，Docker 在執行時，不會將 terminal 附加到 container 上
+    ![](../../assets/pics/k8s/container_use_cases.png)
+- 如何指定不同的指令，來啟動 container 呢？
+    - 法 1 (臨時作法): 當 Docker 執行時，在 CLI 加上指定的執行選項
+        ```bash
+        docker run ubuntu sleep 5
+        ```
+    - 法 2 (永久作法): 可透過設定 Dockerfile 的 `ENTRYPOINT`、`CMD` 指令
+        - `ENTRYPOINT`: 定義 container 啟動時，一定要先執行的指令
+        - `CMD`: 定義 container 啟動時，要執行的指令
+            - Tips: 必須用陣列 `[ ]` 來表示，且其中的元素都必須用雙括弧 `" "` 來表示，陣列元素之間需用逗號 `,` 做分隔
+            ![](../../assets/pics/k8s/dockerfile_command_arguments_format.png)
+            ![](../../assets/pics/k8s/dockerfile_from_cmd.png)
+        - 建立 Dockerfile
+            ```dockerfile
+            FROM ubuntu
+            CMD ["sleep", "5"]
+            ```
+        - 建立 Docker image
+            ```bash
+            docker build -t ubuntu-sleeper .
+            ```
+        - 執行 Docker container
+            ```bash
+            docker run ubuntu-sleeper
+            ```
+- Dockerfile `CMD` vs. `ENTRYPOINT` 的應用
+    - 情況 1: 僅宣告 `CMD`。當 Docker 執行容器時，可透過 CLI 傳遞指令、參數，來覆寫 `CMD` 指令
+    - 情況 2: 僅宣告 `ENTRYPOINT`。當 Docker 執行容器時，只要傳遞參數即可
+    - 情況 3: 僅宣告 `ENTRYPOINT`，但 Docker 執行容器時，未傳遞參數 => 會報錯（missing operand）
+    ![](../../assets/pics/k8s/cmd_and_entrypoint_illustration1.png)
+
+    - 情況 4: 同時宣告 `ENTRYPOINT` 與 `CMD`。當 Docker 執行容器時，`CMD` 指令會作為參數，傳遞給 `ENTRYPOINT` 指令
+    - 情況 5: 同時宣告 `ENTRYPOINT` 與 `CMD`，且當 Docker 執行容器時，透過 CLI 傳遞參數，會覆寫原本的 `CMD` 指令
+    - 情況 6: 同時宣告 `ENTRYPOINT` 與 `CMD`，且當 Docker 執行容器時，透過 CLI 傳遞參數，會覆寫原本的 `ENTRYPOINT` 指令
+    ![](../../assets/pics/k8s/cmd_and_entrypoint_illustration2.png)
+
+- Dockerfile vs. Kubernetes Pod YAML manifest 設定檔
+    - Dockerfile
+        ```dockerfile
+        FROM ubuntu
+        ENTRYPOINT ["sleep"]
+        CMD ["5"]
+        ```
+    - K8s Pod 的 YAML manifest 設定檔
+        ```yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+            name: ubuntu-sleeper-pod
+        
+        spec:
+            containers:
+            -   name: ubuntu-sleeper
+                image: ubuntu-sleeper
+                command: ["sleep2.0"]
+                args: ["10"]
+        ```
+    - **注意! Dockerfile 中的 `ENTRYPOINT` 指令，會對應到 K8s Pod YAML manifest 設定檔中的 `command` 欄位; 而 `CMD` 指令，則會對應到 `args` 欄位**
+        ![](../../assets/pics/k8s/dockerfile_and_k8s_pod_yaml_command_args.png)
+        ![](../../assets/pics/k8s/dockerfile_and_k8s_pod_yaml_command_args_comparison.png)
+
+- 設定環境變數
+    - 法 1: 運用單純的 key-value 鍵值對，設定環境變數
+    - 法 2: 運用 K8s ConfigMap，設定環境變數。需用陣列 `[ ]` 表示，以及使用 `valueFrom.configMapKeyRef` 來給定 ConfigMap
+    - 法 3: 運用 K8s Secrets，設定環境變數。需用陣列 `[ ]` 表示，以及使用 `valueFrom.secretKeyRef` 來給定 Secrets
+    ![](../../assets/pics/k8s/three_ways_set_env_variables.png)
+
+#### ConfigMap
+- 用途: 儲存應用程式的設定資料
+- 建立 ConfigMap
+    - 命令式 (Imperative): 
+        ```bash
+        # 在 CLI 上，直接給定 key-value 對，來建立 ConfigMap
+        kubectl create configmap app-config --from-literal=APP_COLOR=blue --from-literal=APP_MODE=prod
+        ```
+
+        ```bash
+        # 透過檔案來建立 ConfigMap
+        kubectl create configmap app-config --from-file=app_config.properties
+        ```
+
+        ![](../../assets/pics/k8s/create_configmap_imperative.png)
+
+    - 宣告式 (Declarative):
+        ```yaml
+        # configmap-definition.yaml
+        apiVersion: v1
+        kind: ConfigMap
+            metadata:
+                name: app-config
+            data:
+                APP_COLOR: blue
+                APP_MODE: prod
+        ```
+
+        ```bash
+        kubectl create -f configmap-definition.yaml
+        ```
+
+        ![](../../assets/pics/k8s/create_configmap_declarative.png)
+        ![](../../assets/pics/k8s/create_configmap_in_real_world.png)
+
+- 注入 ConfigMap 到 Pod 中
+    - `envFrom.configMapRef`: 適用於需要將所有 ConfigMap 的 key-value 對，都作為環境變數的情況
+        ```yaml
+        # pod-definition.yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+            name: simple-webapp-color
+        spec:
+            containers:
+            -   name: simple-webapp-color
+                image: simple-webapp-color
+                ports:
+                - containerPort: 8080
+
+                # 注入 ConfigMap 到 Pod 中 (`envFrom` 採用陣列表示)
+                envFrom:
+                - configMapRef:
+                    name: app-config
+        ```
+
+        ```yaml
+        # configmap-definition.yaml
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+            name: app-config
+        data:
+            APP_COLOR: blue
+            APP_MODE: prod
+        ```
+
+        ```bash
+        kubectl create -f pod-definition.yaml
+        ```
+
+        ![](../../assets/pics/k8s/configmap_in_pod_envfrom.png)
+
+    - 其它方式
+        - `env.valueFrom.configMapKeyRef`: 適用於只需要特定 ConfigMap 的 key-value 對，作為環境變數的情況
+        - `volumes.configMap`: 適用於應用程式，需要 volume 形式的設定資料，作為環境變數的情況
+        ![](../../assets/pics/k8s/configmap_in_pod_other_ways.png)
+
+- 查詢目前有哪些 ConfigMaps
+    ```bash
+    kubectl get configmaps 
+    # (or)
+    # kubectl get cm
+    ```
+
+    ![](../../assets/pics/k8s/view_configmap.png)
+
+- 詳細檢視指定的 ConfigMap
+    ```bash
+    kubectl describe configmap app-config -o=yaml
+    ```
+
+#### Secrets
+- 用途: 儲存系統的機敏資料
+- 注意! **K8s 的 Secrets 只是用 base64 編碼 (encode) 過的資料而已，這並不算是真正的加密 (encrypt)**。任何人只要知道 base64 編碼的解碼 (decode) 方法，就能解碼 Secrets
+    - 安全性概念: 儘管 **K8s 官方文件將 Secrets 視為存儲敏感數據的 "更安全選擇 (safer option)"**，這主要是因為它們比純文字 (plain text) 較安全，可以降低意外洩漏密碼、其他機敏資料的風險。**真正的安全性來自於如何使用和管理這些 Secrets，而不是 Secrets 本身的安全性**
+    ![](../../assets/pics/k8s/k8s_docs_secrets_unencrypted.png)
+
+    - 可參考 [K8s 官方文件: Encrypting Confidential Data at Rest](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/)
+- 建立 Secret
+    - 命令式 (Imperative): 
+        ```bash
+        # 在 CLI 上，直接給定 key-value 對，來建立 Secret
+        kubectl create secret generic app-secret --from-literal=DB_Host=mysql --from-literal=DB_User=root --from-literal=DB_Password=paswrd
+        ```
+
+        ```bash
+        # 透過檔案來建立 Secret
+        kubectl create secret generic app-secret --from-file=app_secret.properties
+        ```
+
+        ![](../../assets/pics/k8s/create_secret_imperative.png)
+
+    - 宣告式 (Declarative):
+        -  將原始機敏資料，運用 base64 編碼 (非加密)
+            ```bash
+            echo -n "mysql" | base64
+            echo -n "root" | base64
+            echo -n "paswrd"| base64
+            ```
+            
+            ![](../../assets/pics/k8s/base64_encode_secret.png)
+
+        - 建立 Secret 的 YAML manifest 設定檔
+            ```yaml
+            # secret-data.yaml
+            apiVersion: v1
+            kind: Secret
+            metadata:
+                name: app-secret
+            data:
+                DB_Host: bX1zcWw=
+                DB_User: cm9vdA==
+                DB_Password: cGFzd3Jk
+            ```
+        - 建立 Secret
+            ```bash
+            $ kubectl create -f secret-data.yaml
+            ```
+
+        ![](../../assets/pics/k8s/create_secret_declarative.png)
+
+- 注入 Secret 到 Pod 中
+    - `envFrom.secretRef`: 適用於需要使用所有 Secret 的 key-value 對
+        ```yaml
+        # secret-definition.yaml
+        apiVersion: v1
+        kind: Secret
+        metadata:
+            name: app-secret
+        data:
+            DB_Host: bX1zcWw=
+            DB_User: cm9vdA==
+            DB_Password: cGFzd3Jk
+        ```
+
+        ```yaml
+        # pod-definition.yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+            name: simple-webapp-color
+        
+        spec:
+            containers:
+            -   name: simple-webapp-color
+                image: simple-webapp-color
+                ports:
+                -   containerPort: 8080
+                
+                # 注入 Secret 到 Pod 中 (`envFrom` 採用陣列表示)
+                envFrom:
+                -   secretRef:
+                    name: app-secret
+        ```
+
+        ```bash
+        kubectl create -f pod-definition.yaml
+        ```
+
+        ![](../../assets/pics/k8s/secret_in_pod_envfrom.png)
+
+    - 其它方式
+        - `env.valueFrom.secretKeyRef`: 適用於只需要使用特定 Secret 的 key-value 對
+        - `volumes.secret`: 適用於應用程式，需要使用 volume 形式的設定資料
+            - Secret 中的每個屬性，都會被建立為一個檔案，且每個檔案的名稱就是 Secret 的鍵 (key)，檔案的內容就是 Secret 的值 (value)
+            ![](../../assets/pics/k8s/secret_in_pod_volumes.png)
+ 
+        ![](../../assets/pics/k8s/secret_in_pod_other_ways.png)
+
+- base64 解碼 (decode)
+    ```bash
+    echo -n "bX1zcWw=" | base64 --decode
+    echo -n "cm9vdA==" | base64 --decode
+    echo -n "cGFzd3Jk" | base64 --decode
+    ```
+
+    ![](../../assets/pics/k8s/base64_decode_secret.png)
+
+- 查詢目前有哪些 Secrets
+    ```bash
+    kubectl get secrets
+    ```
+
+- 詳細檢視指定的 Secret
+    ```bash
+    kubectl describe secret app-secret -o=yaml
+    ```
+
+    ![](../../assets/pics/k8s/view_secret.png)
+
+- Secret 的最佳實踐
+    ![](../../assets/pics/k8s/secrets_best_practice.png)
+
+### Scale Applications
+#### Multi-Container Pod
+- 用途: 有時，我們可能會需要兩種服務一起運作，例如: 網頁伺服器 + log 代理
+    - 解決方式: 我們可以在一個 Pod 中包含多個 containers，這樣 containers 之間就能視為同一個本地端 (local)，亦能共享同一個 Networking, Storage 等
+
+    ![](../../assets/pics/k8s/multi_containers_in_pod_sidecar.png)
+    ![](../../assets/pics/k8s/multi_containers_in_pod_share_network_and_storage.png)
+
+- 建立 Multi-Container Pod
+    ```yaml
+    # pod-definition.yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+        name: simple-webapp
+        labels:
+            name: simple-webapp
+    
+    spec:
+        containers:
+        # 第一個 container
+        -   name: simple-webapp
+            image: simple-webapp
+            ports:
+            -   ContainerPort: 8080
+
+        # 第二個 container
+        - name: log-agent
+            image: log-agent
+    ```
+
+    ![](../../assets/pics/k8s/create_multi_containers_in_pod_yaml_array.png)
+    ![](../../assets/pics/k8s/create_multi_containers_in_pod.png)
+
+- Multi-container Pods 的三大設計模式 (Design Patterns)
+    - **Sidecar (邊車模式)**: 主要 container 負責應用程式的主要邏輯，而 **sidecar container 負責支援性的工作**
+        - e.g. Logging, Monitoring 等
+    - **Adapter (適配器模式)**: 主要 container 負責應用程式的主要邏輯，而 **adapter container 負責轉換主要 container 的輸出**
+        - e.g. 把資料從 JSON 轉換為 YAML 格式
+    - **Ambassador (大使模式)**: 主要 container 負責應用程式的主要邏輯，而 **ambassador container 負責將主要 container 的輸出轉換成另一種格式**
+        - e.g. 代理服務 (Proxy)、負載均衡 (Load Balance)、安全認證
+    ![](../../assets/pics/k8s/multi_containers_in_pod_three_design_patterns.png)
+
+- 在 Kubernetes 中，多容器 Pod 中的每個容器都預期會在 Pod 的生命週期內保持運行。例如: 網頁伺服器 + log 代理 都會需要持續運行。若其中任何一個 container 失效，Pod 就會重新啟動
+    - 在 Kubernetes 中，**sidecar container** 是<strong>在主要的 container 之前就會啟動，並持續運行</strong>
+- Init Container (初始化容器)
+    - 特性:
+        - **初始化容器總是會執行到成功為止**，若執行失敗，kubelet 會重複執行初始化容器，直到執行成功為止
+        - 每個初始化容器<strong>必須完成執行成功後，才能執行下一個初始化容器</strong>
+    
+    | Feature | Init Containers (初始化容器) | Sidecar Containers (邊車容器) |
+    | :---: | :---: | :---: |
+    | 運行時間 | 主應用容器啟動前完成 | 與主應用容器同時運行 |
+    | 執行順序 | 順序完成，主容器等所有 init 容器完成後才啟動  | 與主容器並行執行 |
+    | 支援 Probe 類型 | 不支援 `lifecycle`、`livenessProbe`、`readinessProbe`、`startupProbe` | 支援 `lifecycle`、`livenessProbe`、`readinessProbe`、`startupProbe` |
+    | 資源共享 | 共享資源（CPU、記憶體、網路）但不直接互動，可使用 shared volume 來進行資料交換 | 共享資源（CPU、記憶體、網路）並可直接互動 |
+
+    - 範例:
+        ```yaml
+        # init-container-pod-definition.yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+            name: myapp-pod
+            labels:
+                app: myapp
+        
+        spec:
+            # 設定初始化容器
+            initContainers:
+            -   name: init-myservice
+                image: busybox
+                command: ['sh', '-c', 'git clone <some-repository-that-will-be-used-by-application> ; done;']
+
+            # 設定主要容器
+            containers:
+            -   name: myapp-container
+                image: busybox:1.28
+                command: ['sh', '-c', 'echo The app is running! && sleep 3600'] 
+        ```
+
+        ```yaml
+        # multi-init-container-pod-definition.yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+            name: myapp-pod
+            labels:
+                app: myapp
+        
+        spec:
+            # 設定初始化容器
+            initContainers:
+                -   name: init-myservice
+                    image: busybox:1.28
+                    command: ['sh', '-c', 'until nslookup myservice; do echo waiting for myservice; sleep 2; done;']
+                -   name: init-mydb
+                    image: busybox:1.28
+                    command: ['sh', '-c', 'until nslookup mydb; do echo waiting for mydb; sleep 2; done;']
+
+            # 設定主要容器
+            containers:
+            -   name: myapp-container
+                image: busybox:1.28
+                command: ['sh', '-c', 'echo The app is running! && sleep 3600']
+        ```
+
+### Self-Healing Application
+- Kubernetes 透過 ReplicaSets 和 Replication Controllers 支援自我修復的應用程式 (Self-Healing Application)
+    - Replication Controller 能確保當 POD 內的應用程式失效時，能夠自動重新建立該 POD，以確保應用程式的副本數量 (replicas) 始終保持在所需的數量
+- Kubernetes 亦提供額外的方法，來檢查在 POD 內運行的應用程式 container 的健康狀況，並通過 **Liveness Probes** 和 **Readiness Probes** 來確保應用程式的正常運作
+    - **Liveness Probes**: **用於檢查應用程式是否正在運行**，並在應用程式失效時，自動重新啟動該應用程式
+    - **Readiness Probes**: **用於檢查應用程式是否已經準備好接收流量**，並在應用程式尚未準備好接收流量時，將該應用程式從服務中移除
+    ```yaml
+    # pod-definition.yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+        name: myapp-pod
+        labels:
+            app: myapp
+    
+    spec:
+        containers:
+        -   name: myapp-container
+            image: busybox
+            command: ['sh', '-c', 'echo The app is running! && sleep 3600']
+            
+            # 設定 livenessProbe: 用於檢查應用程式是否正在運行
+            livenessProbe:
+                exec:
+                    command:
+                    - cat
+                    - /tmp/healthy
+                initialDelaySeconds: 5
+                periodSeconds: 5
+    
+            # 設定 readinessProbe: 用於檢查應用程式是否已經準備好接收流量
+            readinessProbe:
+                exec:
+                    command:
+                    - cat
+                    - /tmp/healthy
+                initialDelaySeconds: 5
+                periodSeconds: 5
+    ```
 
 
 ## 考試資訊
@@ -1341,11 +1871,12 @@
     ```
 
     ![](../../assets/pics/k8s/exam_tips_wc.png)
--- `--command`: 用於指定容器的指令
+
+- `--command`: 用於指定容器的指令
     - Tips: `--command` 後面接的是對於容器的指令，因此習慣上我們會把 `--command` 放在最後面才宣告
-    ```bash
-    kubectl run static-busybox --image=busybox --dry-run=client -o=yaml --command -- sleep 1000
-    ```
+        ```bash
+        kubectl run static-busybox --image=busybox --dry-run=client -o=yaml --command -- sleep 1000
+        ```
 
 
 ## 學習資源
