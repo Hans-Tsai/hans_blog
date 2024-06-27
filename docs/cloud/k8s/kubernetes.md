@@ -30,7 +30,7 @@
 ### Cluster Architecture
 - Master Node
     - etcd: 儲存叢集資訊
-    - kube-scheduler: 負責調度工作節點上的應用程式或 container
+    - kube-scheduler: 負責排程工作節點上的應用程式或 container
     - kube-controller-manager: 負責管理不同控制器的功能，例如: Node Controller, Replication Controller 等
     - kube-apiserver: 負責協調叢集中的所有操作
 - Worker Node
@@ -740,8 +740,8 @@
         - NoSchedule: 表示新 Pod 不會被排程到這個節點上，除非這些 Pod 有相應的 toleration
             - 用途: 用於<strong>強制性地避免</strong> Pod 被排程到特定節點上
         - PreferNoSchedule: 表示 Kubernetes 會盡量避免將 Pod 排程到這個節點上，但這<strong>不是強制的</strong>。若沒有其他合適的節點，Pod 仍然可能會被排程到這個節點上
-            - 用途: 用於軟性地避免 Pod 調度到特定節點上，但在資源不足或其他情況下允許例外
-        - NoExecute: 表示不僅新 Pod 無法被調度到這個節點上，**已經在這個節點上的 Pod 也會被驅逐 (除非這些 Pod 有相應的 toleration)**
+            - 用途: 用於軟性地避免 Pod 排程到特定節點上，但在資源不足或其他情況下允許例外
+        - NoExecute: 表示不僅新 Pod 無法被排程到這個節點上，**已經在這個節點上的 Pod 也會被驅逐 (除非這些 Pod 有相應的 toleration)**
             - 用途: 用於在節點狀態改變或需要進行維護時，驅逐不符合條件的 Pod
     - 設定 taints
         ```bash
@@ -1831,6 +1831,297 @@
                 periodSeconds: 5
     ```
 
+## Cluster Maintenance
+### Cluster Upgrade Process
+- 檢視 K8s 叢集的版本
+    ```bash
+    kubectl get nodes
+    ```
+
+    ![](../../assets/pics/k8s/check_k8s_cluster_version.png)
+
+- 語意化版本管理 (Semantic Versioning)
+    - `major.minor.patch`
+        - major: 主要版本，當 K8s 叢集有<strong>重大變更 (breaking changes)</strong>時，會增加此版本號
+        - minor: 次要版本，當 K8s 叢集有<strong>新功能 (feature)</strong>時，會增加此版本號
+        - patch: 修補版本，當 K8s 叢集有<strong>錯誤修正 (bug fix)</strong>時，會增加此版本號
+        ![](../../assets/pics/k8s/k8s-semantic_verison.png)
+    - 在正式發布版本之前，軟體通常會經歷多個開發階段。這些版本被稱為先行版本，標示為 alpha, beta 等
+        - alpha: 初始測試版本，通常在功能開發的早期階段釋出。它可能包含一些新功能，但這些功能尚未完全實現 or 尚未通過完整測試
+            - e.g. `v1.0.0-alpha`
+        - beta: 是在 Alpha 版本之後釋出的，通常表示功能已基本完成，並且已進行了初步測試。beta 版本會提供給更廣泛的使用者進行測試，以收集回饋，並發現潛在問題
+            - e.g. `v1.0.0-beta`
+        ![](../../assets/pics/k8s/k8s_release_note_semantic_versioning_alpha_and_beta.png)
+
+- K8s 叢集中各物件的版本號
+    - K8s 叢集中的各物件，**沒有強制ㄧ定要使用相同的版本號**，但是核心物件 (e.g. Kube-apiserver, Kube-controller-manager, Kube-scheduler, Kubelet, Kube-proxy) 通常會使用相同的版本號
+    - K8s 叢集中的各物件，對於當前的 K8s 叢集版本號，分別會有可支援的版本號範圍
+        ![](../../assets/pics/k8s/k8s_cluster_all_objects_version-support_range.png)
+    - K8s 叢集中的各物件，例如: Pod, Deployment, Service 等，都有自己的版本號。當 K8s 叢集升級時，這些物件的版本號也會隨之升級
+        - **etcd cluster, CoreDNS 因為是獨立專案，因此會有其自己的版本號**。因此，當 K8s 叢集升級時，也<strong>需要注意 K8s 叢集與 etcd cluster, CoreDNS 的版本相容性</strong>
+        - **kubectl** 因為是 Kubernetes 的 CLI 工具，通常會安裝在使用者的本地端環境中，而不是 K8s 叢集的 Node 上。因此，**kubectl 會需要手動進行升級版本號**
+        ![](../../assets/pics/k8s/k8s_cluster_object_version.png)
+
+- 升級 K8s 叢集的版本號
+    - 在任何時間點，K8s 只支援最近的 3 個次要版本 (minor version)
+    - 最佳實踐: 建議的方法是一次升級一個次要版本
+        ![](../../assets/pics/k8s/upgrade_k8s_cluster_version_every_minor_version.png)
+    
+    - 常見的升級 K8s 叢集方法:
+        - 法 1: 使用<strong>公有雲 (e.g. GCP, AWS, Azure)，可以在 GUI 上進行升級</strong>
+        - 法 2: 使用 <strong>kubeadm 工具，透過 CLI 指令進行升級</strong>
+        - 法 3: 手動部署 K8s 叢集，就只能透過手動方式進行升級
+        ![](../../assets/pics/k8s/options_to_upgrade_k8s_cluster.png)
+
+    - 升級 K8s 叢集的三種主要策略
+        - Recreate: 先刪除舊的 **Node**，再建立新的 **Node**。這樣的方式，會導致服務中斷
+            ![](../../assets/pics/k8s/upgrade_k8s_cluster_recreate.png)
+        - RollingUpdate (預設): 滾動更新，一次升級一個 Node。亦即，逐步刪除舊的 **Node**，並建立新的 **Node**。這樣的方式，<strong>不會導致服務中斷</strong>
+            ![](../../assets/pics/k8s/upgrade_k8s_cluster_rollingupdate.png)
+        - Add new Node: 新增新的 **Node**，並將舊的 **Node** 逐步刪除。這樣的方式，<strong>不會導致服務中斷</strong>
+            ![](../../assets/pics/k8s/upgrade_k8s_cluster_add_new_node.png)
+
+- 檢視當前的作業系統版本
+    ```bash
+    cat /etc/*release
+    ```
+
+    ![](../../assets/pics/k8s/view_current_os_version.png)
+
+- 運用 kubeadm，升級 Master Node
+    - 檢查並計劃升級。這將確保所有前置條件，都已滿足並告知需要升級的內容
+        ```bash
+        kubeadm upgrade plan
+        ```
+
+        ![](../../assets/pics/k8s/kubeadm_upgrade_plan.png)
+
+    - 升級 kubeadm 工具的版本號
+        ```bash
+        apt-get upgrade -y kubeadm=1.12.0-00
+        ```
+    - 升級 K8s 叢集
+        ```bash
+        kubeadm upgrade apply v1.12.0
+        ```
+    
+    - 升級 K8s 叢集成功後，這時候若我們檢視當前的 Node 仍顯示舊的版本號
+        ![](../../assets/pics/k8s/kubeadm_upgrade_master_node_old.png)
+
+    - 升級 kubelet 物件 (這裡是指 master node 上的)
+        ```bash
+        apt-get upgrade kubelet=1.12.0-00
+        ```
+
+    - 重新啟動 kubelet 物件
+        ```bash
+        systemctl restart kubelet
+        ```
+
+    - 這時候，再檢視當前的 Node，就會正確顯示升級後的新版本號
+        ```bash
+        kubectl get nodes
+        ```
+
+        ![](../../assets/pics/k8s/kubeadm_upgrade_master_node_new.png)
+
+- 運用 kubeadm，升級 Worker Node
+    - 要先連線到 worker node 中，才可以開始進行升級 (可以用 Node name 或 Internal IP 來連線)
+        ```bash
+        ssh node01
+        ```
+
+        ```bash
+        ssh 10.244.0.4
+        ```
+
+    - 先將當前 worker node 上，所有 Pod 工作負載 (workload) 都排出 (drain)
+        ```bash
+        kubectl drain node01 --ignore-daemonsets
+        ```
+
+    - 升級 kubeadm、kubelet packages 的版本號
+        ```bash
+        apt-get upgrade -y kubeadm=1.12.0-00
+        apt-get upgrade -y kubelet=1.12.0-00
+        ```
+
+    - 更新 Worker Node 的設定檔，以符合新的版本號
+        ```bash
+        kubeadm upgrade node config --kubelet-version v1.12.0
+        ```
+
+    - 重新啟動 kubelet 服務
+        ```bash
+        systemctl restart kubelet
+        ```
+
+    - 將升級後的 Node 標記為可排程 (schedulable)
+        ```bash
+        kubectl uncordon node-1
+        ```
+
+        ![](../../assets/pics/k8s/kubeadm_upgrade_worker_node.png)
+
+    - 接下來，**需逐一升級每一個 Worker Node，直到所有 Worker Node 都完成升級**
+        ![](../../assets/pics/k8s/kubeadm_upgrade_worker_node_individually.png)
+
+- 參考資料:
+    - [K8s 官方文件: release note](https://github.com/kubernetes/kubernetes/releases)
+    - [K8s 官方文件: Upgrading kubeadm clusters](https://v1-29.docs.kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade/)
+        - 步驟 1: Changing the package repository
+        - 步驟 2: Determine which version to upgrade to
+        - 步驟 3: Upgrading control plane nodes
+        - 步驟 4: Upgrade worker nodes
+        - 步驟 5: Verify the status of the cluster
+
+### Operating System Upgrades
+- 在預設情況下，若一個 Node 在 5 分鐘內沒有恢復正常狀態，K8s 叢集將會開始驅逐該 Node 上的 Pod
+    ```bash
+    kube-controller-manager --pod-eviction-timeout=5m0s
+    ```
+
+    ![](../../assets/pics/k8s/os_upgrade_pod_eviction_timeout.png)
+
+- **Drain Node (排出)**: 將 Node 上的所有 Pod 驅逐（預設除了 DaemonSet 管理的 Pod 外），並<strong>將 Node 標記為不可排程 (unschedulable) 的狀態</strong>
+    - 目的: 將 Node 上的所有 Pod 安全地遷移到其他 Node 上，以便進行 Node 維護, 升級, 移除
+    - 使用情境: 進行 Node 維護, 升級
+        ```bash
+        kubectl drain node-1 --ignore-daemonsets
+        ```
+
+        ![](../../assets/pics/k8s/drain_ignore_daemonsets.png)
+
+    - 注意! 若 Pod 不是由 Deployment, ReplicaSet, StatefulSet 等控制器管理，則在執行 `kubectl drain` 指令時，會出現錯誤訊息，因為 K8s 叢集為了防範我們誤刪 Pod，而無法復原
+        - 此時，我們可以透過 `--force` 選項，強制執行 `kubectl drain` 指令
+        ```bash
+        kubectl drain node-1 --ignore-daemonsets --force
+        ```
+
+        ![](../../assets/pics/k8s/drain_force.png)
+
+- **Cordon/Uncordon Node (警戒/解除警戒)**
+    - **Cordon**: 用於標記 Node 為不可排程 (unschedulable)，即不再接受新的 Pod。**但現有 Pod 不會受到影響**
+        - 使用情境: 在需要進行 Node 維護時，防止新的 Pod 被排程到該節點上
+    - **Uncordon**: 用於標記 Node 為可排程 (schedulable)，即可以接受新的 Pod
+        - 使用情境:  Node 維護, 升級完成後，重新允許該 Node 接收新的 Pod
+    
+    ```bash
+    kubectl cordon node-1
+    kubectl uncordon node-1
+    ```
+
+    ![](../../assets/pics/k8s/uncordon.png)
+
+### Backup and Restore Methodologies
+- 若我們要備份 K8s 叢集時，會需要備份以下三種資源
+    - **Resource Configuration**: 包含所有 Kubernetes 叢集中的所有資源的設定，能確保在需要時能夠快速恢復 K8s 叢集狀態
+    - **etcd Cluster**: 儲存 K8s 叢集中所有狀態的資料，包括所有設定、資源設定、資料，是 K8s 叢集運行的核心
+    - **Persistent Volume**: 儲存應用程式的持久化資料，對於有狀態的應用程式 (e.g. 資料庫、重要文件) 非常重要，這些資料需要被可靠地備份，以防遺失
+    ![](../../assets/pics/k8s/k8s_cluster_back_three_condidates.png)
+
+- **Backup-Resource Configuration**
+    - 最佳實踐: 將所有資源設定儲存到 Git Repository 中，以便能夠快速恢復 K8s 叢集狀態
+        ![](../../assets/pics/k8s/save_resource_configuration_on_github.png)
+            
+    - 快速導出多種 K8s 叢集中核心資源的設定檔，並儲存到指定的 YAML manifest 設定檔中
+        - <strong>僅支援</strong>匯出以下資源的設定檔: <strong>Pod, Service, Deployment, ReplicaSet, StatefulSet, DaemonSet, Job, CronJob</strong>
+            ```bash
+            # (only for few resource groups)
+            kubectl get all --all-namespaces -o yaml > all-deploy-services.yaml
+            ```
+        - <strong>不支援</strong>匯出以下資源的設定檔: <strong>ConfigMap, Secret, PersistentVolume</strong>, PersistentVolumeClaim, <strong>Ingress</strong>, Custom Resource Definitions（CRD）及其實例
+            ```bash
+            kubectl get configmap --all-namespaces -o yaml >> all-deploy-services.yaml
+            kubectl get secret --all-namespaces -o yaml >> all-deploy-services.yaml
+            kubectl get pv --all-namespaces -o yaml >> all-deploy-services.yaml
+            kubectl get pvc --all-namespaces -o yaml >> all-deploy-services.yaml
+            kubectl get ingress --all-namespaces -o yaml >> all-deploy-services.yaml
+            kubectl get crd --all-namespaces -o yaml >> all-deploy-services.yaml
+            ```
+        
+        - Velero: 是一個強大的開源工具，用於備份、恢復、遷移 K8s 叢集中的資源 & PersistentVolume。它支持定期備份、基於策略的備份管理
+
+        ![](../../assets/pics/k8s/export_backup_resource_configuration.png)
+
+
+- **Backup-etcd Cluster**
+    - 實務上，我們會備份 etcd cluster 的資料，而不是對於每個 K8s 叢集中的資源逐一備份
+    - 可指定匯出的 etcd cluster 備份檔案要儲存在什麼路徑位置
+        ![](../../assets/pics/k8s/backup_etcd_cluster_data_dir.png)
+    
+    - **etcdctl**: 用於與 etcd cluster 進行互動的 CLI 指令工具，包括備份、還原、查詢等操作
+        - 備份 (backup)
+            - **需先指定 etcdctl 的 API 版本號** (必要)
+                ```bash
+                export ETCDCTL_API=3
+                ```
+            
+            - 建立 etcd cluster 的快照備份 (snapshot)
+                ```bash
+                etcdctl snapshot save snapshot.db
+                ```
+
+            - 查詢 etcd cluster 的快照狀態
+                ```bash
+                etcdctl snapshot status snapshot.db
+                ```
+
+            ![](../../assets/pics/k8s/etcdctl_snapshot_save.png)
+
+        - 還原 (restore)
+            - 先暫停 kube-apiserver 服務，以透過 etcd cluster 還原 K8s 叢集
+                ```bash
+                service kube-apiserver stop
+                ```
+
+            - 復原 etcd cluster 的快照備份
+                ```bash
+                etcdctl snapshot restore
+                ```
+
+            - 更新 etcd 服務的設定檔內容
+                - 預設路徑: `/etc/kubernetes/manifests/etcd.yaml` 中的 `spec.containers.command` 欄位
+            
+            - 重新載入系統設定檔
+                ```bash
+                systemctl daemon-reload
+                ```
+
+            - 重啟 etcd 服務
+                ```bash
+                service etcd restart
+                ```
+
+            - 重啟 kube-apiserver
+                ```bash
+                service kube-apiserver start
+                ```
+
+            ![](../../assets/pics/k8s/restore_etcd_cluster.png)
+
+-  Tips: <strong>每個 etcdctl 指令，都必須指定 endpoint, cacert, cert,key 四個選項值，用來驗證權限</strong>
+    - `--endpoints`: 指定 etcd 伺服器的 IP address, port
+    - `--cacert`: 指定 CA (證書授權機構) 的證書，用來驗證 etcd 伺服器的證書是否由受信任的 CA 所簽發
+    - `--cert`: 指定客戶端 (etcdctl) 證書，用來證明 etcdctl 的身份，讓 etcd 伺服器可以驗證它是否為受信任的實體
+    - `--key`: 指定客戶端 (etcdctl) 私鑰，用來解密 etcdctl 證書的內容，以便在 TLS handshake 過程中能證明 etcdctl 的身份
+    
+    ```bash
+    etcdctl \
+    snapshot save /tmp/snapshot.db \
+    --endpoints=https://127.0.0.1:2379 \
+    --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+    --cert=/etc/kubernetes/pki/etcd/etcd-server.crt \
+    --key=/etc/kubernetes/pki/etcd/etcd-server.key
+    ```
+
+    ![](../../assets/pics/k8s/etcdctl_four_required_options_for_authentication.png)
+
+- 參考資料: [K8s 官方文件: Operating etcd clusters for Kubernetes](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/)
+
+
+
+
 
 ## 考試資訊
 - 考試內容
@@ -1848,6 +2139,10 @@
 	- [CNCF-CKA 考試要求](https://docs.linuxfoundation.org/tc-docs/certification/tips-cka-and-ckad)
 
 ## 考試技巧
+- 設定常用指令的別名
+    ```bash
+    alias k=kubectl
+    ```
 - 根據 CLI 上的指令與選項，快速建立 YAML 範本: 
     - `--image`: 指定 container image
     - `--dry-run=client`: 告訴 kubectl 執行命令，但不會實際建立 Pod，只是模擬執行
@@ -1878,6 +2173,9 @@
         kubectl run static-busybox --image=busybox --dry-run=client -o=yaml --command -- sleep 1000
         ```
 
+- 在 CKA 考試期間，我們不會知道自己下指令的結果是否正確？ 因此，我們必須自己驗證結果。舉例說明如下
+    - Q: 題目要求我們根據指定的 container image 建立一個 Pod
+        - A: 我們可以透過 `kubectl describe pod <pod-name>` 來檢視 Pod 的詳細資訊，以確認 Pod 是否正確建立
 
 ## 學習資源
 - [Kubernetes 官方文件](https://kubernetes.io/docs/home/)
