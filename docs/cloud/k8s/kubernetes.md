@@ -4,7 +4,7 @@
 
 [TOC]
 
-## 簡介
+## Introduction
 - 由 CNCF 與 Linux Foundation 合作的 Kubernetes 證照考試
     - Certified Kubernetes Administrator (**CKA**): 對於 Kubernetes **管理者**
         - Core Concepts
@@ -26,7 +26,7 @@
         - Services & Networking
     - 參考資訊: [Frequently Asked Questions: CKA and CKAD & CKS](https://docs.linuxfoundation.org/tc-docs/certification/faq-cka-ckad-cks)
 
-## 核心觀念
+## Core Concepts
 ### Cluster Architecture
 - Master Node
     - etcd: 儲存叢集資訊
@@ -488,7 +488,7 @@
     ```bash
     kubectl get pods --all-namespaces
     ```
-### 宣告式 vs. 命令式
+### Imperative vs. Declarative
 > 在現代的程式碼即基礎設設施 (Infrastructure as Code, IaC) 中，有以下兩種主要的程式碼管理方式
 
 ![](../../assets/pics/k8s/iac_imperative_and_declarative.png)
@@ -921,7 +921,7 @@
     - [Schedule a Pod using required node affinity](https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes-using-node-affinity/#schedule-a-pod-using-required-node-affinity) 
     - [Node affinity](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#node-affinity)
 
-### 結合 Taints & Tolerations & Node Affinity
+### combine Taints & Tolerations & Node Affinity
 > 情境: 假設有五個 Node (Blue, Red, Green, Gray, Gray)，並且有五個 Pods (blue, red, green, gray, gray)。<br>
 > 我們希望將 blue Pod 排程到 Blue Node 上，red Pod 排程到 Red Node 上，green Pod 排程到 Green Node 上，gray Pod 排程到 Gray Node 上。<br>
 > 也就是說，在每個顏色的 Node 上，僅能排程對應顏色的 Pod。<br>
@@ -1309,7 +1309,7 @@
 - 當我們第一次建立 Deployment，會觸發一個 Rollout，產生一個 Revision。而之後的每次更新，都會觸發一個新的 Rollout，產生一個新的 Revision
     ![](../../assets/pics/k8s/rollout_and_versioning.png)
 
-#### Deployment-Rollout 策略
+#### Deployment-Rollout Strategy
 - 建立 Deployment
     ```bash
     kubectl create deployment nginx --image=nginx
@@ -2119,11 +2119,960 @@
 
 - 參考資料: [K8s 官方文件: Operating etcd clusters for Kubernetes](https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/)
 
+## Security
+### Kubernetes Security Primitives
+- 通常會對 kube-apiserver 設定 Secure Host
+    - 禁用純密碼存取，並啟用 SSH key 認證
+        ![](../../assets/pics/k8s/secure_hosts.png)
 
+    - 認證 (Authentication): 決定誰能存取？
+        - 使用者帳戶/密碼
+        - 使用者名稱/token
+        - Certificate
+        - 外部認證提供者 (e.g. LDAP)
+        - 服務帳戶 (Service Account)
+    - 授權 (Authorization): 決定誰能做什麼？
+        - 基於角色存取控制機制 (Role-Based Access Control, RBAC): 基於角色來控制存取權限
+        - 基於屬性存取控制機制 (Attribute-Based Access Control, ABAC): 基於使用者的屬性來控制存取權限
+        - Node Authorization: 決定 Node 是否能加入 K8s 叢集
+        - Webhook Mode: 透過 Webhook 服務來授權
+    ![](../../assets/pics/k8s/secure_kubernetes.png)
 
+- TLS 證書: 用於加密通訊
+    - 在 K8s 叢集中的各物件之間，都會使用 TLS 證書來加密通訊
+        ![](../../assets/pics/k8s/k8s_tls_certificates.png)
 
+- Networking: 讓 K8s 叢集中的 Pods 能夠互相通訊
+    - 預設，K8s 叢集中的 Pods 能夠互相通訊
+    - 可使用 Network Policies 來控制流量
+        ![](../../assets/pics/k8s/k8s_network_policies.png)
 
-## 考試資訊
+### Authentication
+- K8s 叢集中會有存在以下使用者帳號:
+    - 管理者
+    - 開發者
+    - 終端使用者 (由應用程式內部作管理，故暫不討論)
+    - 第三方應用程式 (Bots)
+    ![](../../assets/pics/k8s/k8s_different_user_accounts.png)
+
+- 上述的四種使用者帳戶，可以大致劃分成以下兩類:
+    - 人類: 管理者、開發者
+    - 機器: 其他需要存取 K8s 叢集的 process/service/application
+- K8s 叢集無法建立/查詢使用者帳號，只能透過外部認證提供者 (e.g. LDAP) 來建立/查詢使用者帳號
+    ![](../../assets/pics/k8s/k8s_service_accounts.png)
+
+- 所有使用者的存取權限都是由 kube-apiserver 進行管理，並且所有的 API 請求都會經過 kube-apiserver 來處理
+    ![](../../assets/pics/k8s/kube_apiserver_manage_api_requests.png)
+
+- kube-apiserver 會透過以下 4 種方法來認證使用者
+    ![](../../assets/pics/k8s/auth_mechanisms.png)
+
+    - 基本的使用者名稱/密碼 (已於 K8s v1.19 版本後停用)
+        - 法一: 在 CLI 上，執行時透過選項設定
+            ![](../../assets/pics/k8s/authentication_mechanisms_basic.png)
+        
+        - 法二: 使用 kubeadm，在 kube-apiserver YAML manifest 設定檔中，設定使用者名稱/密碼
+            ![](../../assets/pics/k8s/authentication_mechanisms_basic_config.png)
+
+- 透過 CLI 指令的選項，認證使用者
+    ```bash
+    curl -v -k http://master-node-ip:6443/api/v1/pods -u "user1:password123"
+    ```
+
+    ![](../../assets/pics/k8s/authenticate_user_using_password.png)
+
+- 透過 token 認證使用者
+    ![](../../assets/pics/k8s/authentication_mechanism_using_token.png.png)
+    
+
+### TLS certificates for cluster components
+- 非對稱加密法 (Asymmetric Encryption)
+    - 可透過公鑰 (Public Key) 加密，私鑰 (Private Key) 解密
+- 建立公私鑰對
+    ```bash
+    ssh-keygen -t rsa -b 2048 -f mykey
+    ```
+
+- 檢視公鑰
+    ```bash
+    cat ~/.ssh/id_rsa.pub
+    ```
+
+- 指定私鑰的本地端路徑，登入遠端系統
+    ```bash
+    ssh -i /path/to/id_rsa user1@server1
+    ```
+
+- 同一個使用者，可以使用私鑰，對多個遠端系統的公鑰進行認證，來登入系統
+    ![](../../assets/pics/k8s/asymmetric_encryption_ssh_multiple_public_keys.png)
+
+- 也可以使用 OpenSSL 工具，產生公私鑰對
+    ```bash
+    openssl genrsa -out my-bank.key 1024
+    openssl rsa -in my-bank.key -pubout > mybank.pem
+    ```
+
+- 憑證機構 (Certificate Authority, CA)
+    - e.g. Symantec, DigiCert, Comodo, GlobalSign 等
+    ![](../../assets/pics/k8s/ca_illustration.png)
+    
+    - 需要用私鑰來產生 CSR 文件
+    - CSR (Certificate Signing Request) 是一個發送給 CA 的文件，用於請求頒發憑證。CSR 會包含一些關鍵訊息，例如: 組織名稱、域名、公鑰、其他識別信息。
+
+    - 簽署 SSL/TLS 證書的流程
+        - Certificate Signing Request (CSR)：產生一個包含申請者訊息的 CSR 文件
+            ```bash
+            openssl req -new -key my-bank.key -out my-bank.csr -subj "/C=US/ST=CA/O=MyOrg, Inc./CN=my-bank.com"
+            ```
+
+            ![](../../assets/pics/k8s/ca_generate_csr_file.png)
+
+        - Validate Information：憑證機構（CA）會驗證申請者提供的訊息
+            ![](../../assets/pics/k8s/ca_validate_information.png)
+
+        - Sign and Send Certificate：CA 簽名，並發送正式的證書給申請者
+            ![](../../assets/pics/k8s/ca_sign_and_send_certification.png)
+
+- 公共鍵值基礎建設 (Public Key Infrastructure, PKI)
+    - 用於建立、管理、儲存、分發、撤銷數位證書
+    - 用於確保數位證書的安全性
+    ![](../../assets/pics/k8s/pki_illustration.png)
+
+- 公私鑰的慣用命名風格
+    - 公鑰: `.crt`, `.cert`, `.pem` 結尾
+    - 私鑰: 含有 `.key`
+    ![](../../assets/pics/k8s/public_key_and_private_key_naming_convention.png)
+
+- 在 K8s 叢集中，關於 TLS 加密傳輸通常會有以下兩個要求
+    - 伺服器端證書 (Server Certificates): 需要使用伺服器證書來驗證它們的身份
+        - kube-apiserver server: **用於證明自己是合法的 kube-apiserver**，讓其他客戶端如 kubectl、kubelet 可以信任並與其安全通訊
+        - etcd server: **用於證明自己是合法的 etcd 伺服器**，讓 kube-apiserver 和其他客戶端可以信任並與其安全通訊
+        - kubelet server: **用於證明自己是合法的 kubelet 伺服器**，讓 kube-apiserver 和其他客戶端可以信任並與其安全通訊
+        ![](../../assets/pics/k8s/client_tls_certifications.png)
+        
+    - 客戶端證書 (Client Certificates): 需要使用客戶端證書來證明它們的身份
+        - admin
+        - kube-scheduler
+        - kube-controller-manager
+        - kube-proxy
+        - kube-apiserver client: 當 kube-apiserver 需要與 etcd 等其他服務通訊時，**用於證明自己的身份**
+        - etcd client: 當 etcd 需要與其他服務通信時，如 K8s 叢集內的其他 etcd 節點，**用於證明自己的身份**
+        - kubelet client: 當 kubelet 需要與 kube-apiserver 或其他服務通訊時，**用於證明自己的身份**
+        ![](../../assets/pics/k8s/server_tls_certifications.png)
+
+    - 統整概念:
+        ![](../../assets/pics/k8s/tls_certifications_in_k8s.png)
+        ![](../../assets/pics/k8s/tls_in_k8s_bewteen_kube_apiserver_and_kube_scheduler.png)
+        ![](../../assets/pics/k8s/tls_certifications_in_k8s_summary.png)
+
+- 建立 TLS 證書
+    - CA (憑證機構本身)
+        - Step 1: 產生公私鑰對
+            ```bash
+            openssl genrsa -out ca.key 2048
+            ```
+
+        - Step 2: 產生 CSR 文件
+            ```
+            openssl req -new -key ca.key -subj "/CN=KUBERNETES-CA" -out ca.csr
+            ```
+
+        - Step 3: 簽署證書
+            ```
+            openssl x509 -req -in ca.csr -signkey ca.key -out ca.crt
+            ```
+
+        ![](../../assets/pics/k8s/ca_create_tls_certification.png)
+
+    - Server Certificates
+        - kube-apiserver server:
+            ![](../../assets/pics/k8s/kube_apiserver_create_tls_certification_1.png)
+            ![](../../assets/pics/k8s/kube_apiserver_create_tls_certification_2.png)
+
+        - etcd server
+            ![](../../assets/pics/k8s/etcd_server_create_tls_certification_1.png)
+            ![](../../assets/pics/k8s/etcd_server_create_tls_certification_2.png)
+
+        - kubelet server:
+            ![](../../assets/pics/k8s/kubelet_server_create_tls_certification.png)
+
+    - Client Certificates
+        - admin 
+            - Step 1: 產生公私鑰對
+                ```bash
+                openssl genrsa -out admin.key 2048
+                ```
+
+            - Step 2: 產生 CSR 文件
+                ```bash
+                openssl req -new -key admin.key -subj "/CN=kube-admin" -out admin.csr
+                ```
+
+            - Step 3: 簽署證書
+                ```bash
+                openssl x509 -req -in admin.csr -CA ca.crt -CAkey ca.key -out admin.crt
+                ```
+            
+            - Step 4: 授權給 admin 使用
+                ```bash
+                openssl req -new -key admin.key -subj "/CN=kube-admin/O=system:masters" -out admin.csr
+                ```
+
+            ![](../../assets/pics/k8s/admin_create_tls_certification.png)
+
+        - kube-scheduler
+            ![](../../assets/pics/k8s/kube_scheduler_create_tls_certification.png)
+            
+        - kube-controller-manager
+            ![](../../assets/pics/k8s/kube_controller_manager_create_tls_certification.png)
+            
+        - kube-proxy
+            ![](../../assets/pics/k8s/kube_proxy_create_tls_certification.png)
+
+        - kubelet client:
+            ![](../../assets/pics/k8s/kubelet_client_create_tls_certification.png)
+            
+        - 統整:
+            ![](../../assets/pics/k8s/clients_tls_certifications.png)
+
+- 設定 TLS 證書給 K8s 叢集中的各元件
+    - 手動設定 --- 不推薦，較複雜
+    - 透過 **kubeadm** 工具設定 --- **推薦作法**
+    ![](../../assets/pics/k8s/set_certifications_in_k8s.png)
+
+- 可透過 kube-apiserver 的 YAML manifest 設定檔，來檢視 kube-apiserver 的證書
+    ```bash
+    cat /etc/kubernetes/manifests/kube-apiserver.yaml
+    ```
+
+    ![](../../assets/pics/k8s/view_certifications_in_k8s.png)
+
+- 檢視 TLS 證書的內容
+    ```bash
+    openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout
+    ```
+
+    ![](../../assets/pics/k8s/view_certifications_content.png)
+
+- 檢視 K8s 叢集中各元件的 TLS 證書內容: 檢查 TLS 證書是否皆由正確的 CA 簽發，且是否在有效期限內
+    ![](../../assets/pics/k8s/view_certifications_content_in_k8s.png)
+
+- 檢視 K8s 叢集的啟動狀態
+    - 法一: 假設使用 kubeadm 建立 K8s 叢集，可查看 etcd 的 log
+        ```bash
+        kubectl logs etcd-master
+        ```
+
+        ![](../../assets/pics/k8s/view_k8s_logs_by_etcd.png)
+        
+    - 法二: 若 K8s 叢集未正確啟動 (e.g. kube-apiserver || etcd 服務未正常啟動)，導致 kubectl 指令無法使用時，可檢視 container 的 log
+        ```bash
+        docker ps -a
+        ```
+
+        ```
+        docker logs <container-id>
+        ```
+
+        ![](../../assets/pics/k8s/view_k8s_logs_by_docker.png)
+
+#### K8s Certificate API
+- K8s Certificate API
+    - K8s 叢集會由 kube-controller-manager 擔任 CA 的角色，負責簽署 K8s 叢集內部各元件的 TLS 證書
+        ![](../../assets/pics/k8s/kube_controller_manager_ca_role.png)
+        ![](../../assets/pics/k8s/kube_controller_manager_ca_role_yaml.png)
+
+    - 簽署 TLS 證書的流程: 將 CSR 文件，透過 K8s Certificate API 送至 kube-controller-manager，由其簽署證書
+        ![](../../assets/pics/k8s/k8s_certificate_api_processes.png)
+
+        - Step 1: 使用者建立新的私鑰
+            ```bash
+            openssl genrsa -out jane.key 2048
+            ```
+
+        - Step 2: 產生一個 CSR 文件
+            ```bash
+            openssl req -new -key jane.key -subj "/CN=jane" -out jane.csr 
+            ```
+        
+        - Step 3: 使用者將 CSR 文件發送給 admin，由 admin 將 CSR 文件轉換成 CSR 物件，並將其運用 base64 編碼後儲存
+            ```yaml
+            apiVersion: certificates.k8s.io/v1beta1
+            kind: CertificateSigningRequest
+            metadata:
+                name: jane
+            
+            spec:
+                groups:
+                -   system:authenticated
+                usages:
+                -   digital signature
+                -   key encipherment
+                -   server auth
+            request:
+                <certificate-goes-here>
+            ```
+
+            - 檢視 CSR 文件的內容
+                ```bash
+                cat jane.csr | base64
+                ```
+
+            - 建立 CertificateSigningRequest 物件
+                ```bash
+                kubectl create -f jane.yaml
+                ```
+
+            ![](../../assets/pics/k8s/cat_jane_csr.png)
+
+        - Step 4: 列出目前所有的 CSR 文件
+            ```bash
+            kubectl get csr
+            ```
+
+        - Step 5: 允許簽署 CSR 文件
+            ```bash
+            kubectl certificate approve jane
+            ```
+
+            - 也可以拒絕簽署 CSR 文件
+                ```bash
+                kubectl certificate deny jane
+                ```
+
+            - 也可以刪除 CSR 文件
+                ```bash
+                kubectl delete csr jane
+                ```
+
+        - Step 6: 檢視 TLS 證書的內容
+            ```bash
+            kubectl get csr jane -o=yaml
+            ```
+
+            - 檢視 TLS 證書的內容
+                ```bash
+                echo "<certificate>" | base64 --decode
+                ```
+
+            ![](../../assets/pics/k8s/k8s_certificate_api.png)
+
+#### kubeconfig
+- kubeconfig
+    - 當我們要存取 K8s 叢集的資源時，需提供相關認證資訊。但如果每次都這麼做，會有點麻煩。因此，我們可以設定 kubeconfig 檔案，來存放這些認證資訊
+        ![](../../assets/pics/k8s/not_using_kubeconfig.png.png)
+
+        ```bash
+        kubectl get pods --kubeconfig <config-file-name>
+        ```
+
+    - kubeconfig 檔案會包含以下三個部分
+        - Cluster: 關於 K8s 叢集的資訊
+        - Context: 關於使用者如何存取 K8s 叢集的資訊 (將 Cluster & User 結合在一起)
+        - User: 關於使用者的資訊
+        ![](../../assets/pics/k8s/kubeconfig_structure.png)
+        ![](../../assets/pics/k8s/kubeconfig_yaml.png)
+
+    - 檢視當前 K8s 叢集正在使用的 kubeconfig 設定檔內容
+        ```bash
+        kubectl config view
+        ```
+
+        ![](../../assets/pics/k8s/view_kubeconfig_content.png)
+
+    - 檢視指定路徑下的 kubeconfig 設定檔內容
+        ```bash
+        kubectl config veiw --kubeconfig=my-custom-config
+        ```
+
+        ![](../../assets/pics/k8s/view_kubeconfig_file_content.png)
+
+    - 更新當前使用的 kubeconfig context 設定
+        ```bash
+        kubectl config use-context <context-name>
+        kubectl config use-context prod-user@production
+        ```
+
+        ![](../../assets/pics/k8s/update_kubeconfig_current_context.png)
+
+    - 設定 kubeconfig 中 context 的 namespace
+        ![](../../assets/pics/k8s/set_kubeconfig_context_namespace.png)
+
+    - 設定 kubeconfig 中 context 的 TLS 證書
+        - 法一: 可指定 TLS 證書的路徑位置
+            ![](../../assets/pics/k8s/set_tls_certificate_in_kubeconfig_by_file_path.png)
+
+        - 法二: 可指定 TLS 證書的 base64 編碼內容
+            ![](../../assets/pics/k8s/set_tls_certificate_in_kubeconfig_by_base64_content_1.png)
+            ![](../../assets/pics/k8s/set_tls_certificate_in_kubeconfig_by_base64_content_2.png)
+
+### Authorization
+#### K8s API groups
+- 檢視當前 K8s 叢集的版本號
+    ```bash
+    curl https://kube-master:6443/version
+    ```
+
+- 檢視當前 K8s 叢集有哪些 Pods
+    ```bash
+    curl https://kube-master:6443/api/v1/pods
+    ```
+
+    ![](../../assets/pics/k8s/curl_get_k8s_version_and_pods.png)
+
+- K8s 叢集的 APIs 會根據用途劃分為以下的群組:
+    - `/metrics`: 提供系統性能、資源使用的指標數據，常用於監控
+    - `/healthz`: 提供應用程序的健康狀態檢查，用於確認應用程式是否正常運行
+    - `/version`: 顯示 kube-apiserver 的版本資訊
+    - `/api`: 核心 API 的入口，處理基本的 K8s 資源
+        ![](../../assets/pics/k8s/api_group_core_group.png)
+
+    - `/apis`: 擴展 API 的入口，處理更專門的 K8s 資源
+        ![](../../assets/pics/k8s/api_group_named_group.png)
+        
+    - `/logs`: 提供 log 數據，通常用於除錯、監控
+    ![](../../assets/pics/k8s/k8s_api_groups.png)
+
+- 列出所有的 API groups
+    ```bash
+    curl http://localhost:6443 -k
+    ```
+
+    ```bash
+    curl http://localhost:6443/apis -k | grep "name"
+    ```
+
+    - `-k`: 用於告訴 curl 忽略 SSL 證書的驗證，通常用於本地端 or 測試環境
+    ![](../../assets/pics/k8s/list_all_api_groups.png)
+
+- 存取 kube-apiserver 的方法
+    - 法一: curl 指令 + TLS 證書 (較複雜)
+        ![](../../assets/pics/k8s/access_kube_apiserver_using_tls_certification_option.png)
+
+    - 法二: kubectl-proxy 作為代理伺服器，來存取 kube-apiserver
+        ![](../../assets/pics/k8s/kubectl_proxy.png)
+
+        - 注意! **kube-proxy 不等於 kubectl-proxy**
+            ![](../../assets/pics/k8s/kube_proxy_is_not_equal_to_kubectl_proxy.png)
+
+#### Authorization Mechanisms
+- K8s 叢集支援以下幾種授權機制，來控制 K8s API 的存取權限
+    - Node Authorization: 決定 Node 是否能加入 K8s 叢集
+        ![](../../assets/pics/k8s/node_authorization.png)
+
+    - ABAC (Attribute-Based Access Control): 基於使用者的屬性來控制存取權限
+        ![](../../assets/pics/k8s/abac.png)
+
+    - RBAC (Role-Based Access Control): 基於角色來控制存取權限
+        ![](../../assets/pics/k8s/rbac.png)
+
+    - Webhook Mode: 透過 Webhook 服務，由 K8s 叢集外部的服務進行授權決策
+        ![](../../assets/pics/k8s/webhook.png)
+
+    - AlwaysAllow: 無論任何情況，都允許存取
+        - 這是 **K8s 叢集的預設授權機制**
+        ![](../../assets/pics/k8s/always_allow.png)
+
+    - AlwaysDeny: 無論任何情況，都拒絕存取
+
+- 若同時使用多種授權機制，K8s 叢集會按照所列出的順序，進行授權決策
+    - 若前一個授權機制拒絕請求的話，就由下一個授權機制進行授權決策，依此類推
+    - 一旦某個授權機制允許請求，就不會再繼續往下進行授權決策
+    ![](../../assets/pics/k8s/authorization_mode_multiple_options.png)
+
+#### RBAC authorization
+- 每個 Role 會包含三個區塊
+    - apiGroups: 指定使用 API 群組
+        - `""`: 表示 core API 群組
+        - `apps`: 表示 named API 群組
+    - resources: 指定可存取的 K8s 物件有哪些
+    - verbs: 指定對資源可執行的操作有哪些
+- 建立 Role
+    ```yaml
+    # developer-role.yaml
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+        name: developer
+    
+    # 指定授權的規則
+    rules:
+    -   apiGroups: [""]        # "" indicates the core API group
+        resources: ["pods"]
+        verbs: ["get", "list", "update", "delete", "create"]
+    
+    -   apiGroups: [""]
+        resources: ["ConfigMap"]
+        verbs: ["create"]
+    ```
+
+    ```bash
+    kubectl create -f developer-role.yaml
+    ```
+
+- 根據 Role，建立 RoleBinding
+    ```yaml
+    # developer-role-binding.yaml
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+        name: devuser-developer-binding
+    
+    # 指定要授權的使用者
+    subjects:
+    -   kind: User
+        name: dev-user # "name" is case sensitive
+        apiGroup: rbac.authorization.k8s.io
+    
+    # 指定要授予的 Role
+    roleRef:
+        kind: Role
+        name: developer
+        apiGroup: rbac.authorization.k8s.io
+    ```
+
+    ```bash
+    kubectl create -f devuser-developer-binding.yaml
+    ```
+
+    ![](../../assets/pics/k8s/rbac_create_role_and_rolebinding.png)
+
+- 列出當前所有 RBAC 的 Role
+    ```bash
+    kubectl get roles
+    ```
+
+- 詳細檢視指定 Role 的資訊
+    ```bash
+    kubectl describe role developer
+    ```
+
+- 列出當前所有 RBAC 的 RoleBinding
+    ```bash
+    kubectl get rolebindings
+    ```
+
+    ![](../../assets/pics/k8s/get_all_rolebindings.png)
+
+- 詳細檢視指定 RoleBinding 的資訊
+    ```bash
+    kubectl describe rolebinding devuser-developer-binding
+    ```
+
+    ![](../../assets/pics/k8s/describe_rolebinding.png)
+
+#### Check Access Control
+- 檢視當前使用者的<strong>對於某個操作的存取權限</strong>
+    ```bash
+    kubectl auth can-i create deployments
+    ```
+
+    ```bash
+    kubectl auth can-i delete nodes
+    ```
+
+- <strong>以指定使用者的身份</strong>，檢視其對於某個操作的存取權限
+    ```bash
+    kubectl auth can-i create deployments --as=dev-user
+    ```
+
+    ```bash
+    kubectl auth can-i create pods --as=dev-user
+    ```
+
+- 在指定的 namespace 中，以指定的使用者身份，檢視其對於某個操作的存取權限
+    ```bash
+    kubectl auth can-i create pods --as dev-user --namespace=test
+    ```
+
+![](../../assets/pics/k8s/check_rbac_access_control.png)
+
+#### Resource Names
+- 指定哪些 K8s 資源可以被存取
+    - e.g. Pods
+
+    ```yaml
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+        name: developer
+    
+    # 指定授權的規則
+    rules:
+    -   apiGroups: [""]      # "" indicates the core API group
+        # 指定可以存取的 K8s 資源
+        resources: ["pods"] 
+        verbs: ["get", "update", "create"]
+        resourceNames: ["blue", "orange"]
+    ```
+
+    ![](../../assets/pics/k8s/resource_names.png)
+
+#### Cluster Roles
+- 一般的 Role 是針對某個 namespace 來進行授權
+    ![](../../assets/pics/k8s/roles_with_namespace.png)
+
+- 而 **Cluster Role 是針對整個 K8s 叢集來進行授權**
+    - e.g. 我們無法對 Node 進行資源隔離，因為 Node 是屬於整個 K8s 叢集的，而不是隸屬於某個 namespace 的
+    ![](../../assets/pics/k8s/cluster_roles_cannot_use_namespace.png)
+
+- 因此，K8s 叢集中的所有資源可分為以下兩種
+    - Namespaced Resources: 只能在特定的 namespace 中存取
+        ```bash
+        kubectl api-resources --namespaced=true
+        ```
+
+    - Cluster-scoped Resources: 可在整個 K8s 叢集中存取
+        ```bash
+        kubectl api-resources --namespaced=false
+        ```
+
+    ![](../../assets/pics/k8s/namespaced_and_cluster_scoped_resources.png)
+
+- 建立 Cluster Role
+    ```yaml
+    # cluster-role.yaml
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+        name: cluster-administrator
+    
+    # 指定授權的規則
+    rules:
+    -   apiGroups: [""] # "" indicates the core API group
+        resources: ["nodes"]
+        verbs: ["get", "list", "delete", "create"]
+    ```
+
+    ```bash
+    kubectl create -f cluster-admin-role.yaml
+    ```
+
+- 建立 Cluster RoleBinding
+    ```yaml
+    # cluster-admin-role-binding.yaml
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+        name: cluster-admin-role-binding
+    
+    # 指定要授權的使用者
+    subjects:
+    -   kind: User
+        name: cluster-admin
+        apiGroup: rbac.authorization.k8s.io
+    
+    # 指定要授予的 Cluster Role
+    roleRef:
+        kind: ClusterRole
+        name: cluster-administrator
+        apiGroup: rbac.authorization.k8s.io
+    ```
+
+    ```bash
+    kubectl create -f cluster-admin-role-binding.yaml
+    ```
+
+    ![](../../assets/pics/k8s/cluster_role_and_cluster_rolebinding.png)
+
+#### Service Account
+- 一般的 User Account 供人類使用; 而 Service Account: 供應用程式使用
+    ![](../../assets/pics/k8s/user_account_and_service_account.png)
+
+- 在 K8s v1.24 版之後的更新
+    - 建立 Service Account 時，不會再自動建立 token，而是<strong>需要透過 TokenRequest API，建立 Service Account 的 token</strong>
+        ```bash
+        # 建立 Service Account
+        kubectl create serviceaccount dashboard-sa
+        ```
+
+        ```bash
+        # 透過 TokenRequest API，建立 Service Account 的 token
+        kubectl create token dashboard-sa
+        ```
+
+        ![](../../assets/pics/k8s/service_account_generate_token.png)
+
+    - 解碼 Service Account 的 token
+        ```bash
+        jq -R 'split(".") | select(length > 0) | .[0], .[1] | @base64d | fromjson' <<< eyJhbGciOiJSUzI...
+        ```
+
+    - Service token 具有有效期限
+        - `exp`: token 的過期時間
+            - 預設: 1 小時
+
+        ![](../../assets/pics/k8s/decode_service_account_token.png)
+
+    - 若想建立一個永久有效的 token，可建立一個 Secret 物件，並將 token 儲存綁定 Service Account
+        ```yaml
+        # secret-definition.yaml
+        apiVersion: v1
+        kind: Secret
+        type: kubernetes.io/service-account-token
+        metadata:
+            name: mysecretname
+            namespace: default
+
+            # 綁定 Service Account
+            annotations:
+                kubernetes.io/service-account.name: dashboard-sa
+
+        # 給定 secret token 值
+        stringData:
+            token: eyJhbGciOi
+        ```
+
+        ```bash
+        kubectl create -f secret-definition.yaml
+        ```
+
+        ![](../../assets/pics/k8s/service_account_generate_token_using_k8s_secret.png)
+
+### Images Security
+- 檢視 container 所使用的 image
+    ![](../../assets/pics/k8s/container_image_name.png)
+
+- image name 的完整格式
+    - username/account: 預設是 library，是 Docker Hub 的預設 public namespace，用來儲存一些知名且常用的官方 image
+    ![](../../assets/pics/k8s/container_image_name_fqdn.png)
+
+- 若要<strong>使用 Docker</strong> 登入 private registry，並使用 private image
+    ```bash
+    docker login <private-registry.io>
+    ```
+
+    ```bash
+    docker run <private-registry.io/apps/internal-app>
+    ```
+
+    ![](../../assets/pics/k8s/docker_login_private_registry.png)
+
+- <strong>在 K8s 中，需先建立一個 docker-registry secret 物件</strong>，來存放登入 private registry 的認證資訊
+    ```bash
+    kubectl create secret docker-registry regcred \
+        --docker-server=private-registry.io \ 
+        --docker-username=registry-user \
+        --docker-password=registry-password \
+        --docker-email=registry-user@org.com
+    ```
+
+    ```yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+        name: nginx-pod
+    
+    spec:
+        containers:
+        -   name: nginx
+            image: private-registry.io/apps/internal-app
+        
+        # 指定要使用的 docker-registry secret
+        imagePullSecrets:
+        -   name: regcred
+    ```
+
+    ![](../../assets/pics/k8s/k8s_secret_docker_registry.png)
+
+### Security Contexts
+- Docker Security 先備知識
+    - container 與 host 共享相同的 O.S. kernel，因此不算是完全的資源隔離
+        - 在 Linux 中，container 是透過 namespace, cgroup 來實現資源隔離
+            - namespace: 用於隔離 process
+            - cgroup: 用於分配資源
+            > 不同 namespace 的情況下，可以存在相同的 process ID 不會互相干擾
+
+        - container 與 host 使用不同的 namespace
+        - 所有在 container 中運行的 process 實際上都是在 host 上執行的，**但是在 container 自己的 namespace 中運行**
+        - docker container 位於自己的 namespace 中，並且只能看到自己的 namespace 中的 process
+            ![](../../assets/pics/k8s/container_process.png)
+        - 對於 host 而言，container 中的 process 就像是 host 上的其他 process 一樣
+            ![](../../assets/pics/k8s/host_process.png)
+
+        - Host 預設會使用 root 身份，來執行 container 中的 process
+            - 可透過 `--user` 選項，來指定 container 中的 process 使用者身份
+                ```bash
+                docker run --user=1000 ubuntu sleep 3600
+                ```
+
+                ![](../../assets/pics/k8s/docker_run_setting_user.png)
+
+            - 也可透過 Dockerfile 指定使用者身份，未來當 container 執行這個 image 時，就會預設用這個使用者身份
+                ```dockerfile
+                # my-ubuntu-image.Dockerfile
+                FROM ubuntu
+                USER 1
+                ```
+
+                ```bash
+                docker build -t my-ubuntu-image .
+                ```
+
+                ```bash
+                docker run my-ubuntu-image sleep 3600
+                ```
+
+                ![](../../assets/pics/k8s/dockerfile_setting_user.png)
+
+            - 透過 Docker 為我們實作的安全機制，**container 中的 root 身份不同於 host 中的 root 身份，能限制其權限**
+                - e.g. 在 container 中的 root 身份，無法直接存取 host 中的檔案
+                - Docker 實際上運用的是 Linux capability 來實作安全機制的
+                ![](../../assets/pics/k8s/linux_capability.png)
+
+                - 賦予 container 中的 process 某些 Linux capability 權限
+                    ```bash
+                    docker run --cap-add=NET_ADMIN ubuntu sleep 3600
+                    ```
+
+                - 限制 container 中的 process 某些 Linux capability 權限
+                    ```bash
+                    docker run --cap-drop=NET_ADMIN ubuntu sleep 3600
+                    ```
+
+                - 開放 container 中的 process 所有 Linux capability 權限
+                    ```bash
+                    docker run --privileged ubuntu sleep 3600
+                    ```
+
+- K8s Security
+    - 可以設定 **Kubernetes Security 於 Pod level 或 container level**
+        - Pod Security Context: 設定整個 Pod 的安全性
+        - Container Security Context: 設定單一個 container 的安全性
+        > **若兩個同時都有設定，則以 Container Security Context 為主**
+
+        ![](../../assets/pics/k8s/k8s_security_pod_level_and_container_level.png)
+
+    - Pod Level
+        ```yaml
+        # pod-security-context.yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+            name: web-pod
+
+        spec:
+            # 設定 Pod level 的 security context
+            securityContext:
+                runAsUser: 1000
+            containers:
+            -   name: ubuntu
+                image: ubuntu
+                command: ["sleep", "3600"]
+        ```
+
+        ![](../../assets/pics/k8s/set_k8s_pod_level_security_context.png)
+
+    - container Level
+        ```yaml
+        # container-security-context.yaml
+        apiVersion: v1
+        kind: Pod
+        metadata:
+            name: web-pod
+        
+        spec:
+            containers:
+            -   name: ubuntu
+                image: ubuntu
+                command: ["sleep", "3600"]
+                # 設定 container level 的 security context
+                securityContext:
+                    runAsUser: 1000
+                    # 設定 container 的 linux capability 權限
+                    capabilities: 
+                        add: ["MAC_ADMIN"]
+        ```
+
+        ![](../../assets/pics/k8s/set_k8s_container_level_security_context.png)
+
+### Network Policies
+- **Network Policies 算是一種 K8s 物件**
+- Network Policies 有以下兩種 traffic
+    - Ingress (入口): 進入 Pod 的 traffic
+    - Egress (出口): 從 Pod 離開的 traffic
+    ![](../../assets/pics/k8s/network_policies_two_types.png)
+    ![](../../assets/pics/k8s/network_policies_ingress_and_egress_illustration.png)
+
+- K8s 預設是允許所有的 traffic 進出 Pod; 若想要限制 traffic，則需設定 Network Policies
+- 為了簡化 K8s 的流量管理，一旦某個 Ingress traffic 被允許進入 Pod，相關的 Egress traffic 也會被預設允許，除非有明確的 Network Policies 限制該 Egress traffic
+
+- 無論我們使用哪種 Networking 解決方案，都應該要預設使 K8s 叢集中的各個 Pod 能夠彼此通訊
+    - 相當於所有 Pods 都在同一個虛擬私有網路 (VPN) 中，而該虛擬私有網路會橫跨 K8s 叢集中的所有 Nodes
+    ![](../../assets/pics/k8s/k8s_networking_between_nodes.png)
+
+- 建立 Network Policies
+    - 可以使用 label, podSelector, namespaceSelector 來指定 Network Policies
+        ![](../../assets/pics/k8s/network_policy_selectors.png)
+    
+    - 可以設定 Ingress, Egress traffic 的規則
+        - Ingress: 用 from 陣列開頭，來指定 traffic 來源
+        - Egress: 用 to 陣列開頭，來指定 traffic 目的地
+        ![](../../assets/pics/k8s/network_policy_rules.png)
+
+    - 可以設定 ipBlock 來限制外部服務的 IP address 存取權限
+        - 因為外部服務不在 K8s 叢集中，因此無法使用 label, podSelector, namespaceSelector 來設定 Network Policies
+        ![](../../assets/pics/k8s/network_policy_ingress_ipblock.png)
+        ![](../../assets/pics/k8s/network_policy_egress_ipblock.png)
+
+    - Tips: 設定 Ingress, Egress traffic 規則時，需注意 `-` 陣列的表示方式
+        - **當一個 `-` 陣列中，包含多個規則時**，表示這些規則是 **AND** 關係，需同時符合
+            ![](../../assets/pics/k8s/network_policy_ingress_and_ operator.png)
+
+        - **當多個 `-` 陣列中，並列表示規則時**，表示這些規則是 **OR** 關係，只要符合其中一個即可
+            ![](../../assets/pics/k8s/network_policy_ingress_or_ operator.png)
+
+    ```yaml
+    # network-policy-definition.yaml
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+        name: db-policy
+    
+    spec:
+        podSelector:
+            matchLabels:
+            role: db
+        
+        # 設定要限制的 traffic 類型
+        policyTypes:
+        -   Ingress
+        -   Egress
+        
+        # 設定 Ingress traffic 規則
+        ingress:
+        - from:
+            # 多個 `-` 陣列中，並列表示規則，表示這些規則是 OR 關係，只要符合其中一個即可
+            - ipBlock:
+                cidr: 172.17.0.0/16
+                except:
+                - 172.17.1.0/24
+            - namespaceSelector:
+                matchLabels:
+                    project: myproject
+            - podSelector:
+                matchLabels:
+                    role: frontend
+            
+            ports:
+            -   protocol: TCP
+                port: 6379
+        # 設定 Egress traffic 規則
+        egress:
+        - to:
+            - ipBlock:
+                cidr: 10.0.0.0/24
+            
+            ports:
+            -   protocol: TCP
+                port: 5978
+    ```
+
+    ```bash
+    kubectl create -f network-policy-definition.yaml
+    ```
+
+## Exam Information
 - 考試內容
     - ![](../../assets/pics/k8s/cncf_cka_exam_domain.png)
 - 考試時間: 2 小時
@@ -2138,11 +3087,19 @@
 	- [CNCF-CKA 報名考試](https://www.cncf.io/training/certification/cka/)
 	- [CNCF-CKA 考試要求](https://docs.linuxfoundation.org/tc-docs/certification/tips-cka-and-ckad)
 
-## 考試技巧
+## Exam Tips
 - 設定常用指令的別名
     ```bash
     alias k=kubectl
     ```
+
+- 檢視 K8s 叢集中各項資源的縮寫名稱 (shortnames, 是否屬於 Namespaced 的物件)
+    ```bash
+    kubectl api-resources
+    ```
+
+    ![](../../assets/pics/k8s/kubectl_api_resources.png)
+
 - 根據 CLI 上的指令與選項，快速建立 YAML 範本: 
     - `--image`: 指定 container image
     - `--dry-run=client`: 告訴 kubectl 執行命令，但不會實際建立 Pod，只是模擬執行
@@ -2177,7 +3134,7 @@
     - Q: 題目要求我們根據指定的 container image 建立一個 Pod
         - A: 我們可以透過 `kubectl describe pod <pod-name>` 來檢視 Pod 的詳細資訊，以確認 Pod 是否正確建立
 
-## 學習資源
+## Reference
 - [Kubernetes 官方文件](https://kubernetes.io/docs/home/)
 - [GitHub: KodeKloud CKA learning notes](https://github.com/kodekloudhub/certified-kubernetes-administrator-course?tab=readme-ov-file)
 - [KodeKloud 線上模擬練習環境](https://uklabs.kodekloud.com/courses/labs-certified-kubernetes-administrator-with-practice-tests/)
