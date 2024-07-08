@@ -3072,6 +3072,381 @@
     kubectl create -f network-policy-definition.yaml
     ```
 
+- 實務上，我們可能會需要頻繁地切換 cluster, namespace，因此我們可以使用 kubectx, kubens 工具來輔助我們達成目標
+    - kubectx: 輔助快速地切換 K8s cluster
+    - kubens: 輔助快速地切換 K8s namespace
+    - 參考連結: [GitHub: kubectx + kubens: Power tools for kubectl](https://github.com/ahmetb/kubectx)
+
+## Storage
+### Introduction of Docker Storage
+- **Docker Storage Driver 負責管理 container 檔案系統，可決定 container 如何儲存、讀取資料**，以下是兩種主要的類型
+    - Storage Driver: 用於管理 container 的 storage
+        - e.g. Overlay2（目前 Docker 預設使用）, AUFS, Btrfs, ZFS, DeviceMapper
+    - Volume Driver: 用於管理 container 的 volume
+        - e.g. local（預設的 Volume Driver）, nfs, glusterfs, flocker, rexray
+        - e.g. (第三方): Azure file storage, DigitalOcean, Google Compute Persistent Disks, VMware vSphere storage
+- 當安裝 Docker 後，它會自動建立以下的目錄結構
+    - `/var/lib/docker/`: 是 Docker container 預設儲存資料的地方
+        - `aufs`: 儲存 AUFS storage driver 的資料
+        - `containers`: 儲存 container 的資料
+        - `image`: 儲存 container image 的資料
+        - `volumes`: 儲存 container volume 的資料
+
+    ![](../../assets/pics/docker_storage_file_system_folder_structure.png)
+
+- Docker image 的分層架構
+    - **Dockerfile 的每一行都會在 Docker image 中建立一個新的層 (layer)**
+    - Docker image 是由多個分層組成，**每一層都是唯讀的**
+    - **每一層都會基於前一層的基礎上進行修改**，因此這也會反映在 image layer 的檔案大小上
+    ![](../../assets/pics/docker_image_layerd_architecture.png)
+    
+    - **Docker 建立 image 時，會重複使用快取中的 image layer**，以加速 image 的建立，同時也能節省硬碟使用空間
+        - e.g. 以下圖為例，兩個 Dockerfile 內容重複的部分 (Layer 1 ~ Layer 3)，Docker 會從快取中重複使用已經建立過的 image layer
+        ![](../../assets/pics/k8s/docker_image_layer_reuse_cache.png)
+
+- 說明 Docker 透過 image，建立、執行、刪除 container 的過程
+    - Step 1: **建立唯讀的(read-only) image layer**
+        ```bash
+        docker build Dockerfile -t <myimage>
+        ```
+
+        ![](../../assets/pics/k8s/docker_image_layer_readonly.png)
+
+    - Step 2: **執行 image 時，建立一個可寫的(writeable) container layer，用來儲存 container 產生的資料**，例如: 應用程式產生的 log 資料，或是 container 產生的 temp 資料
+        ```bash
+        docker run <myimage>
+        ```
+
+        ![](../../assets/pics/k8s/docker_image_container_layer_writeable.png)
+
+        - **copy-on-write 機制**: 若我們想要編輯 image layer 的程式碼，**Docker 會幫我們在 container layer 建立一個副本，讓我們可以進行編輯** (e.g. app.py)
+            ![](../../assets/pics/k8s/docker_image_copy_on_write_mechanism.png)
+
+    - Step 3: **當 container 被刪除時，container layer 所儲存的資料也會被一併刪除**
+        - 注意! **若多個 container 使用相同的 image，則這些 container layer 會共享相同的 image layer**
+
+        ```bash
+        docker rm <mycontainer>
+        ```
+
+- Docker 建立永久儲存資料的 container
+    - 法一 (Volume mounting): 由 Docker 自行管理的掛載點
+        - Step 1: 建立 Volume 在 `/var/lib/docker/volumes/` 資料夾中
+            ```bash
+            docker volume create <data_volume>
+            ```
+        
+        - Step 2: 將 Volume 掛載到 container 中。這樣，當 container 被刪除時，Volume 中的資料可繼續保留
+            - 註: `/var/lib/mysql` 是 MySQL container 預設儲存資料的地方
+
+            ```bash
+            docker run -v <data_volume>:/var/lib/mysql mysql
+            ```
+
+        - 可檢視當前所有的 Volume
+            ```bash
+            docker volume ls
+            ```
+
+    - 法二 (Bind mounting): 直接將宿主機的儲存空間掛載到 container 上，可指定宿主機的儲存空間的完整路徑
+        - Step 1: 建立外部資料儲存位置
+            ```bash
+            mkdir -p /data/mysql
+            ```
+
+        - Step 2: 將外部資料儲存位置掛載到 container 中
+            ```bash
+            docker run --mount type=bind,source=/data/mysql,target=/var/lib/mysql mysql
+            ```
+
+        ![](../../assets/pics/k8s/docker_container_volume.png)
+
+- Storage Driver 功能
+    - **維護 container image 的分層架構**
+    - 建立可讀寫的 container layer
+    - **支援 copy-on-write 機制**
+- 常見的 Storage Driver 類型: AUFS, ZFS, BTRFS, Device Mapper, Overlay, Overlay2
+    - Docker 會根據當前 container 所在的底層作業系統(O.S.)，自動地選出最適合的 Storage Driver 來使用
+
+- 當 Docker 運行 container 時，可以指定要使用的 Volume driver，這樣會建立一個 container 並掛載指定的 AWS EBS volume
+    ```bash
+    docker run -it --name mysql --volume-driver rexray/ebs --mount src=ebs-vol,target=/var/lib/mysql mysql
+    ```
+
+    ![](../../assets/pics/k8s/volume_driver_aws_ebs.png)
+
+- Container Interface: 用來定義 Orchestration 系統與 container 之間的溝通方式
+    - orchestration 系統: 用來管理 container 的系統，例如: Kubernetes, Docker Swarm, Mesos
+    - container runtime: 用來執行 container 的系統，例如: Docker, containerd, CRI-O, rkt
+    - CRI (Container Runtime Interface)
+    - CNI (Container Network Interface)
+    - CSI (Container Storage Interface): 定義了一組 RPC 供 Orchestration 系統來呼叫，並且這些 RPC 必須由 storage driver 實作
+    ![](../../assets/pics/k8s/container_storage_interface.png)
+
+### Volume
+- 在 K8s 的世界中，Pod 的生命週期總是短暫的。因此，我們可以建立 Volume 來儲存 Pod 的資料，以便在 Pod 被刪除後，資料仍然可以被保留
+- 我們可以在 Pod 的 YAML manifest 設定檔中，指定 Volume 路徑位置
+    ```yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+        name: random-number-generator
+
+    spec:
+        containers:
+        -   name: alpine
+            image: alpine
+            command: ["/bin/sh", "-c"]
+            args: ["shuf -i 0-100 -n 1 >> /opt/number.out"]
+            # 定義 container 掛載點
+            volumeMounts:
+            -   mountPath: /opt
+                name: data-volume
+
+        # 定義 Pod 所使用的 Volume
+        volumes:
+        -   name: data-volume
+            hostPath:
+                path: /data
+                type: Directory
+    ```
+
+- 舉例來說，我們建立一個可以產生隨機數字的 Pod，並將 Volume 掛載到 container 內的 `/opt` 路徑上。之後，當 container 運行時，所產生的隨機數字會被寫入 Volume 中，而實際是儲存到宿主機的 `/data` 資料夾中
+    - 這樣，當 Pod 被刪除時，Volume 中的資料仍然可以被保留
+    ![](../../assets/pics/k8s/k8s_volume_mounting.png)
+
+- Volume 的 Storage option: 因為 Volume 的 hostPath 是代表宿主機的路徑，因此不適用於 multi-node cluster，這時我們就要使用外部的 Storage 來解決這個問題
+    - e.g. NFS, GlusterFS, CephFS
+    - e.g. (三大公有雲) AWS EBS, Azure Disk, Google's Persistent Disk
+    ![](../../assets/pics/k8s/k8s_volume_storage_option.png)
+
+    ```yaml
+    # volume-storage-option.yaml
+    # ...略
+    volumes:
+    -   name: data-volume
+        awsElasticBlockStore:
+            volumeID: <volume-id>
+            fsType: ext4
+    ```
+
+### Persistent Volume
+- Persistent Volume (PV): 是 K8s 叢集中的一個物件，用來提供存 cluster 級別的儲存空間公池
+    - 使用者可透過 Persistent Volume Claim (PVC) 來存取 PV
+    - PV 可有效降低使用者在每次建立 Pod 時，需要手動指定 Volume 的負擔
+- 建立 Persistent Volume
+    ```yaml
+    # pv-definition.yaml
+    apiVersion: v1
+    kind: PersistentVolume
+    metadata:
+        name: pv-vol1
+    
+    spec:
+        accessModes: [ "ReadWriteOnce" ]
+        capacity:
+            storage: 1Gi
+        hostPath:
+            path: /tmp/data
+    ```
+
+    ```bash
+    kubectl create -f pv-definition.yaml
+    ```
+
+- 檢視 Persistent Volume
+    ```bash
+    kubectl get pv
+    ```
+
+- 刪除 Persistent Volume
+    ```bash
+    kubectl delete pv pv-vol1
+    ```
+
+    ![](../../assets/pics/k8s/k8s_persistent_volume.png)
+
+### Persistent Volume Claim
+- Persistent Volume Claim (PVC): 是 K8s 叢集中的一個物件，用來存取 Persistent Volume (PV)
+- 一旦建立 PVC，K8s 會自動根據 PVC 的需求和屬性，將 PV 綁定到 PVC 上; **若 PVC 的設定要求無法與任何 PV 匹配**，則 PVC 會保持在 **Pending** 狀態
+    ![](../../assets/pics/k8s/k8s_persistent_volume_claims.png)
+
+- 宣告 PVC, PV 的 YAML manifest 設定檔
+    ```yaml
+    # pv-definition.yaml
+    kind: PersistentVolume
+    apiVersion: v1
+    metadata:
+        name: pv-vol1
+
+    spec:
+        accessModes: [ "ReadWriteOnce" ]
+        capacity:
+            storage: 1Gi
+        hostPath:
+            path: /tmp/data
+    ```
+
+    ```yaml
+    # pvc-definition.yaml
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+        name: myclaim
+
+    spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+            requests:
+                storage: 1Gi
+    ```
+
+- 建立並檢視 PV
+    ```bash
+    kubectl create -f pv-definition.yaml
+    ```
+
+    ```bash
+    kubectl get pv
+    ```
+
+    ![](../../assets/pics/k8s/k8s_create_pv.png)
+
+- 建立並檢視 PVC
+    ```bash
+    kubectl create -f pvc-definition.yaml
+    ```
+
+    ```bash
+    kubectl get pvc
+    ```
+
+    ![](../../assets/pics/k8s/k8s_create_pvc.png)
+
+- 在 Pod 的 YAML manifest 設定檔中，指定 PVC 的名稱
+    ```yaml
+    # pod-definition.yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+        name: mypod
+    
+    spec:
+        containers:
+        -   name: myfrontend
+            image: nginx
+            volumeMounts:
+            -   mountPath: "/var/www/html"
+                name: mypd
+        volumes:
+        -   name: mypd
+            persistentVolumeClaim:
+                claimName: myclaim
+    ```
+
+- 刪除 PVC
+    ```bash
+    kubectl delete pvc myclaim
+    ```
+
+- 刪除 PV
+    ```bash
+    kubectl delete pv pv-vol1
+    ```
+
+- PV, PVC, Pod 之間的關係圖
+    ![](../../assets/pics/k8s/k8s_pv_pvc_pod_relationship.png)
+
+### Storage Class
+- Storage Class: 是 K8s 叢集中的一個物件，用來定義 Persistent Volume (PV) 的屬性
+    - Storage Class 可以定義 PV 的屬性，例如: 儲存類型、儲存大小、儲存位置等
+- Static Provisioning: 是指在建立 PV 時，直接指定 PV 的屬性
+    - 需在建立 PV 時，都要手動指定 PV 的屬性 => 較麻煩
+    ![](../../assets/pics/k8s/k8s_storage_class_static_provisioning.png)
+
+- Dynamic Provisioning: 是指在建立 PVC 時，K8s **會自動根據 PVC 的需求、屬性，來建立 PV**
+    - 當我們建立 Storage Class 物件後，PV 會自動建立，我們就不再需要定義 PV => **較方便**
+    ![](../../assets/pics/k8s/k8s_storage_class_dynamic_provisioning.png)
+
+- 建立 Storage Class
+    ```yaml
+    # sc-definition.yaml
+    apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+        name: google-storage
+    
+    # Storage Class 的 Dynamic Provisioning 設定
+    provisioner: kubernetes.io/gce-pd
+    ```
+
+    ```bash
+    kubectl create -f sc-definition.yaml
+    ```
+
+- 檢視 Storage Class
+    ```bash
+    kubectl get sc
+    ```
+
+    ![](../../assets/pics/k8s/k8s_get_storage_class.png)
+
+- 建立 Persistent Volume Claim (PVC) 時，指定 Storage Class
+    ```yaml
+    # pvc-definition.yaml
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+        name: myclaim
+
+    spec:
+        accessModes: [ "ReadWriteOnce" ]
+        # 指定要使用的 Storage Class 物件
+        storageClassName: google-storage       
+        resources:
+            requests:
+                storage: 500Mi
+    ```
+
+    ```bash
+    kubectl create -f pvc-definition.yaml
+    ```
+
+- 建立 Pod
+    ```yaml
+    # pod-definition.yaml
+    apiVersion: v1
+    kind: Pod
+    metadata:
+        name: mypod
+    
+    spec:
+        containers:
+        -   name: frontend
+            image: nginx
+            volumeMounts:
+            -   mountPath: "/var/www/html"
+                name: web
+        
+        volumes:
+        -   name: web
+            # 指定要使用的 PVC
+            persistentVolumeClaim:
+                claimName: myclaim
+    ```
+
+    ```bash
+    kubectl create -f pod-definition.yaml
+    ```
+
+- Storage Class 的 Provisioner 選項
+    - e.g. Portworx, ScaleIO, CephFS
+    - e.g. (公有雲) AWS EBS, Azure File, Azure Disk, GCP Persistent Disk
+        ![](../../assets/pics/k8s/k8s_storage_class_yaml.png)
+
+    - 而之所以稱為 **Storage Class**，是因為它<strong>可以定義多個不同的 Storage Class，以便滿足不同的需求</strong>
+        ![](../../assets/pics/k8s/k8s_storage_class_provisioner.png)
+
 ## Exam Information
 - 考試內容
     - ![](../../assets/pics/k8s/cncf_cka_exam_domain.png)
