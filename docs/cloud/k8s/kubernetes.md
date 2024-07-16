@@ -3447,6 +3447,543 @@
     - 而之所以稱為 **Storage Class**，是因為它<strong>可以定義多個不同的 Storage Class，以便滿足不同的需求</strong>
         ![](../../assets/pics/k8s/k8s_storage_class_provisioner.png)
 
+## Networking
+### Networling Prerequisite
+- Switching
+    - 用途: 連接區域網路（LAN）中的裝置
+        - 兩台設備透過網路介面（interface），連接到交換機（switch）
+    - **檢視當前主機的網路介面**
+        - eth0: 用來連接到交換機上的網路介面
+        ```bash
+        ip link
+        ```
+    
+    - **檢視當前主機的 IP address**
+        ```bash
+        ip addr
+        ```
+
+    - **新增 eth0 網路介面的 IP address**
+        ```bash
+        ip addr add 192.168.1.10/24 dev eth0
+        ```
+
+        ```bash
+        ip addr add 192.168.1.11/24 dev eth0
+        ```
+
+    ![](../../assets/pics/k8s/networking_prerequisite_switching.png)
+
+- Routing
+    - 用途: 連接兩個網路，會分配給每個網路一個 IP address，根據路由表（IP table）將封包轉發給下一個目的地
+    - 檢視當前的路由表
+        ```bash
+        ip route show
+        ```
+
+    - 新增 IP address 到路由表 
+        ```bash
+        ip route add 192.168.1.0/24 via 192.168.2.1
+        ```
+
+    - 設定預設路由器的 IP address
+        ```bash
+        ip route add default via 192.168.2.1
+        ```
+
+    ![](../../assets/pics/k8s/networking_prerequisite_routing.png)
+
+- Gateway
+    - 用途: 將區域網路連向外部網際網路（Internet）的通道
+
+- DNS
+    - 用途: 將 IP address 轉換成 domain name
+    - 檢視靜態 DNS 設定（若這邊已查詢到相對應的 IP address <-> domain name，就不會到 DNS 伺服器查詢了）
+        ```bash
+        cat /etc/hosts
+        ```
+
+        ![](../../assets/pics/k8s/networking_prerequisite_dns_set_etc_hosts.png)
+
+    - 檢視當前系統所使用的 DNS 伺服器（可得知當前系統是在哪裡查詢 domain name）
+        ```bash
+        cat /etc/resolv.conf
+        ```
+
+        ![](../../assets/pics/k8s/networking_prerequisite_dns_set_etc_resolv_conf.png)
+
+    - 檢視當前預設的 DNS 解析順序
+        ```bash
+        cat /etc/nsswitch.conf
+        ```
+
+        ![](../../assets/pics/k8s/nsswitch_conf.png)
+
+    - 在小型系統中，我們或許可以手動設定每個主機的 /etc/hosts 文件; 但若是在大型系統中，需要一個集中設定的地方 => DNS 伺服器
+        ![](../../assets/pics/k8s/networking_prerequisite_without_dns_server.png)
+        ![](../../assets/pics/k8s/networking_prerequisite_with_dns_server.png)
+
+    - 域名 (Domain name)
+        ![](../../assets/pics/k8s/domain_name.png)
+
+        - **Top Level Domain (TLD)**: 例如: `.com`, `.org`, `.net`
+            ![](../../assets/pics/top_level_domain.png)
+
+        - 域名階層關係
+            ![](../../assets/pics/k8s/domain_name_hierarchy.png)
+
+        - 域名解析流程
+            ![](../../assets/pics/k8s/domain_name_resolution_process.png)
+
+    - DNS 紀錄類別
+        - A: 將 domain name 解析成 IPv4 address
+        - AAAA: 將 domain name 解析成 IPv6 address
+        - CNAME: 將 domain name 解析成另一個 domain name
+        ![](../../assets/pics/k8s/dns_record_types.png)
+
+    - DNS 常用指令
+        - `nslookup`: 查詢 DNS 記錄
+            - 注意! 這個指令只會查詢 DNS 伺服器中的紀錄; 而不會查看 `/etc/hosts` 檔案中的靜態 DNS 記錄
+            ```bash
+            nslookup www.google.com
+            ```
+
+            ![](../../assets/pics/k8s/nslookup.png)
+
+        - `dig`: 詳細檢視 DNS 記錄
+            ```bash
+            dig www.google.com
+            ```
+
+            ![](../../assets/pics/k8s/dig.png)
+
+- Networking Namespace
+    - container 僅能看到由它本身運行的 process; 而底層主機可以看到所有的 process
+        ```bash
+        ps aux
+        ```
+
+        ![](../../assets/pics/k8s/process_namespace.png)
+
+    - 建立 Linux 主機的 network namespace
+        ```bash
+        ip netns add red
+        ```
+
+    - 列出當前所有的 network namespace
+        ```bash
+        ip netns
+        ```
+
+        ![](../../assets/pics/k8s/create_network_namespace.png)
+
+    - 在指定的 network namespace 中執行指令
+        ```bash
+        ip netns exec red ip link
+        ```
+
+        ![](../../assets/pics/k8s/exec_network_namespace.png)
+
+    - Step 1: 建立虛擬乙太網路連線
+        ```bash
+        ip link add veth-red type veth peer name veth-blue
+        ```
+    - Step 2: 將虛擬乙太網路設定到指定的 network namespace
+        ```bash
+        ip link set veth-red netns red
+        ```
+
+        ```bash
+        ip link set veth-blue netns blue
+        ```
+
+    - Step 3: 在指定的 network namespace 中，設定虛擬以太網路的 IP address
+        ```bash
+        ip -n red addr add 192.168.15.1/24 dev veth-red
+        ```
+
+        ```bash
+        ip -n blue addr add 192.168.15.2/24 dev veth-blue
+        ```
+
+    - Step 4: 在指定的 network namespace 中，啟用虛擬乙太網路連線
+        ```bash
+        ip -n red link set veth-red up
+        ```
+
+        ```bash
+        ip -n blue link set veth-blue up
+        ```
+
+        ![](../../assets/pics/k8s/create_veth.png)
+
+    - 在指定的 network namespace 中，測試虛擬乙太網路的連線
+        ```bash
+        ip netns exec red ping 192.168.15.2
+        ```
+
+        ```bash
+        ip netns exec red arp
+        ```
+
+        ```bash
+        ip netns exec blue arp
+        ```
+
+        ![](../../assets/pics/k8s/test_veth.png)
+
+    - 刪除虛擬乙太網路連線
+        ```bash
+        ip -n red link del veth-red
+        ```
+
+        ```bash
+        ip -n red link del veth-blue
+        ```
+
+    - 在生產環境中，通常我們會建立一個虛擬的交換機，來連接不同的 network namespace，而不需要手動一個個建立 veth pair
+        - e.g. [Linux Bridge](), [Open vSwitch](https://www.openvswitch.org/)
+        ![](../../assets/pics/k8s/virtual_switch.png)
+
+- Docker Networking: Docker 有三種網路模式
+    - **None**: 在 None 模式下，容器只有一個 loopback 介面，無其他網路介面
+        ```bash
+        docker run --network none nginx
+        ```
+
+        ![](../../assets/pics/k8s/docker_networking_none.png)
+
+    - **Host**: 在 Host 模式下，容器直接使用宿主機的網路堆疊，沒有獨立的網路命名空間
+        ```bash
+        docker run --network host nginx
+        ```
+
+        ![](../../assets/pics/k8s/docker_networking_host.png)
+
+    - **Bridge**: **預設的網路模式**，會建立一個 Docker 內部專用網路，用於連接 container 到 Docker 宿主機的網路
+        - 容器之間可以透過 IP address 相互通訊
+
+        ```bash
+        docker run --network bridge nginx
+        ```
+
+        ![](../../assets/pics/k8s/docker_networking_bridge.png)
+
+    - 檢視當前所有的 Docker networking
+        ```bash
+        docker network ls
+        ```
+
+        ![](../../assets/pics/k8s/docker_network_ls.png)
+
+    - 檢視當前 Docker container 的網路命名空間
+        ```bash
+        ip netns
+        ```
+
+        ![](../../assets/pics/k8s/ip_netns.png)
+
+    - 開放 Docker container 的 port，供外部存取使用
+        ```bash
+        docker run -p 8080:80 nginx
+        ```
+
+        ![](../../assets/pics/k8s/docker_run_export_port.png)
+
+    - Docker 使用 iptables 的原理，來實現 traffic 的 port-forwarding 機制
+        ```bash
+        iptables \
+            -t nat \
+            -A DOCKER \
+            -j DNAT \
+            --dport 8080 \
+            --to-destination 172.18.0.6:80
+        ```
+
+        ![](../../assets/pics/k8s/docker_iptables.png)
+
+    - 檢視 Docker 當前所有的 iptables 規則
+        ```bash
+        iptables -nvL -t nat
+        ```
+
+        ![](../../assets/pics/k8s/docker_iptables_rule.png)
+
+- Container Network Interface (CNI)
+    - 是一個標準，用來規範容器運行時的網路設定
+        ![](../../assets/pics/k8s/container_network_interface.png)
+        ![](../../assets/pics/k8s/cni_standard.png)
+
+    - 第三方 Network Plugin 供應商
+        - e.g. Weave, Calico, Flannel, Cilium
+        - 但是，**Docker 使用 Container Network Model (CNM)** 來處理網路問題，而不是使用 CNI
+        ![](../../assets/pics/k8s/docker_networking_cnm.png)
+
+- K8s 叢集必須開放哪些 ports？
+    - 一般情況
+        ![](../../assets/pics/k8s/k8s_networking_structure.png)
+
+    - 多個 Master Node 之間的 etcd 需要交換資訊，可以開放 port 2380 供 etcd client 使用
+        ![](../../assets/pics/k8s/k8s_networking_etcd_client_port.png)
+
+    - K8s 官方文件要求開放的 ports
+        ![](../../assets/pics/k8s/k8s_docs_required_ports.png)
+
+### Pod Networking
+- 可以使用 K8s 官方推薦的第三方插件（plugin），來實現 Pod 的網路連接
+    - 每個 Pod 都必須擁有一個 IP address
+    - 在同一個 Node 中的所有 Pod 都必須能互相通訊
+    - 在不同 Node 中的 Pod 也必須能互相通訊，而不需要透過 NAT
+    ![](../../assets/pics/k8s/k8s_networking_plugin.png)
+
+- 可以將所有關於設定 Pod 連線的指令，寫成一個 bash script
+    ![](../../assets/pics/k8s/k8s_networking_net_script.png)
+
+- 實務上，比較好的做法是在設定路由器作為 default Gateway，來連接不同的 Node
+    - 如此，我們就會有一個虛擬網路（`10.244.0.0/16`），可以串連所有的 Node
+    ![](../../assets/pics/k8s/k8s_networking_gateway.png)
+
+- 實務上，我們需要一個標準、自動化的 K8s networking 設定方式 => 採用 CNI 標準
+    - 分成 ADD, DEL 兩個主要部份
+        - ADD: 在 k8s networking 中，新增 container
+        - DEL: 從 k8s networking 中，移除 container
+- 運用 CNI 標準，快速設定 container 的網路連接
+    - CNI 設定檔的路徑: `/etc/cni/net.d`
+    - CNI 指令檔的路徑: `/opt/cni/bin` (e.g. `net-script.sh`)
+    - 執行指令: `./net-script.sh add <container-name> <namespace>`
+    ![](../../assets/pics/k8s/k8s_networking_cni_config.png)
+
+- 參考連結: [K8s 官方文件: Installing Addons](https://kubernetes.io/docs/concepts/cluster-administration/addons/)
+
+### CNI in K8s
+- 設定 CNI
+    - 建立 container runtime: containerd, cri-o
+    - 選擇 container network plugin: weaveworks, flannel, cilium, VMware NSC
+        - 路徑: `/opt/cni/bin`
+    - 參考設定檔: 要使用哪個 plugin？ 該如何使用 plugin？
+        - 路徑: `bridge.conflist`, `flannel.conflist`
+    ![](../../assets/pics/k8s/configuring_cni.png)
+    ![](../../assets/pics/k8s/view_kubelet_options.png)
+
+### CNI-weaveworks
+- Weaveworks 是一個 CNI plugin，用來實現 K8s 叢集的網路連接
+    - 功能: 提供網路連接、網路安全、網路監控等功能
+    - Weave Net 在 K8s 中會以 DaemonSet 的形式部署。因為 DaemonSet 能確保在 K8s 集群中的每個節點上都有運行一個 Pod，這對於網路插件而言是必要的。網路插件需要在每個節點上運行，以便管理該節點上所有 container 的網路設定
+    ![](../../assets/pics/k8s/cni_weaveworks_architecture.png)
+
+- 部署 weavework 插件
+    ```bash
+    kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64
+| tr -d '\n')"
+    ```
+
+- 檢視部署好的 weave net
+    ```bash
+    kubectl get pods –n=kube-system
+    ```
+
+- 可透過 log 來檢查部署 weave net 時的錯誤訊息
+    ```bash
+    kubectl logs weave-net-5gcmb weave –n=kube-system
+    ```
+
+    ![](../../assets/pics/k8s/weaveworks_peer.png)
+
+### IP address management-weaveworks
+- 根據 CNI 標準的要求，網路插件必須能管理每個 container 的 IP address
+    ![](../../assets/pics/k8s/ip_address_management_cni_standard.png)
+    ![](../../assets/pics/k8s/ip_address_management_weaveworks.png)
+
+### DNS in K8s
+- Service DNS 紀錄 (FQDN)
+- Pod DNS 紀錄 (FQDN)
+    ![](../../assets/pics/k8s/k8s_dns_fqdn.png)
+
+### Ingress
+- 前情提要: 關於將外部流量引導到 K8s 叢集中的 Pod 的方法
+    - 使用 NodePort Service
+        - 域名解析：`www.my-online-store.com` 被解析到一個節點的 IP address <node-ip>
+        - NodePort 服務 `wear-service` 開放 port 38080
+        - 外部使用者的存取流程: 使用者存取 `http://my-online-store.com:38080` 時，該請求被轉發到 NodePort 服務 wear-service，然後再路由到後端的 Pod
+        ![](../../assets/pics/k8s/ingress_nodeport_service.png)
+
+    - 使用負載平衡（Load Balancer）
+        - 可透過多個 GCP Load Balancer 服務，存取不同的 Service（e.g. `wear-service`, `video-service`）
+        ![](../../assets/pics/k8s/ingress_gcp_load_balancer.png)
+
+- 用途: 用來管理外部流量進入 K8s 叢集
+    - 透過 Ingress Controller 來管理流量
+    - Ingress Controller 會根據 Ingress 資源的設定，來將流量導向到指定的 Service
+    - K8s 叢集預設並不提供 Ingress Controller，因此我們需要自行部署 Ingress Controller
+        - 僅需一次性設定 NodePort Service 或 Load Balancer，使其可以供外部存取 K8s 叢集中的 Service 即可
+        ![](../../assets/pics/k8s/ingress_nodeport.png)
+        ![](../../assets/pics/k8s/ingress_load_balancer.png)
+
+- Ingress Controller: 首先，必須在 K8s 叢集中部署一個 Ingress Controller 用來管理 Ingress Resource 的控制器，它負責監聽 Ingress Resource 的變更，並根據 Ingress 規則將流量路由到相應的 Service 上
+    - 常見的 Ingress Controller: GCP Cloud Load Balancing, Nginx, HAProxy, Traefik, Contour, Istio
+    ![](../../assets/pics/k8s/ingress_controller.png)
+
+- Ingress Resource: 部署好 Ingress Controller 之後，需要設定 Ingress Resource 來定義具體的路由規則。Ingress Resource 會設定如何將外部 HTTP 和 HTTPS 請求路由到 K8s 叢集內的 Service 上
+    ![](../../assets/pics/k8s/ingress_controller_and_ingress_resource.png)
+
+- 建立 Ingress Controller 的流程
+    - Step 1: 建立 ConfigMap
+        ```yaml
+        kind: ConfigMap
+        apiVersion: v1
+        metadata:
+            name: nginx-configuration
+        ```
+
+    - Step 2: 建立 Deployment
+        ```yaml
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+            name: ingress-controller
+        
+        spec:
+            replicas: 1
+            selector:
+                matchLabels:
+                    name: nginx-ingress
+            template:
+                metadata:
+                    labels:
+                        name: nginx-ingress
+                spec:
+                    serviceAccountName: ingress-serviceaccount
+                    containers:
+                        -   name: nginx-ingress-controller
+                            image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.21.0
+                            # 設定 Nginx Ingress Controller 的參數
+                            args:
+                            -   /nginx-ingress-controller
+                            -   --configmap=$(POD_NAMESPACE)/nginx-configuration
+                        env:
+                        -   name: POD_NAME
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: metadata.name
+                        -   name: POD_NAMESPACE
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: metadata.namespace
+                    ports:
+                        - name: http
+                            containerPort: 80
+                        - name: https
+                            containerPort: 443
+        ```
+
+    - Step 3: 建立 Service Account，以設定正確的 Roles, ClusterRoles, RoleBindings 權限
+        ```bash
+        kubectl create -f ingress-sa.yaml
+        ```
+
+        ![](../../assets/pics/k8s/ingress_controller_configmap_and_serviceaccount.png)
+
+    - Step 4: 設定 Ingress 的 NodePort Service，供開放外部存取使用
+        ```yaml
+        # service-Nodeport.yaml
+
+        apiVersion: v1
+        kind: Service
+        metadata:
+            name: ingress
+        
+        spec:
+            type: NodePort
+            ports:
+            -   port: 80
+                targetPort: 80
+                protocol: TCP
+                name: http
+            
+            -   port: 443
+                targetPort: 443
+                protocol: TCP
+                name: https
+
+            selector:
+                name: nginx-ingress
+        ```
+
+        ```bash
+        kubectl create -f service-Nodeport.yaml
+        ```
+
+        ```bash
+        kubectl get services
+        ```
+
+- 建立 Ingress Resource 的兩種策略
+    ![](../../assets/pics/k8s/ingress_resource_two_strategies.png)
+    ![](../../assets/pics/k8s/ingress_resource_rules_and_path.png)
+
+    - 策略 1: 2 Rules and 1 Path each
+        ```yaml
+        # ingress-wear-watch.yaml
+
+        apiVersion: extensions/v1beta1
+        kind: Ingress
+        metadata:
+            name: ingress-wear-watch
+        
+        spec:
+            # 2 Rules
+            rules:
+            -   host: wear.my-online-store.com
+                http:
+                    # 1 Path each
+                    paths:
+                    -   backend:
+                            serviceName: wear-service
+                            servicePort: 80
+            
+            -   host: watch.my-online-store.com
+                http:
+                    # 1 Path each
+                    paths:
+                    -   backend:
+                            serviceName: watch-service
+                            servicePort: 80
+        ```
+
+        ![](../../assets/pics/k8s/ingress_resource_2_rules_and_1_path_each.png)
+        
+    - 策略 2: 1 Rule and 2 Paths
+        ```yaml
+        # ingress-wear-watch.yaml
+        apiVersion: extensions/v1beta1
+        kind: Ingress
+        metadata:
+            name: ingress-wear-watch
+        
+        spec:
+            # 1 Rule
+            rules:
+            -   http:
+                paths:
+                # 2 Paths
+                -   path: /wear
+                    backend:
+                        serviceName: wear-service
+                        servicePort: 80
+
+                -   path: /watch
+                    backend:
+                        serviceName: watch-service
+                        servicePort: 80
+        ```
+
+        ![](../../assets/pics/k8s/ingress_resource_1_rule_2_paths.png)
+        ![](../../assets/pics/k8s/ingress_resource_1_rule_2_paths_describe.png)
+
+- 總結（Ingress 架構圖）
+    ![](../../assets/pics/k8s/ingress_overall_architecture.png)
+
+
 ## Exam Information
 - 考試內容
     - ![](../../assets/pics/k8s/cncf_cka_exam_domain.png)
