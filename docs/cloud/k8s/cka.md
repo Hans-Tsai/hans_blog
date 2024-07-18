@@ -306,19 +306,23 @@
 - 概念: (假設有個外部使用者，想要存取 pod 的網頁服務)
     - 若我們想存取私有網域中的 pod 時，必須先透過 SSH 連線進入 K8s 叢集中的該工作節點後，再透過 curl 指令來存取 pod 的內網 IP address
         ![](../../assets/pics/k8s/external_communication_using_ssh.png.png)
+
     - 但是一般來說，我們會希望只要存取 K8s 叢集中的該工作節點的 IP address，而無需透過 SSH 連線進入工作節點內部，來存取 pod 的服務
         - Solution: 這時候我們就可以透過 Service 作為中間的服務，將外部的 client 透過 Service 來存取 pod 的服務
         - 可以把 Service 想像成一個節點內的虛擬伺服器，會擁有自己的 IP address、port，並將流量導向到對應的 pod 服務上
         ![](../../assets/pics/k8s/external_communication_without_using_ssh.png.png)
+
 - 在正式環境中，通常會是 multiple pods 的情境
     - 單一節點上有多個 pods
         - 這些 pods 都具有相同的 label，nodePort Service 會透過 label 來選擇要管理的 pods，並將外部流量導向到這些 pods 上
             - algorithm: random (預設會使用隨機演算法，來決定將流量導向到哪個 pod 上)
             - sessionAffinity: true (會將同一個 session 的流量導向到同一個 pod 上)
             ![](../../assets/pics/k8s/single_node_with_multiple_pods_using_service.png)
+
     - 多個節點上分別有一個 pod
         - 外部使用者可透過任何一個節點的 IP address，與相同的 nodePort 來存取 pod 的服務，達到高可用性、負載均衡的目的 <br>
             ![](../../assets/pics/k8s/multiple_nodes_with_one_pod_using_service.png)
+
 - 三種 Service 類型
     ![](../../assets/pics/k8s/service_three_types.png)
     - **ClusterIP**: 會建立一個虛擬 IP address 以提供內部的 pod 之間通訊，僅能在叢集內部使用
@@ -344,6 +348,7 @@
             type: back-end
         ```
         ![](../../assets/pics/k8s/service_clusterip_commands.png)
+
     - **NodePort**: 會在每個節點上開啟一個 port，讓外部的 client 可以透過節點的 IP address 來存取 pod 的服務
         - nodePort 的 port: 預設範圍 30000 ～ 32767
             - 若未指定 port，K8s 會自動分配一個 port
@@ -372,6 +377,7 @@
         ```
         ![](../../assets/pics/k8s/service_nodeport.png)
         ![](../../assets/pics/k8s/service_nodeport_pod_selector.png)
+        
         - 建立 Service 物件
             ```bash
             kubectl create -f service-definition.yaml
@@ -1115,6 +1121,9 @@
     ![](../../assets/pics/k8s/how_does_daemonset_works.png)
 
 ### Static Pods
+- Static Pod: 在 K8s 叢集中，由 kubelet 直接管理的 Pod，而不是透過 kube-apiserver 來建立、管理
+    - kubelet 會自動監控、啟動這些 Static Pod
+    - 不會被記錄在 etcd 中，因此不能透過 `kubectl` 指令來管理
 - 假設沒有 K8s 叢集，也沒有 Master Node，也沒有 kube-apiserver。那麼 Worker Node 會如何運作？
     - Ans: kubelet 會透過預設在 `/etc/kubernetes/manifests` 目錄下的 YAML manifest 設定檔，來建立 Static Pods
         - 法 1: 透過 CLI 的 `--pod-manifest-path` 選項，通知 kubelet 建立 Static Pods
@@ -1239,7 +1248,7 @@
     ```
 
     ```bash
-    $ kubectl logs -f event-simulator-pod
+    kubectl logs -f event-simulator-pod
     ```
 
     ![](../../assets/pics/k8s/logging_k8s_logs.png)
@@ -3773,8 +3782,7 @@
 
 - 部署 weavework 插件
     ```bash
-    kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64
-| tr -d '\n')"
+    kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
     ```
 
 - 檢視部署好的 weave net
@@ -3983,6 +3991,251 @@
 - 總結（Ingress 架構圖）
     ![](../../assets/pics/k8s/ingress_overall_architecture.png)
 
+## Design K8s Cluster
+- 目標
+    - 學習/教育: [Minikube](https://minikube.sigs.k8s.io/docs/start/?arch=%2Fmacos%2Fx86-64%2Fstable%2Fbinary+download), 單一節點的 K8s 叢集（AWS, GCP, Azure）
+    - 開發/測試: 一個 master node + 多個 worker node 的多節點 K8s 叢集（AWS, GCP, Azure）, 使用 [Kubeadm](https://kubernetes.io/docs/reference/setup-tools/kubeadm/) 工具來快速建立叢集
+        ![](../../assets/pics/k8s/turnkey_solution.png)
+
+    - 生產環境: 使用三大公有雲的 K8s 代管服務（AWS, GCP, Azure）
+        - **Kops** for AWS
+        - **GKE** for GCP
+        - **Azure Kubernetes Service(AKS)** for Azure
+        ![](../../assets/pics/k8s/hosted_solution.png)
+
+    - 統整
+        ![](../../assets/pics/k8s/minikube_vs_kubeadm.png)
+        ![](../../assets/pics/k8s/turnkey_vs_hosted_solution.png)
+
+- 架設 K8s 叢集前的考量
+    - 部署考量
+        - 本地架設（On premise）
+        - 雲端代管服務（Cloud）
+    - 節點考量
+        - 使用實體機器 or 虛擬機器作為 Node
+        - 根據需求，制定 K8s 叢集的最小需求節點數（含 Master Node, Worker Node）
+        - Master Node vs Worker Node 分別需要幾個
+        - **最佳實踐: Master Node 不會負責處理工作需求**（雖然理論上可以）
+    - 資源考量
+        - 儲存空間
+            - 需要高效能的應用程式: SSD Backed Storag
+            - 能處理高併發連線的應用程式: Network based storage
+            - 能讓多個 Pods 共享存取的持久性儲存空間: Persistent shared volumes
+            - 透過 label，將指定的應用程式，分配到指定的硬碟類型的節點上
+            - 透過 Node Selectors 來指定應用程式，佈署到指定的硬碟類型的節點上
+    - 網路考量
+        - [K8s networking addons](https://kubernetes.io/docs/concepts/cluster-administration/addons/): **Weave Net**, Flannel ...等
+- 架設 K8s 叢集
+    - kube-apiserver: 設計 active-active 模式，是為了確保 Master Node 與 Worker Node 能持續交流，以避免單點故障
+        ![](../../assets/pics/k8s/kube_apiserver_active_active_architecture.png)
+
+    - kube-controller-manager, kube-scheduler: 設計 active-standby 模式，是為了確保 K8s 叢集狀態的一致性，以避免 Master Node 之間的競爭
+        ![](../../assets/pics/k8s/kube_controller_manager_active_standy_architecture.png)
+
+    - etcd: 可選擇採用 **Stacked** 或 External etcd 拓樸架構
+        - Stacked 拓樸架構: 較容易設定，但是沒有 HA 機制
+            ![](../../assets/pics/k8s/docs/assets/pics/k8s/etcd_stacked_topology.png)
+
+        - External etcd 拓樸架構: 較複雜設定，但是有 HA 機制
+            ![](../../assets/pics/k8s/external_etcd_topology.png)
+
+            - kube-apiserver 需要設定連線到哪個 etcd 伺服器
+                ![](../../assets/pics/k8s/kube_apiserver_connect_etcd_server.png)
+
+- etcd 伺服器會採用 RAFT 共識演算法，定期選出 Leader Node，來負責寫入資料; 而其它 Follower Node 則負責讀取資料
+    - RAFT 共識演算法: 所有節點同時啟動隨機計時器，由第一個完成的節點向其它節點發出請求，擔任 Leader Node。當獲得多數（majority）的其他節點的贊同時，該節點就會成為 Leader Node
+        - 多數（majority）= 法定人數（quorum）: N/2 + 1
+        ![](../../assets/pics/k8s/raft_quorum.png)
+
+    - 節點總數是奇數 or 偶數也有差別; 此外，網路分段（network segmentation）也有影響多數（majority）的判定
+    - 最佳實踐: K8s 叢集的總節點數，採用奇數，並且使用 3, 5, 7 ... 個節點較好
+        ![](../../assets/pics/k8s/design_k8s_cluster_number_of_nodes.png)
+
+## Create K8s cluster using kubeadm tool
+- 本課程的範例 K8s 叢集架構設計圖: 1 Master Node + 2 Worker Node
+    ![](../../assets/pics/k8s/demo_k8s_architecture.png)
+    ![](../../assets/pics/k8s/create_k8s_cluster_using_kubeadm_tool.png)
+
+- 本課程的範例 K8s 叢集建置流程圖解
+    ![](../../assets/pics/k8s/create_k8s_cluster_using_kubeadm_tool_steps_illustration.png)
+
+    - Step 1: 運用 Virtual Box 建立虛擬機器
+    - Step 2: 運用 [Vagrant](https://www.vagrantup.com/) 快速自動化建置虛擬機器的環境
+    - Step 3: [安裝 container runtime](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#installing-runtime): containerd, Docker
+        - 以選擇 [containerd](https://kubernetes.io/docs/setup/production-environment/container-runtimes/) 為例
+            - **在 Master Node, Worker Node 都要** [啟用 IPv4 packet forwarding](https://kubernetes.io/docs/setup/production-environment/container-runtimes/#prerequisite-ipv4-forwarding-optional)
+            - [驗證 `net.ipv4.ip_forward` 已設定為 1](https://kubernetes.io/docs/setup/production-environment/container-runtimes/#prerequisite-ipv4-forwarding-optional)
+    - Step 4: **在 Master Node, Worker Node 都要** [安裝 kubeadm, kubectl, kubelet 工具](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#installing-kubeadm-kubelet-and-kubectl)
+        - kubeadm: 用來引導建立 K8s 叢集的指令工具
+        - kubectl: 用來與 K8s 叢集溝通的 CLI 命令列工具
+        - kubelet: 在 K8s 叢集中的所有機器上運行的元件，負責啟動 Pod、容器
+    - Step 5: **在 Master Node, Worker Node 都要** [安裝 cgroup driver](https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/configure-cgroup-driver/): kubelet、container runtime 都需要透過 cgroup driver 來管理硬體資源（e.g. CPU, Memory）
+        - 以選擇 **systemd** 為例 (K8s v1.22 之後，預設就是使用 systemd，所以不需要做額外設定)
+    - Step 6: [初始化 Master Node](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#initializing-your-control-plane-node)
+        - 設定 Master Node 的共享端點，可以是 DNS 名稱, IP address, 負載平衡器的 IP address (若是要建立 2 個以上的 Master Node 才需要設定，所以是 optional 的步驟)
+            ```bash
+            kubeadm init --control-plane-endpoint=
+            ```
+
+        - **設定 Pod network CIDR**
+            ```bash
+            kubeadm init --pod-network-cidr=
+            ```
+
+        - 設定 kubeadm 要使用的 container runtime (通常 kubeadm 會自動偵測，所以是 optional 的步驟)
+            ```bash
+            kubeadm init --cri-socket=<containerd>
+            ```
+
+        - 設定 kube-apiserver 的靜態 IP address，讓所有的 Worker Node 都能存取 kube-apiserver (通常 kubeadm 預設會使用 default gateway 的 IP address，所以是 optional 的步驟)
+            ```bash
+            kubeadm init --apiserver-advertise-address=<master-node-ip-address>
+            ```
+
+    - Step 7: 建立 kube config 檔案
+        ```bash
+        mkdir -p $HOME/.kube
+        sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+        sudo chown $(id -u):$(id -g) $HOME/.kube/config
+        ```
+
+        - 確認 Master Node 是否已成功初始化
+            ```bash
+            kubectl get nodes
+            ```
+
+    - Step 8: **在 Master Node**，設定 K8s 叢集的網路連線 (CNI)
+        - 以選擇 [Weave Net](https://kubernetes.io/docs/concepts/cluster-administration/addons/) 為例
+            ```bash
+            kubectl apply -f https://reweave.azurewebsites.net/k8s/<k8s-version>/net.yaml
+            ```
+
+        - [確保網路設定的一致性](https://rajch.github.io/weave/kubernetes/kube-addon#key-points): 若在 Worker Node 的 kube-proxy 中有設定 `--cluster-cidr` 選項 (也就是 `kubeadm init --pod-network-cidr=` 的 IP address) 的話，請確保 Weave Net 這個 DaemonSet 的環境變數 `IPALLOC_RANGE` 的 IP address 一致性
+            ```bash
+            kubectl edit daemonset weave-net -n=kube-system
+            ```
+
+        - 確認 Weave Net 這個 DaemonSet 是否已成功部署在 Master Node 上
+            ```bash
+            kubectl get pods -n=kube-system
+            ```
+
+    - Step 9: [將 Worker Node 都加入到 K8s 叢集中](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#join-nodes)
+        - 在 **Worker Node** 中執行以下指令
+            ```bash
+            sudo kubeadm join --token <token> <control-plane-host>:<control-plane-port> --discovery-token-ca-cert-hash sha256:<hash>
+            ```
+
+        - 確認 Worker Node 是否已成功加入 K8s 叢集
+            ```bash
+            kubectl get nodes
+            ```
+
+## End to End Tests on K8s Cluster
+> 在 2020/09 月之後的 CKA 考試，不會考到 End to End Tests 的部分！ <br>
+
+- 測試 K8s 叢集的方法
+    - 手動測試
+        - 確認節點正常運行
+            ```bash
+            kubectl get nodes
+            ```
+
+        - 確認 Pod 正常運行
+            ```bash
+            kubectl get pods
+            ```
+
+            ![](../../assets/pics/k8s/k8s_cluster_manual_test_check_nodes_and_pods.png)
+
+        - 確認 Master Node
+            - kube-apiserver 的運行狀態
+                ```bash
+                service kube-apiserver status
+                ```
+
+            - kube-controller-manager 的運行狀態
+                ```bash
+                service kube-controller-manager status
+                ```
+
+            - kube-scheduler 的運行狀態
+                ```bash
+                service kube-scheduler status
+                ```
+
+            ![](../../assets/pics/k8s/k8s_cluster_manual_test_check_master_node.png)
+
+        - 確認 Worker Node
+            - kubelet 的運行狀態
+                ```bash
+                service kubelet status
+                ```
+
+            - kube-proxy 的運行狀態
+                ```bash
+                service kube-proxy status
+                ```
+
+            ![](../../assets/pics/k8s/k8s_cluster_manual_test_check_worker_node.png)
+
+        - 確認 Deployment 能成功部署
+            ```bash
+            kubectl run nginx
+            ```
+
+            ```bash
+            kubectl get pods
+            ```
+
+            ```bash
+            kubectl scale --replicas=3 deploy/nginx
+            ```
+
+            ```bash
+            kubectl get pods
+            ```
+
+            ![](../../assets/pics/k8s/k8s_cluster_manual_test_check_deployment.png)
+
+        - 確認 Service 能正常運作
+            ```bash
+            kubectl expose deployment nginx --port=80 --type=NodePort
+            ```
+
+            ```bash
+            kubectl get service
+            ```
+
+            ```bash
+            curl http://<worker-node>:<NodePort>
+            ```
+
+            ![](../../assets/pics/k8s/k8s_cluster_manual_test_check_service.png)
+
+
+    - 自動化測試工具: [K8s test-infra](https://github.com/kubernetes/test-infra?tab=readme-ov-file)
+        - 能確保 K8s 叢集中的 Networking、Service、DNS 解析、Secrets、ConfigMap 均能正常運作
+            ![](../../assets/pics/k8s/k8s_test_infra.png)
+            ![](../../assets/pics/k8s/k8s_test_infra_procedures.png)
+
+        - 常用指令
+            ![](../../assets/pics/k8s/k8s_test_infra_commands.png)
+
+        - 範例檢測結果
+            ![](../../assets/pics/k8s/k8s_test_infra_result_part1.png)
+            ![](../../assets/pics/k8s/k8s_test_infra_result_part2.png)
+
+    - 參考連結: [KodeKloud YouTube 影片教學: Install Kubernetes from Scratch [19] - End to End Tests](https://www.youtube.com/watch?v=-ovJrIIED88&list=PL2We04F3Y_41jYdadX55fdJplDvgNGENo&index=19)
+
+- 參考連結
+    - [K8s 官方文件: 運用 kubeadm 工具，快速建立 K8s 叢集](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/)
+    - [GitHub: KodeKloud 教學如何建立 K8s 叢集](https://github.com/kodekloudhub/certified-kubernetes-administrator-course/blob/master/docs/11-Install-Kubernetes-the-kubeadm-way/03-Provision-VMs-with-Vagrant.md)
+        - Kubeadm Clusters
+        - Managed Clusters (AWS EKS, Azure AKS, GCP GKE)
+    - [GitHub: KodeKloud 從 0 ~ 1 建立 K8s 叢集 (較複雜的方法)](https://github.com/mmumshad/kubernetes-the-hard-way)
+        - 可搭配 [YouTube: KodeKloud 影片教學](https://www.youtube.com/watch?v=uUupRagM7m0&list=PL2We04F3Y_41jYdadX55fdJplDvgNGENo&index=2)
+
 
 ## Exam Information
 - 考試內容
@@ -4003,6 +4256,11 @@
 - 設定常用指令的別名
     ```bash
     alias k=kubectl
+    ```
+
+- 設定 kubectl 的自動補全功能 (auto complete)
+    ```bash
+    source <(kubectl completion bash)
     ```
 
 - 檢視 K8s 叢集中各項資源的縮寫名稱 (shortnames, 是否屬於 Namespaced 的物件)

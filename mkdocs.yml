@@ -170,7 +170,7 @@ nav:
   - Cloud:
     - AWS:
       - SAA: cloud/aws/saa.md
-    - Kubernetes: cloud/k8s/kubernetes.md
+    - Kubernetes: cloud/k8s/cka.md
   - Version Control:
     - Git: version_control/git.md
   - Coding Interview:
