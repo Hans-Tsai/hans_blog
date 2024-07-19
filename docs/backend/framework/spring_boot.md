@@ -386,6 +386,7 @@ public class MyAspectAround {
 			}
 		}
 		```
+		
     - 使用 @RestController 註解，就不用加上 @ResponseBody 註解
     	```java
 		@RestController
@@ -1418,7 +1419,7 @@ public void transfer(Integer fromAccountId, Integer toAccountId, Integer money) 
     - `deleteById()`: 根據 id 刪除數據
 - **`PagingAndSortingRepository`** interface: 新增分頁、排序的操作
 - **`JpaRepositor`** interface: 能力最強，新增了 JPA 相關的 flush 操作
-![spring_data_repository_interface](../../assets/pics/framework/spring_data_repository_interface.jpeg)
+![spring_data_repository_interface](../../assets/pics/framework/spring_data_repository_interface.jpeg) <br>
 [圖片出處](https://www.javatpoint.com/spring-boot-crud-operations#:%7E:text=CrudRepository%20does%20not%20provide%20any,works%20as%20a%20marker%20interface)
 
 - CrudRepository 基本 CRUD 操作
@@ -1517,6 +1518,7 @@ public class StudentController {
     }
 }
 ```
+
 - 自定義查詢條件
 	```java
 	// StudentRepository.java (interface)
@@ -1533,6 +1535,7 @@ public class StudentController {
 		Student findByIdAndName(Integer id, String name);
 	}
 	```
+
 - @Query 註解: 用來解決 `findByXxx` 無法 **寫出複雜的查詢邏輯的問題** (e.g. JOIN 許多 table)
     - 用途: 在 Spring Data JPA 中，**執行原生的 SQL 語法**
         - `nativeQuery = true` 參數: 表示要執行原生的 SQL 語法; false: 表示要執行 JPQL 語法
