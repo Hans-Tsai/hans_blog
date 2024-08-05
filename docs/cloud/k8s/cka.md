@@ -4236,6 +4236,259 @@
     - [GitHub: KodeKloud 從 0 ~ 1 建立 K8s 叢集 (較複雜的方法)](https://github.com/mmumshad/kubernetes-the-hard-way)
         - 可搭配 [YouTube: KodeKloud 影片教學](https://www.youtube.com/watch?v=uUupRagM7m0&list=PL2We04F3Y_41jYdadX55fdJplDvgNGENo&index=2)
 
+## Troubleshooting
+### Application Failure
+> 情境假設: 我們有一個兩層式架構的 Web Server, DB Server，其系統架構如下圖所示 <br>
+
+![](../../assets/pics/k8s/troubleshooting_application_failure_system_architecture.png){width=300px height=200px}
+
+- 若本身對於故障排除已有經驗的話，可以從系統架構圖中的任一環節開始進行除錯; 但若是一時間找不出頭緒的話，建議可從最源頭的地方開始進行除錯，例如: 從 Web Server 開始進行除錯
+    - Step 1: 檢查應用程式的狀態
+        ```bash
+        curl http://web-service-ip:node-port
+        ```
+    - Step 2: 檢查 Web Service 的狀態，是否已正確連接到 Web Pod 端點(endpoint)，並檢查 Web Service 所使用的 Selector 是否正確選取相對應 Web Pod 的 label
+        ```bash
+        kubectl describe service web-service
+        ```
+
+        ![](../../assets/pics/k8s/troubleshooting_application_failure_web_service.png)
+
+    - Step 3: 檢查 Web Pod 的狀態，是否正常運行
+        ```bash
+        # 查看 Pod Status, Restart 次數
+        kubectl get pods
+        ```
+
+        ```bash
+        kubectl describe pod web
+        ```
+
+        ```bash
+        kubectl logs web
+        ```
+
+        ```bash
+        # 因為當前正在運行的 Pod 可能不會反應上次 Crash 的原因，因此可以加上 -f --previous 參數，來查看上次 Pod Crash 的 log 訊息
+        kubectl logs web -f --previous
+        ```
+
+        ![](../../assets/pics/k8s/troubleshooting_application_failure_web_pod.png)
+
+    - Step 4: 最後，檢查 DB Service, DB Pod 的狀態
+        ![](../../assets/pics/k8s/troubleshooting_application_failure_db_service.png)
+        ![](../../assets/pics/k8s/troubleshooting_application_failure_db_pod.png)
+
+- 參考連結: [K8s 官方文件: Troubleshooting Applications](https://kubernetes.io/docs/tasks/debug/debug-application/)
+
+### Control Plane Node Failure
+- Step 1: 檢查 K8s 叢集中所有節點、Pods 的運行狀態
+    ```bash
+    kubectl get nodes
+    ```
+
+    ```bash
+    kubeclt get pods --all-namespaces
+    ```
+
+    ![](../../assets/pics/k8s/troubleshooting_control_plane_node_failure_check_node_and_pod_status.png)
+
+- Step 2: (若是使用 kubeadm 工具來建立 K8s 叢集的話)，可以使用 `kubectl` 檢查 Control Plane Node 中，所有 Pods 的運行狀態
+    ```bash
+    kubectl get pods -n=kube-system
+    ```
+
+    ![](../../assets/pics/k8s/troubleshooting_control_plane_node_failure_check_pods_on_master_node.png)
+
+- Step 3: 檢查 Control Plane Node 上，所有 K8s 叢集服務的運行狀態
+    - 檢查 kube-apiserver 的運行狀態
+        ```bash
+        service kube-apiserver status
+        ```
+
+    - 檢查 kube-controller-manager 的運行狀態
+        ```bash
+        service kube-controller-manager status
+        ```
+
+    - 檢查 kube-scheduler 的運行狀態
+        ```bash
+        service kube-scheduler status
+        ```
+
+    ![](../../assets/pics/k8s/troubleshooting_control_plane_node_failure_check_k8s_cluster_services.png)
+
+- Step 4: 檢查 Worker Node 上的 kubelet, kube-proxy 的運行狀態
+    ```bash
+    service kubelet status
+    ```
+
+    ```bash
+    service kube-proxy status
+    ```
+
+    ![](../../assets/pics/k8s/troubleshooting_control_plane_node_failure_check_worker_node_services.png)
+
+- Step 5: 檢查 Control Plane Node 上，所有運行的物件的 log 訊息
+    - (若是使用 `SystemD` Service 來部署 K8s 叢集的 Control Plan 相關物件的話)，可以使用 `kubectl`
+        ```bash
+        kubectl logs kube-apiserver-master -n=kube-system
+        ```
+
+    - (若是使用 `SystemD` Service 來部署 K8s 叢集的 Control Plan 相關物件的話)，可以使用 `journalctl`
+        ```bash
+        sudo journalctl -u=kube-apiserver
+        ```
+
+    ![](../../assets/pics/k8s/docs/assets/pics/k8s/troubleshooting_control_plane_node_failure_check_control_plane_node_component_logs.png)
+
+- 參考連結: [K8s 官方文件: Troubleshooting Clusters](https://kubernetes.io/docs/tasks/debug/debug-cluster/)
+
+### Worker Node Failure
+- Step 1: 檢查 K8s 叢集中，所有 Worker Nodes 的運行狀態 (Ready || NotReady)
+    ```bash
+    kubectl get nodes
+    ```
+
+    -  若某個 Worker Node 為 **NotReady** 狀態，則可以進一步檢視該 Worker Node 的資源運用狀態 (e.g. disk, memory)
+        ```bash
+        kubectl describe node worker-1
+        ```
+
+        ![](../../assets/pics/k8s/troubleshooting_worker_node_failure_describe_node.png)
+
+    - 若某個 Worker Node 為 **Unknown** 狀態，表示該 Worker Node 與 Control Plane Node 已失去連線，可透過 `LastHeartbeatTime` 最後一次的連線時間
+        ![](../../assets/pics/k8s/troubleshooting_worker_node_failure_unknown_status.png)
+
+- Step 2: 可針對指定的 Worker Node，則可以進一步檢視該 Worker Node 的資源運用狀態
+    ```bash
+    # 動態顯示 Worker Node 的運行狀態，主要用於監控 CPU, Memory 的使用情況
+    top
+    ```
+
+    ```bash
+    # 顯示 Worker Node 的硬碟使用情況，以適合人類閱讀的方式來呈現
+    df -h
+    ```
+
+    ![](../../assets/pics/k8s/troubleshooting_worker_node_failure_top_and_df_command.png)
+
+- Step 3: 檢查 Worker Node 上的 kubelet 運行狀態
+    - 檢查 kubelet 是否正常運行中
+        ```bash
+        serivce kubelet status
+        ```
+
+    - 檢視 kubelet 的運行狀態 log 訊息
+        ```bash
+        sudo journalctl -u kubelet
+        ```
+
+        ![](../../assets/pics/k8s/troubleshooting_worker_node_failure_check_kubelet_status.png)
+
+    - 檢查 kubelet 的 CA 憑證的有效性 (e.g. 在有效期間內、在正確的 group 中、是由正確的 CA 機構所發行)
+        ```bash
+        openssl x509 -in /var/lib/kubelet/worker-1.crt -text
+        ```
+
+    ![](../../assets/pics/k8s/troubleshooting_worker_node_failure_check_kubelet_ca.png)
+
+### Networking Failure
+- 安裝網路插件 (CNI)，例如: Weave Net, Flannel
+    - [K8s 官方文件: Installing Addons](https://kubernetes.io/docs/concepts/cluster-administration/addons/)
+- CoreDNS: K8s 叢集可使用 CoreDNS 作為 DNS 伺服器
+    - 可檢視 Corefile plugin，以 ConfigMap 的形式來設定 CoreDNS
+        ```yaml
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+            name: coredns
+            namespace: kube-system
+        data:
+            Corefile: |
+                .:53 {
+                    errors
+                    health {
+                        lameduck 5s
+                    }
+                    ready
+                    kubernetes cluster.local in-addr.arpa ip6.arpa {
+                        pods insecure
+                        fallthrough in-addr.arpa ip6.arpa
+                        ttl 30
+                    }
+                    prometheus :9153
+                    forward . /etc/resolv.conf
+                    cache 30
+                    loop
+                    reload
+                    loadbalance
+                }
+        ```
+
+    - 將 K8s 叢集外的域名，直接轉發到正確的權威 DNS 伺服器
+        ```bash
+        proxy . /etc/resolv.conf
+        ```
+
+    - CoreDNS 故障排除
+        - 若 Pod 處於 pending 狀態: 檢查是否安裝了網路插件 (CNI)
+        - 若發生 CrashLoopBackOff 或錯誤狀態: 可能是 SELinux 的問題
+
+            > 在 K8s 中，SELinux（Security-Enhanced Linux）是一種安全模組，用於控制訪問權限
+            
+            > 當 Kubernetes 節點上運行的 CoreDNS Pod 遇到 SELinux 問題時，可能會導致 Pod 無法啟動，出現 `CrashLoopBackOff` 或 `Error` 狀態。這些問題通常是由於舊版 Docker 與 SELinux 的不兼容性或錯誤設定所引起的 
+
+            - 法 1: 升級 Docker (將 Docker 升級到最新版本，以確保與 SELinux 的兼容性)
+                ```bash
+                sudo yum update docker
+                
+                sudo systemctl restart docker
+                ```
+
+            - 法 2: 禁用 SELinux
+                - 臨時禁用 SELinux 來測試問題是否解決
+                    ```bash
+                    sudo setenforce 0
+                    ```
+
+                - 若問題解決，可以考慮永久禁用 SELinux
+                    ```bash
+                    sudo sed -i 's/^SELINUX=enforcing/SELINUX=disabled/' /etc/selinux/config
+
+                    sudo reboot
+                    ```
+
+            - 法 3: 修改部署設定檔 `allowPrivilegeEscalation` 為 true，允許提升權限
+                ```bash
+                kubectl -n kube-system get deployment coredns -o yaml | \
+                    sed 's/allowPrivilegeEscalation: false/allowPrivilegeEscalation: true/g' | \
+                
+                kubectl apply -f -
+                ```
+
+    - 參考連結: 
+        - [K8s 官方文件: Customizing DNS Service](https://kubernetes.io/docs/tasks/administer-cluster/dns-custom-nameservers/)
+        - [K8s 官方文件: Debugging DNS Resolution](https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/)
+        - [K8s 官方文件: Debug Services](https://kubernetes.io/docs/tasks/debug/debug-application/debug-service/)
+
+- kube-proxy
+    - 概述
+        - 角色: 運行在每個節點上的網路代理，維護節點上的網路規則，允許 Pod 之間的網路通訊
+        - 部署: 若是透過 kubeadm 工具所建立的 K8s 叢集，kube-proxy 是作為 DaemonSet 運行在每個工作節點上
+        - 責任: 監視服務和端點，將流量路由到實際的 Pod
+    - 設定檔的路徑位置
+        - `/var/lib/kube-proxy/config.conf`: kube-proxy 的設定檔
+        - 可設定 clusterCIDR, kubeproxy mode, ipvs, iptables, bindaddress, kube-config 等
+    - kube-proxy 故障排除
+        - 確認 kube-proxy pod 在 kube-system 命名空間中是正常運行的
+        - 檢查 kube-proxy 的 log 訊息
+        - 驗證 configmap 與其設定檔內容的正確性、一致性
+        - 確認 kube-config 有在 configmap 中定義
+        - 確認 kube-proxy 在容器內是正常運行的
+            ```bash
+            netstat -plan | grep kube-proxy
+            ```
 
 ## Exam Information
 - 考試內容
