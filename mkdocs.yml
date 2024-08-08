@@ -158,19 +158,21 @@ markdown_extensions:
 
 # Page tree
 nav:
-  - Home: index.md
-  - Programming language:
-    - Node.js: programming_language/nodejs.md
-    - Java: programming_language/java.md
-  - Backend:
-    - Framework:
-      - Spring Boot: backend/framework/spring_boot.md
-    - System Design:
-      - DDD: backend/system_design/ddd.md
-  - Cloud:
-    - AWS:
-      - SAA: cloud/aws/saa.md
-    - Kubernetes: cloud/k8s/cka.md
+  # - Home: index.md
+  # - Programming language:
+  #   - Node.js: programming_language/nodejs.md
+  #   - Java: programming_language/java.md
+  # - Backend:
+  #   - Framework:
+  #     - Spring Boot: backend/framework/spring_boot.md
+  #   - System Design:
+  #     - DDD: backend/system_design/ddd.md
+  # - Cloud:
+  #   - AWS:
+  #     - SAA: cloud/aws/saa.md
+  #   - Kubernetes: cloud/k8s/cka.md
+  - Networking:
+    - Networking: networking/networking.md
   - Version Control:
     - Git: version_control/git.md
   - Coding Interview:
@@ -188,5 +190,7 @@ nav:
       - Coding interview preparation: coding_interview/tech_interview_handbook/coding_interview_prepararion.md
       # - System design interview preparation
       # - Behavioral interview preparation
+  - Others:
+    - Others: others/others.md
   - MkDocs Info:
     - MkDocs: mkdocs_info/mkdocs.md
