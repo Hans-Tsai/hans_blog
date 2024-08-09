@@ -63,6 +63,119 @@
 ![](../assets/pics/networking/compare_osi_model_and_tcp_ip_model.png) <br>
 [圖片出處](https://blog.bytebytego.com/p/network-protocols-run-the-internet)
 
+### Layer 7: Application Layer
+#### DNS (Domain Name System)
+- 說明: 是一種能將網域名稱轉換成 IP 位址（domain name :left_right_arrow: IP address）的索引查詢服務。DNS 算是一個集合名詞，為各地、各機構的名稱伺服器（name server）所構成的綜合統稱
+- DNS 服務的功能:
+    - 轉換 網域名稱 :left_right_arrow: IP 位址
+    - 支援 網域名稱的別名服務（alias）
+	- 支援網頁伺服器的負載平衡: 讓多個 IP 位址都對應到同一個網域名稱，以實現負載平衡
+	![](../assets/pics/networking/dns_feature.png)
+
+- DNS 的分散式、階層式架構
+    - Local DNS Server: 位於 ISP 內部，會先查看其快取內容（cache）中是否有匹配的 DNS entry; 若沒有，就會將查詢導向 Root DNS Server，繼續進一步的查詢
+        - Local DNS Server 不隸屬於任何一個 DNS 階層式架構的層級，而是一個獨立的 DNS 伺服器，其功能類似於 `/etc/hosts` 檔案
+            - Local DNS Server 的快取是一個<strong>動態的、隨時間更新</strong>的資料庫，用於<strong>加速多次查詢相同域名的過程</strong>
+			- `/etc/hosts` 檔案則是一個<strong>靜態的、手動設定</strong>的快取檔案，**優先級高於 DNS 伺服器查詢**
+
+		![](../assets/pics/networking/dns_local_server.png)
+
+	- Root DNS Server: 負責管理全球 DNS 名稱空間的最高層級，並<strong>將查詢導向下一層的 TLD DNS Server</strong>
+	- Top Level Domain DNS Server: 負責管理特定頂級域名（TLD）的 DNS 記錄，並將查詢導向下一層的 Authoritative DNS Server
+	- Authoritative DNS Server: 負責管理特定網域名稱的 DNS 記錄，並回答 DNS 查詢
+	![](../assets/pics/networking/dns_hierarchical_architecture.png)
+	![](../assets/pics/networking/dns_tld_and_authorative_server.png)
+
+- DNS 查詢的兩種方式
+    - Recursive Query: 客戶端會先對 Resolver Server 發送 DNS 查詢請求後，DNS 伺服器會<strong>將查詢導向下一層的 DNS 伺服器，直到找到匹配的 DNS 記錄，並將結果返回給客戶端</strong>
+        - **預設採用這個 DNS 查詢方式，因為對客戶端較為簡單，只需等待最終答案即可**
+		![](../assets/pics/networking/dns_recursive_query.png)
+
+    - Iterative Query: 客戶端會先對 Resolver Server 發送 DNS 查詢請求後，DNS 伺服器會將查詢導向下一層的 DNS 伺服器，但<strong>不會等待結果，而是將查詢結果返回給客戶端，讓客戶端自行處理</strong>
+        - 減少對 DNS Server 的負擔，但對客戶端較為複雜，因為它必須處理多個查詢請求，直到獲得最終答案，故查詢過程可能較慢
+		![](../assets/pics/networking/dns_iterative_query.png)
+
+- DNS 查詢流程
+    - 當客戶端發送 DNS 查詢時，Local DNS Server 會先查看其快取內容中是否有匹配的 DNS entry; 若沒有，就會將查詢導向 Root DNS Server，繼續進一步的查詢
+    - Root DNS Server 會將查詢導向下一層的 TLD DNS Server
+    - 再將查詢導向下一層的 Authoritative DNS Server，最終回答 DNS 查詢
+- DNS 紀錄的類型
+	![](../assets/pics/networking/dns_records.png)
+
+	- **A (Address) Record**: 將網域名稱 :arrow_right: IPv4 位址
+    	- 使用情境: IP 位址查詢，這樣可以讓使用者的裝置連接並載入網站，而<strong>使用者無需記住並輸入實際 IP 位址</strong>
+		![](../assets/pics/networking/dns_a_record.png)
+
+	- **AAAA (IPv6 Address) Record**: 將網域名稱 :arrow_right: IPv6 位址
+    	- 使用情境: **僅當網域同時擁有 IPv4、IPv6 位址，且相關的用戶端裝置被設定為使用 IPv6 時，才會使用 AAAA 記錄**
+      	- 雖然所有網域都有一個或多個 IPv4 位址以及相對應的 A 記錄，但因為<strong>並非所有網域都有 IPv6 位址，也並非所有的使用者裝置都被設定為使用 IPv6</strong>
+		![](../assets/pics/networking/dns_aaaa_record.png)
+
+	- **CNAME (Canonical Name) Record**: 將網域名稱 :arrow_right: 另一個網域名稱
+    	- 使用情境: 通常，**當網站具有子網域（例如: blog.example.com 或 shop.example.com）時，這些子網域將具有指向根網域 (example.com) 的 CNAME 記錄**。這樣，**如果主機的 IP 發生變更，則僅需要更新根網域的 DNS A 記錄**，這樣所有 CNAME 記錄都會跟隨對根所做的任何變更
+		![](../assets/pics/networking/dns_cname_record.png)
+
+	- **MX (Mail Exchange) Record**: 將網域名稱 :arrow_right: SMTP 郵件伺服器的 IP 位址
+
+    	> MX 紀錄必須直接指向 A 紀錄 or AAAA 紀錄，而不能指向 CNAME 紀錄
+
+    	- 使用情境: 
+        	- 假設在一個大型企業中，有多個 SMTP 郵件伺服器，可提供備援方案。若主郵件伺服器無法存取，電子郵件會自動轉向備用伺服器，這樣可以提高郵件服務的穩定性、可靠性
+        	- 假設在一個大型企業中，有多個 SMTP 郵件伺服器，可提供負載平衡。這樣可以分散郵件流量，減少單一伺服器的負載
+		
+		![](../assets/pics/networking/dns_mx_record.png)
+
+
+	- **NS (Name Server) Record**: 將網域名稱 :arrow_right: DNS 伺服器的 IP 位址
+
+		> **NS 紀錄不能指向 CNAME 紀錄**，因為 CNAME 紀錄是用來指向另一個網域名稱的，而 **NS 紀錄是用來指向 DNS 伺服器的 IP 位址的**
+
+		- **更新 NS 記錄時，可能需要過幾個小時才能將變更複製到整個 DNS 中**，這是因為 DNS 記錄有一個 TTL（Time to Live）值，這個值決定了 DNS 記錄在 DNS 伺服器上保留的時間
+
+    	- 使用情境: <strong>告訴網際網路要去哪一個 Authorative DNS Server 才能找到</strong>欲查詢的網域的 IP 位址。若沒有正確設定的 NS 記錄，使用者將無法載入網站或應用程式
+		![](../assets/pics/networking/dns_ns_record.png)
+
+	- **PTR (Pointer) Record**: 反向查詢 IP 位址 :arrow_right: 網域名稱
+		- 使用情境:
+    		- **反垃圾郵件**: 有些電子郵件反垃圾郵件篩選器會使用反向 DNS 查詢來檢查電子郵件地址的網域名稱，並查看其所關聯的 IP 位址是否可能被合法電子郵件伺服器使用
+    		- **日誌記錄**: 系統記錄檔通常只會記錄 IP 位址; 而反向 DNS 查詢可以將這些 IP 位址轉換為網域名稱，以取得更易於閱讀的記錄檔
+
+		![](../assets/pics/networking/dns_ptr_record.png) <br>
+		[圖片出處](https://www.google.com/url?sa=i&url=https%3A%2F%2Fmailtrap.io%2Fblog%2Fptr-records%2F&psig=AOvVaw2KzlX4G-5-pnjQ0tv-L7zu&ust=1723278085915000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCJj9saa954cDFQAAAAAdAAAAABAK)
+
+	- **SOA (Start of Authority) Record**: 是每個 DNS 區域的核心部分，包含了與該網域或區域相關的重要資訊
+		![](../assets/pics/networking/dns_soa_record.png)
+
+	- **SRV (Service) Record**: **為特定的服務（例如: VoIP、即時訊息）指定主機、port**。大多數其他 DNS 記錄只指定一個伺服器或一個 IP 位址，但 SRV 記錄還包括該 IP 位址的一個連接埠。**一些網際網路通訊協定需要使用 SRV 記錄才能運作**
+
+		> **SRV 紀錄的伺服器名稱欄位必須指向 A 紀錄 or AAAA 紀錄**，而不能指向 CNAME 紀錄
+
+		![](../assets/pics/networking/dns_srv_record.png)
+
+	- **TXT (Text) Record**: 用於存儲任意文本資訊
+    	- 使用情境: 
+        	- 垃圾郵件防護
+            	- SPF（Sender Policy Framework）: TXT 記錄常用於定義 SPF 規則，這些規則<strong>指定哪些郵件伺服器被允許代表你的網域發送電子郵件，這有助於防止垃圾郵件、釣魚攻擊</strong>
+					```txt
+					v=spf1 include:_spf.example.com ~all
+					```
+
+            	- DKIM（DomainKeys Identified Mail）: TXT 記錄也用於<strong>存儲 DKIM 公鑰，這些公鑰用於驗證電子郵件的來源，確保郵件未被篡改</strong>
+					```txt
+					v=DKIM1; k=rsa; p=公鑰
+					```
+
+        	- 網域擁有權驗證
+            	- SSL/TLS 證書驗證: 一些憑證頒發機構（CA）會要求你添加一個特定的 TXT 記錄，以<strong>驗證你對網域的控制權，從而頒發 SSL/TLS 證書</strong>
+
+		![](../assets/pics/networking/dns_txt_record.png)
+
+- 參考連結:
+    - [AWS: Supported DNS record types](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/ResourceRecordTypes.html)
+    - [Microsoft: Recursive and Iterative Queries](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-2000-server/cc961401(v=technet.10)?redirectedfrom=MSDN)
+    - [Cloudflare: 什麼是 DNS 記錄？](https://www.cloudflare.com/zh-tw/learning/dns/dns-records/)
+
+
 ### Layer 3: Network Layer
 #### subnet
 - 說明: subnet（子網）是網路的一部分，它<strong>由較大網路中的 IP 位址範圍劃分而來</strong>。子網的目的是<strong>將一個大的網路劃分成較小的、更容易管理的部分，從而提高網路的效率、安全性</strong>
