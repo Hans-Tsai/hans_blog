@@ -64,15 +64,114 @@
 [圖片出處](https://blog.bytebytego.com/p/network-protocols-run-the-internet)
 
 ### Layer 3: Network Layer
+#### subnet
+- 說明: subnet（子網）是網路的一部分，它<strong>由較大網路中的 IP 位址範圍劃分而來</strong>。子網的目的是<strong>將一個大的網路劃分成較小的、更容易管理的部分，從而提高網路的效率、安全性</strong>
+- 優點:
+    - 提高安全性: 子網劃分<strong>可以將不同的網段隔離開來，限制不同網段之間的通訊，從而提高網路安全性</strong>
+    - 提高效率: 子網劃分有助於減少網路擁塞，因為<strong>封包會被限制在子網內部流動，而不會影響到整個大網路</strong>
+    - 方便管理: 將<strong>大網路劃分為多個子網，可以更容易管理和分配 IP 地址</strong>，並進行故障排除
+
+	![](../assets/pics/networking/subnet_definition.png)
+	![](../assets/pics/networking/subnet_illustration.png)
+
+- 子網遮罩 (subnet mask): 用於區分 IP 位址的網路部分（Network bits）、主機部分（Host bits）
+	![](../assets/pics/networking/subnet_mask_illustration.png)
+	![](../assets/pics/networking/subnet_mask_calculating.png)
+	![](../assets/pics/networking/subnet_mask_example.png)
+
+- 參考連結: [影片: IP address network and host portion | subnet mask explained](https://www.youtube.com/watch?v=eHV1aOnu7oM&feature=youtu.be)
+
+#### CIDR (Classless Inter-Domain Routing)
+- 說明: <strong>可依據實際需求，彈性設定所需的網段 & IP address 數量，使用「斜線表示法」來定義 subnet mask 的長度</strong>; 而不受限於傳統的 A, B, C 類別，例如 Class A 是 /8，Class B 是 /16，Class C 是 /24
+- 優點:
+    - 減少 IP 位置浪費: 因為 CIDR 可以讓我們更靈活地指派 IP 位址的網路、主機識別符，所以<strong>可使用 CIDR 為特定網路提供所需數量的 IP 位址並減少浪費</strong>。此外，CIDR 減少了路由表項目，簡化了封包路由
+    - 建立虛擬私有雲端（VPC）: VPC 是託管在 AWS 雲端中的私有數位空間，其允許我們在隔離且安全的環境中佈建工作負載。**VPC 在連線的裝置之間傳輸封包時使用 CIDR IP 地址**
+
+	![](../assets/pics/networking/cidr_definition.png)
+	![](../assets/pics/networking/cidr_block.png)
+
+- 參考連結: [什麼是 CIDR ?](https://aws.amazon.com/tw/what-is/cidr/)
+
 #### IP (Internet Protocol)
 - 用途: 負責將封包從一個裝置傳送到另一個裝置
 - 重要觀念:
 	- IP 流量可以使用 TCP 或 UDP 傳送。TCP 會先執行三次握手，以確保兩個裝置都準備好接收資料，才會開始傳輸; 而 UDP 則是無連接的協定，不需要握手過程
+- IPv4
+	- **IPv4 address 的總長度為 32 bits**，並且以 `.` 劃分為 4 個區段
+    - **每一區段的 number range = (0 ~ 255)~10~**
+    - 每一區段分別為 8 個 bits ➞ **IPv4 中的每個數字代表 8 bits**
+    - 總共 **可分配出 2^32^ 個 unique 的 IPv4 address**
+    - **採用句號( `.` )來分隔各區段**
+    - 示意圖:
+      	![](../assets/pics/networking/ipv4_illustration.png)
+        ![](../assets/pics/networking/ipv4_illustration_binary_conversion.png)
+
+	- IPv4 datagram 內容
+    	- 從上至下，第 1 ～ 5 列（IP datagram header）為必填欄位，第 6 列（Option）為選填欄位
+        	- IP datagram header: 20 bytes
+      	- IP datagram 分段後，要重組成原本的 IP datagram，需要以下欄位:
+          	- Total Length (原本 IP datagram 的大小)
+          	- Identification (IP 分段封包才能知道它是來自哪一個原本的 IP)
+          	- Flags (知道哪個 IP 分段才是最後一個分段，不然無法確認 IP 分段到底到哪結束)
+          	- Fragment Offset (當要重組的時候，才能組成原本的 IP datagram，不然順序會錯亂)
+		
+		![](../assets/pics/networking/ipv4_datagram_illustration.png)
+
+		- **Version**: 4 bits，表示 IP 協定的版本
+		- **Internet Header Length**: 4 bits，表示 IP 標頭的長度，以 32 bits 為單位
+		- **Type of Service**: 8 bits，用於指定 IP 封包在傳送過程中要求的服務類型
+		- **Total Length**: 16 bits，表示整個 IP 封包的長度，包括 header, data
+		- **Identification**: 16 bits，用於識別 IP 封包的分段（fragmentation）、重組（reassembly）所使用
+		- **Flags**: 3 bits，用於控制 IP 封包是否需要分段
+		- **Fragment Offset**: 13 bits，指定分段封包的偏移量。用於辨識分段封包的順序，以及將分段封包重組成原始封包
+		- **Time to Live (TTL)**: 8 bits，表示 IP 封包在網路上的生命週期，每經過一個 router，TTL 就會減少 1
+		- **Protocol**: 8 bits，表示 IP 封包中的資料是使用哪種協定傳送的
+		- **Header Checksum**: 16 bits，這個數值主要用來檢錯用的，確保封包被正確無誤地接收到
+		- **Source IP Address**: 32 bits，表示封包的發送者 IP 位址
+		- **Destination IP Address**: 32 bits，表示封包的接收者 IP 位址
+
+- IPv6
+    - 為下一代的 IP address 規範，採 **16 進制**(hexadecimal)表示
+	- **IPv6 address 的總長度為 128 bits**
+	- **IPv6 中的每個字元(可能是數字 or 字母)代表 4 bits**
+	- 總共 **可分配出 2^128^ 個 unique 的 IPv6 address**
+	- **採用分號( `:` )來分隔各區段**
+	- 當 IPv6 address 中有<strong>許多個 0 時，可以改用 `::` 代替，但是一段 IPv6 address 中只能使用一次 `::`</strong>
+	- 優點:
+		- **IPv6 提供更寬廣的 IP 定址空間**
+		- **IPv6 提供傳輸流量等級(Traffic Class)的分類**
+		- **IPv6 簡化封包標頭**
+		- IPv6 datagram 增加了 **Flow Label**, **Priority** 兩個欄位，用來支援像視訊、語音這類即時服務的需求，以<strong>提高 QoS 的品質</strong>
+		- IPv6 **預設使用 IPsec，來提升安全性**
+- IPv4 vs. IPv6
+	- datagram header 比較
+		![](../assets/pics/networking/ipv4_vs_ipv6_datagram_header.png) <br>
+		[圖片來源](https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.researchgate.net%2Ffigure%2FComparison-of-IPv4-and-IPv6-headers-structures-15_fig1_269810379&psig=AOvVaw19Bebw4_mkqgbscgtst2cQ&ust=1723268287134000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCOiX9OKY54cDFQAAAAAdAAAAABAJ)
+
+    | 特色\IP 協定版本 | IPv4 | IPv6 |
+    | -------- | -------- | -------- |
+    | IP address 長度 | **32 bits** | **128 bits** |
+	| 間隔方式 | 句號( `.` ) | 分號( `:` ) |
+	| IP address 可使用數量 | **2^32^ 個** | **2^128^ 個** |
+	| 流量標籤 | 無 | Flow label |
+	| 廣播 address | Host number 全為 1 | **以多播、任播來取代廣播** |
+	| 自動網路組態設定 | 透過 DHCP Server | 靠 Neighbor Discovery 協定，從鄰近的 router 之資訊取得 |
+	| 安全性 | 未強制需使用 IPsec，安全性較低 ↓ | **預設使用 IPsec，安全性較高 ↑** |
+	| QoS 機制 | 表頭欄位不支援 | **表頭欄位支援** |
+	| 舉例 | `210.59.230.150` | `1079:3:6ED4::44:72BE` |
+
+    > 註: **IPv4 ↔ IPv6 之間可以互相轉換 <br>**
+
+- 參考資料:
+    - [IPv4 Addressing and Subnetting](http://www.routeralley.com/guides/ipv4.pdf)
+    - [iT Home --- IPv4](https://ithelp.ithome.com.tw/articles/10207980)
+	- [iT Home --- 認識 IPv4 與 IPv6 的差異](https://www.ithome.com.tw/tech/92046)
+	- [影片: IP Address - IPv4 vs IPv6 Tutorial](https://www.youtube.com/watch?v=ThdO9beHhpA)
 
 #### ICMP (Internet Control Message Protocol)
 - 用途: ICMP 是網路層的協定，用於主機、路由器之間傳遞網絡層資訊。其主要功能包括：
 	- **錯誤報告**: 當主機, 網路, port, 協定無法送達時，回報錯誤
-	- **回應請求**: 使用 Echo Request, Echo Reply 來測試網絡連通性 (e.g `ping`)
+	- **回應請求**: 使用 Echo Request, Echo Reply 來測試網路連通性 (e.g `ping`)
 - 重要觀念:
     - ICMP 與傳輸層通訊協定（TCP 或 UDP）沒有關聯，因此，**ICMP 成為無連線的通訊協定，在傳送 ICMP 訊息之前，一個裝置不需要開啟與另一個裝置的連線**
     - ICMP 通訊協定也不允許綁定裝置上的特定 port
@@ -325,6 +424,16 @@
     - `-s`: 使用指定的來源 IP 位址作為封包發送的起點
     - `-n`: 禁止將 IP 位址解析為 hostname
     - `-F`: 禁止將探測封包（ICMP Echo Request）分段傳送，確保封包不會被路由器分段，以更準確地測試網路連線的狀況
+- `ping` vs. `traceroute`
+	- `ping`: 
+    	- 是一個核心的網路連線除錯工具，它使用 Echo Request、Echo Reply 的 ICMP 封包來判斷某個 IP 位址是否可以正確抵達並且有回應
+		- `ping` 還會提供 來源地址、目標地址 之間的往返時間 (Round-Trip Time, RTT)，通常以毫秒為單位測量
+    - `traceroute`:
+        - 用於確定封包到達其目的地所經過的路由路徑
+        - `traceroute` 不僅會識別封包經過的每個路由器，還會測量每個路由節點 (hop) 所經歷的延遲時間
+    - 統整: 這兩個工具在網路連接除錯中都很常使用
+        - `ping` 用來<strong>快速測試目標是否可到達，並檢測網路連接的延遲</strong>
+        - `traceroute` 則用來<strong>追蹤封包的路徑，幫助識別網路路由上的問題</strong>
 - 參考連結: [Linux manual page: traceroute](https://linux.die.net/man/8/traceroute)
 
 ### mtr
