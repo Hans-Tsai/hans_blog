@@ -175,6 +175,122 @@
     - [Microsoft: Recursive and Iterative Queries](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-2000-server/cc961401(v=technet.10)?redirectedfrom=MSDN)
     - [Cloudflare: 什麼是 DNS 記錄？](https://www.cloudflare.com/zh-tw/learning/dns/dns-records/)
 
+#### HTTP (HyperText Transfer Protocol)
+- 說明: 在 WWW 上，Client :left_arrow_right: Server 之間的傳輸通訊協定。採用 Request/Response 機制、連結導向服務的主從式架構
+- 特色:
+    - HTTP 為<strong>無狀態協定（stateless protocol）</strong> ➞ 亦即，server 不必保留先前的請求 or 連線
+	- 支援已存取過的網頁內容 => **快取（caching）** 能力
+	- 允許代理伺服器（proxy server）負責處理網路快取
+		![](../assets/pics/networking/http_proxy_server_caching.png)
+
+- HTTP 協定的版本演進
+    - **HTTP/1.0**: 最初在 1989 年所發起制定，採用<strong>單一連線方式，每次只能處理一個請求</strong>
+    - **HTTP/1.1: 解決重複 TCP 連線的問題**
+        - HTTP/1.1 採用 pipelining 的機制
+        - **持久連接 (keep-alive)**
+        - 更多的快取緩存策略（`Etag`, `If-Unmodified-Since`, `If-Match`, `If-None-Match`）
+        - Host 字段來區分同一台實體主機中的多台虛擬主機
+        - 新增更多的 HTTP 方法（`PUT`, `PATCH`, `DELETE`, `CONNECT`, `TRACE`, `OPTIONS`）
+    - **HTTP/2: 解決頭部阻塞（head-of-line blocking）問題**
+		- **多路複用 (request multiplexing)**: 在同一個 TCP 連線中，同時發送、接受多個請求，並且不用等到前一個請求收到回應，透過這個機制，解決了過往在 HTTP/1.1 的頭部阻塞問題
+
+			> 頭部阻塞問題（head-of-line blocking, HOL）: 如果有任一個請求要操作很久或傳輸包流失，那就會阻塞整個 pipeline 的工作
+
+		- **優先請求順序**: HTTP/2 版本中，每個請求或回應的所有數據包，稱之為一個數據流，並且，每個數據流擁有一個唯一編號 ID (stream ID)。每個數據包在發送的時候就會戴上對應的數據流編號 ID，**客戶端還能指定數據流的優先級，優先級越高服務器也會越快做出回應**
+		- **標頭 (header) 訊息壓縮**: HTTP/2 使用 HPACK 壓縮算法，**將 HTTP 標頭壓縮，減少傳輸的大小**
+		- **伺服器主動推送**(server push): **HTTP/2 允許伺服器端主動向客戶端推送數據，這能協助減少客戶端的請求次數**
+    		- 例如: 瀏覽器在過去要請求 index.html 與 style.css 來渲染完整的畫面；透過 server Push，可以在瀏覽器請求 index.html 時，也由伺服器主動發送 style.css，這樣只需要一輪 HTTP 的請求，就可以拿到所需的所有資源
+
+    - **HTTP/3: 使用 QUIC 協定，並且在 UDP 上運行**，以提升效能
+        - QUIC 通訊協定由 Google 於 2012 年開發，QUIC 專為行動密集型網際網路使用而設計，在這種環境中，人們攜帶的智慧型手機會在一天中不斷地從一個網路切換到另一個網路。開發第一個網際網路通訊協定時情況並非如此
+        - **採用 QUIC 協定代表 HTTP/3 將依賴於 UDP 協定**，而不是 TCP 協定。**切換到 UDP 將使線上瀏覽時的連線速度、使用者體驗更快**
+
+	![](../assets/pics/networking/http_version_progression.png) <br>
+	[圖片出處](https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.researchgate.net%2Ffigure%2FComparison-of-HTTP-versions_fig1_312560536&psig=AOvVaw1tjew0NSmcpt1V9hpauvbp&ust=1723305811412000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCOCgrsek6IcDFQAAAAAdAAAAABAE)
+
+
+- HTTP 方法
+    - 說明:
+        - GET: 取得資源
+        - HEAD: 與 GET 類似，但只回傳表頭資訊，不回傳實際資源（body）。常用於<strong>檢查資源是否存在，以及獲取資源的 metadata</strong>
+        - POST: 新增資源，通常會導致狀態變更，或對伺服器產生副作用。常用於<strong>提交表單 or 上傳文件</strong>
+        - PUT: 更新資源，會將 request payload <strong>取代目標資源當前所有的內容。若資源不存在，會建立新的資源</strong>
+        - DELETE: 刪除資源
+        - CONNECT: 建立客戶端 :left_arrow_right: 伺服器的隧道（tunnel），通常用於<strong>加密通訊，例如: HTTPS</strong>
+        - OPTIONS: 用於描述伺服器支援的方法，並回傳相關的 HTTP 表頭資訊。常用於<strong>檢查跨域資源共享（CORS）政策</strong>
+        - TRACE: 執行一個 loop-back 測試，用於<strong>追蹤 request 的路徑，主要用於除錯、測試</strong>
+        - PATCH: 對資源進行<strong>局部更新，只修改資源的部分內容</strong>，而不是替換整個資源
+    - **安全方法**（Safe Methods）: 不會對資源進行修改的方法
+        - GET, HEAD, OPTIONS, TRACE
+    - **冪等方法**（Idempotent Methods）: 無論對資源進行多少次操作，結果都是一樣的
+        - GET, HEAD, **PUT, DELETE**, OPTIONS, TRACE
+- HTTP 訊息
+    - HTTP 是一個 text-based 的傳輸協定，分成 **request** 和 **response** 兩種訊息
+		```text
+		<method> <URL> <version>
+		<header>
+		...
+		...
+		<header>
+
+		<body> 
+		```
+
+		![](../assets/pics/networking/http_request_message.png)
+
+		```text
+		<version> <status code> <status message>
+		<header>
+		...
+		...
+		<header>
+
+		<body> 
+		```
+
+		![](../assets/pics/networking/http_response_message.png)
+
+- HTTP 表頭（header）
+    - 說明: 用於傳遞關於 **request 或 response 的附加資訊**
+    - 格式: **key: value**
+	- 常見的 HTTP header
+		![](../assets/pics/networking/http_header.png)
+
+		- Conditionals 類別: Client可能在之前已經取得過相關的資源，並且保有一份備份，如果此資源沒有更新時，可以不需要透過網路在傳輸一次，以節省時間及頻寬
+            - **ETag**: Response中，對於回傳的資料加的一個 tag，有點像是以資料為輸入的 hash 值，讓 client 可以後續使用，會在 `If-Match`及 `If-None-Match`，以下說明
+                - Server 端接收請求，檢查是否與目前表示的 **ETag 值相同**，若相同則表示<strong>資源並未被更動</strong>
+            - **If-Match**: Server 只有在 match 時，才會動作，通常在 PUT 操作時用於避免 lost update 的問題，例如: 你想編輯一頁 Wiki 的內容，你先要求了本來的頁面，server 回傳了 `Etag: A`，當你編輯完送出時，帶上 `If-Match: A` 的 header，表示只有當內容還是 A 版本時才會更新成功，如果在你編輯的時候有人已經先更新了頁面內容，則會回傳 412: Precondition Failed，如此一來，避免你的更新會蓋掉別人的更新
+            - **If-None-Match**: Server 只會在沒有 match 時，才會回傳資料，因為如果 match 就代表 client 擁有的資料的 copy 還是最新的，就回傳 304: Not Modified，而不會再傳一次資料，這樣可以節省頻寬
+            - **Last-Modified**: Response 中使用，用來說明回傳的資料最近修改的時間，好讓 client 可以 cache 起來並搭配`If-Modified_Since` 來更新，詳情見下面
+            - **If-Modified-Since**: Request 使用此 header 來決定 cache 有沒有過期了，比如說上次拿取資源時 server response 了Last-Modified: Sun, 05 Sep 2021 01:40:14 GMT，這次再 request 相同資源時，就可以帶上 `If-Modified-Since`: Sun, 05 Sep 2021 01:40:14 GMT，表示若在 2021-09-05 這個時間點之後，資料並沒有更新，則 server 可以回傳 304: Not Modified，client 就能直接使用 cache， 而不需要再透過網路下載資料，反之，資料有更改的話，就回傳新的資料並帶上新的 `Last-Modified`
+		- Connection management 類別: 用於管理連線
+			- **Connection**: 用來告訴 server 這個連線是要<strong>持續使用 or 一次性的</strong>，如果是 keep-alive，則 server 會保持連線，直到 client 關閉連線，這樣可以節省建立連線的時間，提高效能
+			- **Keep-Alive**: 用來告訴 server 這個連線要<strong>保持多久，通常是一個時間，如果超過這個時間，server 會主動關閉連線</strong>，這樣可以避免 server 一直保持連線，浪費資源
+
+- HTTP 狀態碼
+    - <strong>HTTP 狀態碼共分為五大類，第一個數字代表伺服器回應的大類</strong>，第二、三個數字再分為中類、小類
+        - 1xx (Informational) — 資訊
+        - 2xx (Successful) — 成功
+        - 3xx (Redirection) — 重新導向
+        - 4xx (Client Error) — 客戶端 錯誤
+        - 5xx (Server Error) — 伺服端 錯誤
+		![](../assets/pics/networking/http_status_code_summary.webp) <br>
+		[圖片出處](https://javaconceptoftheday.com/http-status-codes-cheat-sheet/)
+
+	- 觀念釐清
+        - 301 vs. 302
+
+			![](../assets/pics/networking/http_status_code_compare_301_and_302.png)
+
+        - 401 vs. 403
+			![](../assets/pics/networking/http_status_code_compare_401_and_403.png)
+
+- 參考連結:
+    - [HTTP/1、HTTP/1.1 和 HTTP/2 的區別](https://www.explainthis.io/zh-hant/swe/http1.0-http1.1-http2.0-difference)
+    - [Cloudflare: 什麽是 HTTP/3？](https://www.cloudflare.com/zh-tw/learning/performance/what-is-http3/)
+	- [MDN: HTTP request methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods)
+    - [HTTP headers 簡介: 一些常用的 headers](https://homuchen.com/posts/http-headers/)
+    - [HTTP 狀態碼 (Status Codes)](https://notfalse.net/48/http-status-codes)
 
 ### Layer 3: Network Layer
 #### subnet
@@ -931,3 +1047,105 @@
         - `-I`: 使用 stdin 方式當做傳輸內容
         - `-T`: 指定 TTL 值
 - 參考連結: [How do I benchmark network throughput between Amazon EC2 Linux instances in the same Amazon VPC](https://repost.aws/knowledge-center/network-throughput-benchmark-linux-ec2)
+
+### curl
+- 說明: 全名為 Command Line URL，是一個用於傳輸資料的工具，支援多種協定，例如: HTTP, HTTPS, FTP, FTPS 等
+- 功能: 
+	- 功能強大，任何網路相關的操作都可以透過 curl 進行
+	- 只需要透過短短幾行指令就可以發送出 request，因此很適合拿來做<strong>測試使用</strong>
+	- 支援<strong>檔案的上傳、下載</strong>
+- 基本用法: 第一步是使用不帶參數的 curl 測試網站的狀態，以驗證存取是否正確
+	```bash
+	curl <https://example.com>
+	```
+
+- 常用選項
+    - `A`: 指定 User-Agent。基於網路安全不斷受到重視，會遇到某些網頁不支援 curl 工具做連線，需要修改 User-Agent 來宣告改變瀏覽器，
+		```bash
+		curl -v -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36" https://google.com/
+		```
+
+	- `c`: 儲存 cookie。網站都會使用 cookie 來做登入上的認證，或是存取網站時用來辨認是否為正常的使用者
+		```bash
+		# 將請求時產生的 cookie 資訊儲存至 cookie_file
+		curl -c cookie_file https://www.google.com/
+		```
+
+	- `b`: 讀取 cookie
+		```bash
+		# 發出請求時將 cookie_file 中的資訊帶入至請求中
+		curl -b cookie_file https://www.google.com/
+		```
+
+	- `e`: 帶入來源網址（referrer）。這個參數可以幫助模擬來自特定來源網頁的訪問，以便伺服器可以識別出請求的來源
+		```bash
+		# 設定請求來源網址為 facebook
+		curl -v -e "https://www.facebook.com" https://google.com/
+		```
+
+	- `O`（大寫）: 下載檔案，並使用原始檔案名稱
+	- `o`（小寫）: 下載檔案並重新命名
+		```bash
+		# 下載檔案並重新命名為 city_bridge
+		curl -o city_bridge https://cdn.stocksnap.io/img-thumbs/960w/city-bridge_KSM9UIBTQ9.jpg
+		```
+
+	- `C`: 檔案下載到中斷時，不用整個檔案重新下載，可使用 `-C` 選項來重新續傳下載
+		```bash
+		curl -C -O https://cdn.stocksnap.io/img-thumbs/960w/city-bridge_KSM9UIBTQ9.jpg
+		```
+
+	- `--limit-rate`: 限制傳輸速度。有時候欲測試下載是否正常，又不想佔滿網路頻寬，需限制 `curl` 工具的資料傳輸速度，使用 `–limit-rate` 參數來指定傳輸速度的上限
+		```bash
+		curl --limit-rate 100k -O https://cdn.stocksnap.io/img-thumbs/960w/city-bridge_KSM9UIBTQ9.jpg
+		```
+
+	- `L`: 預設情況下，`curl` 工具不會隨著 HTTP 301 或 302 重新導向到新的網址，可使用 `-L` 選項來強制重新導向
+		```bash
+		curl -L https://www.google.com/
+		```
+
+	- `I`: 只顯示 HTTP 頭部資訊，不顯示內容
+		```bash
+		curl -I https://www.google.com/
+		```
+
+	- `V`（大寫）: 檢查當前的 `curl` 工具版本號。偶爾在比較舊的版本中會有些 bug 或是不支援，不要忘了檢查 `curl` 版本號
+		```bash
+		curl -V
+		``` 
+	- `v`（小寫）: 輸出完整訊息。主要是用來除錯 or 完整顯示整個連線過程的內容，會包含 SSL 握手資訊, request 裡所攜帶的 header
+		```bash
+		curl -v https://google.com/
+		```
+
+	- `X`（= `--request`）: 指定 HTTP 方法
+		```bash
+		# 使用 GET 方法發送請求
+		curl https://reqres.in/api/users/1
+		```
+
+		```bash
+		# 使用 PATCH 方法，部分更新資料
+		curl -X PATCH https://reqres.in/api/users/1 -d "name=mia&job=leader"
+		```
+
+		```bash
+		# 使用 DELETE 方法，刪除資料
+		curl -X DELETE -I https://reqres.in/api/users/1
+		```
+
+	- `d`（= `--data`）: 指定 POST 請求的資料
+		```bash
+		# 使用 POST 方法發送請求，並提供 request body 的資料
+		curl https://reqres.in/api/users/ -d "name=mia&job=leader"
+		```
+
+	- `H`: 指定 request header
+		```bash
+		curl https://reqres.in/api/users/ -d '{"name"]" : "mia", "job": "leader"}' -H "Content-Type: application/json"
+		```
+
+- 參考連結:
+	- [Linux Curl 超詳細教學(常用篇)](https://www.cjkuo.net/linux-curl-detail/)
+	- [Linux curl -v 快速判別無法訪問服務問題點在哪裡?](https://www.cjkuo.net/linux-curl_v_debug/)
