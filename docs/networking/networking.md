@@ -4,6 +4,23 @@
 
 [TOC]
 
+## OSI Model
+- OSI model vs. TCP/IP model
+	- OSI model: 七層
+	- TCP/IP model: 四層
+
+	![](../assets/pics/networking/osi_model_and_data_type.png) <br>
+	[圖片出處](https://www.auvik.com/franklyit/blog/osi-model-explained/)
+
+- OSI model & Networking Protocol
+	![](../assets/pics/networking/osi_model_networking_protocol.png) <br>
+	[圖片出處](https://www.bmc.com/blogs/osi-model-7-layers/)
+
+
+## Networking Protocol & Ports
+- 常見的網路協定與相對應的 port
+	![](../assets/pics/networking/networking_port_summary.png)
+
 ## Latency/Throughput/Performance
 - **延遲 (Latency)**: 將封包從一端傳輸到另一端所需的時間
 	![](../assets/pics/networking/compare_latency_and_iops.png)
@@ -345,9 +362,88 @@
     - [HTTP headers 簡介: 一些常用的 headers](https://homuchen.com/posts/http-headers/)
     - [HTTP 狀態碼 (Status Codes)](https://notfalse.net/48/http-status-codes)
 
+#### Telnet protocol
+- 說明: 是一個應用層的協定，也是一個簡易網路診斷的工具。**允許使用者透過 TCP 連線進入遠端伺服器**
+    - 使用 **TCP port 23**
+- 功能: 執行程式、啟動/停止服務、瀏覽資料夾/檔案、**測試 TCP 連線、檢查遠端伺服器的指定 port 是否開放**
+	![](../assets/pics/networking/telnet_illustration.png)
+
+- 基本指令
+	```bash
+	telnet <host> <port>
+	```
+- 特色
+	- 優點: telnet 使用純文字介面，傳輸效率快
+    - 缺點: 資安問題 ➞ **由於 telnet 缺乏加密，並且使用明文傳輸數據，在現代環境中多數情況下已被 SSH 所取代**。SSH 提供了加密通訊，適用於大多數需要安全傳輸的場景
+
+#### FTP (File Transfer Protocol)
+- 說明: 是一個應用層的檔案傳輸協定，是在<strong>網際網路上進行檔案傳輸的一種標準協定，可將檔案從一個電腦傳輸到另一個電腦</strong>
+    - 使用 **TCP port 21**
+- 特色: 
+    - FTP 是一種<strong>主從式協定（客戶端要求檔案，伺服器端負責提供檔案）</strong>
+        - **FTP 客戶端軟體: FileZilla、WinSCP**
+		![](../assets/pics/networking/ftp_server_client_architecture.png)
+		[圖片來源](https://www.tsg.com.tw/blog-detail4-164-0-ftp.htm)
+
+	- FTP 建立連線時需要兩種基本通道
+		- **命令通道**: 負責啟動指令並攜帶基本資訊（要存取哪些檔案）
+    		- 使用 **TCP port 21**
+		- **資料通道**: 在兩個裝置之間傳遞檔案資料
+    		- 使用 **TCP port 20**
+
+		![](../assets/pics/networking/ftp_connection.png) <br>
+		[圖片來源](https://www.tsnien.idv.tw/Manager_WebBook/chap5/5-2%20%E6%AA%94%E6%A1%88%E5%82%B3%E8%BC%B8%E7%B3%BB%E7%B5%B1%E5%88%86%E6%9E%90.html)
+
+    - FTP 有兩種模式
+		- **主動模式（Active Mode）**: 伺服器端主動連線到客戶端的資料通道。當客戶端需要傳輸數據時，它會在其本地端隨機開啟一個臨時 port ，並告知伺服器端該 port。接著，伺服器端會從自己的 port 20 主動連線到客戶端指定的 port，從而建立資料通道進行資料傳輸
+    		- **FTP 預設採用此主動模式**
+    		- 若客戶端位於防火牆或 NAT 後面，伺服器無法直接連接到客戶端的隨機 port，這可能會導致連線失敗
+			![](../assets/pics/networking/active_ftp_firewall.png) <br>
+			[圖片出處](https://www.mybluelinux.com/active-and-passive-ftp-simplified-understanding-ftp-ports/)
+
+		- **被動模式（Passive Mode）**: 客戶端主動連線到伺服器端的資料通道。在被動模式下，當客戶端需要傳輸資料時，它會<strong>要求伺服器開啟一個隨機端口（port 通常 > 1024），然後告知客戶端這個 port。隨後，客戶端會主動連接到伺服器的這個端口來建立資料通道</strong>
+    		- 被動模式可以更好地應對防火牆、NAT 等網路設備的限制，因為客戶端負責發起所有連線
+			![](../assets/pics/networking/passive_ftp_firewall.png) <br>
+			[圖片出處](https://www.mybluelinux.com/active-and-passive-ftp-simplified-understanding-ftp-ports/)
+
+		![](../assets/pics/networking/ftp_active_passive_mode.jpg) <br>
+		[圖片出處](https://www.mybluelinux.com/active-and-passive-ftp-simplified-understanding-ftp-ports/)
+
+- 應用情境: 在封閉系統內，傳遞大批次的伺服器檔案
+- 優點:
+    - 可以同時傳遞多個檔案
+    - 在連線中斷後恢復檔案傳遞
+    - 安排傳遞作業
+- 缺點: FTP 算是一個相對老舊的協定，存在一些安全漏洞和風險（因為 **FTP 傳輸資料時並未加密**，這表示當駭客擷取資料封包後，就能相對輕易地讀取密碼、使用者名稱和其他機密資料），**因此在實際應用中，我們傾向於使用更新、更安全的協定**，例如: **SFTP（= FTP + SSH）**
+
+#### SSH (Secure Shell)
+- 說明: 是一種<strong>加密連線的網路協定，用於在不安全的網路上安全地遠端連接到遠端伺服器</strong>
+	- 使用 **TCP port 22**
+- **SSH 採用主從式架構**: 要建立一個 SSH 連線，遠端的伺服器必須跑一個 SSH daemon，本地端則要有一個 SSH client 程序
+    - 伺服器端的 SSH daemon 會預設聽從 TCP port 22 進來的連線，並在認證後提供相對應的環境給使用者
+    - SSH client 則負責使用 SSH protocol 來傳送認證訊息、連線細節給遠端機器
+	![](../assets/pics/networking/ssh_create_conntection.png)
+	[圖片出處](https://www.ssh.com/academy/ssh)
+
+- SSH 加密: 採用非對稱式加密後。一旦建立連線後，雙方就能使用對稱式密鑰來加密通訊
+	- 在 SSH 連線中，雙方都有一個公開/私密金鑰對，並且每一方都使用這些金鑰來驗證對方的身份
+	
+	> 而 HTTPS 在大多數實作中僅驗證 web 伺服器的身分
+
+- SSH 驗證
+	```bash
+	ssh <username>@<host>
+	```
+
+- 應用情境: 遠端登入電腦、安全地傳輸檔案、加密通訊
+- SSH vs. VPN
+    - **SSH**: **一次僅加密一個連線，範圍侷限在單一個 session 上**。適用於需要精確控制、高安全性要求的場景，例如: **IT 系統管理員進行遠程伺服器管理**
+    - **IPsec VPN**: **加密所有網路流量**，無論其來自哪個應用程式。適用於需要保護所有網路通訊的情境，例如: **在公共 Wi-Fi 網路中工作**
+- 參考連結: [什麼是 SSH？ | 安全殼層 (SSH) 通訊協定](https://www.cloudflare.com/zh-tw/learning/access-management/what-is-ssh/)
+
 ### Layer 6: Presentation Layer
 #### SSL/TLS
-- SSL (Secure Sockets Layer): 用於加密、保護、驗證網際網路上所發生通訊的通訊協定
+- SSL (Secure Sockets Layer): 用於加密、保護、驗證網際網路上所發生通訊的協定
     - 目前，SSL 已被 TLS (Transport Layer Security) 所取代
 - TLS 握手（handshake）: 使用<strong>非對稱加密（asymmetric encryption）來建立安全通道</strong>
 	![](../assets/pics/networking/tls_handshake.png)
@@ -620,6 +716,7 @@
 		```
 
 		- 使用 `-d` 選項，從 STDIN 讀取的內容將被禁用，因此 "Hi" 文字不會被傳送到伺服器端
+
     - 保持伺服器持續運行: 有時候當客戶端斷開連接，我們仍希望伺服器持續運行，可使用 `-k` 選項讓伺服器持續運行
 		```bash
 		# Server
