@@ -53,6 +53,59 @@
 - 實務上，作為一個參考依據，收看一個 HD 串流影片約需 2 ~ 10 Mbps 的頻寬，而 4K 影片則需要 25 Mbps 以上的頻寬，具體取決於影片解析度、編/解碼器
 - 參考連結: [O'Reilly: High Performance Browser Networking](https://www.oreilly.com/library/view/high-performance-browser/9781449344757/ch01.html)
 
+## CDN
+- 說明: 內容交付網路（Content Delivery Network, CDN）是一種互連伺服器網路，可加快資料密集型應用程式的網頁載入速度。存放在 CDN 伺服器上的網站內容在地理位置上靠近使用者，便能更快地傳送到他們的電腦
+	![](../assets/pics/networking/cdn.png)
+	[圖片出處](https://en.wikipedia.org/wiki/Content_delivery_network)
+
+- 主要目的: **減少由網路設計造成的通訊延遲**
+- CDN 優點
+    - **縮短頁面載入時間**
+    - **降低頻寬成本**: 透過快取和其他最佳化，CDN 可以減少原始伺服器必須提供的資料量，從而降低網站擁有者的託管成本
+    - **提高內容的全球可用性**: 一次太多訪客或網路硬體故障可能導致網站當機。CDN 服務可以處理更多的 Web 流量並減少 Web 伺服器的負載。此外，如果一台或多台 CDN 伺服器離線，其他營運伺服器可予以取代，以確保服務不中斷
+- 應用情境
+    - **高速內容交付**: e.g. 路透社透過 CDN 及時向全球客戶提供新聞內容
+    - **即時串流**: e.g. Netflix 透過 CDN 提供高品質的串流影片
+    - **支援多用戶同時使用**: e.g. 線上遊戲公司可以透過 AWS CloudFront 來支援多用戶同時遊玩
+- CDN 重要功能
+    - **CDN Geo-location**: **使用者根據其地理位置，自動連接到最近的 CDN 伺服器節點**，從而減少延遲、提高資料傳輸速度、優化使用者體驗
+        - 例如: 若使用者位於亞洲，則 CDN 會自動將其連接到亞洲的伺服器，而不是位於北美的伺服器
+    - **CDN Geo-restriction**: **根據使用者的地理位置限制其對某些內容的訪問**。這種機制通常用於遵守版權或法律規範，限制某些國家、地區的使用者存取特定內容
+        - 例如: Geo-restriction 可以透過在 CDN 設定中限制 IP 位址範圍, 地區來實現
+- AWS CloudFront 服務
+    - 是一種 <strong>CDN 服務</strong>，透過在<strong>邊緣位置 (edge locations)上快取內容，以提升讀取效能</strong>
+    	- 若所需的內容未在邊緣位置上快取，則必須向原始伺服器端取得
+  	- 支援 signed URL, signed cookie 它們可讓您控制誰可以存取 AWS CloudFront 的內容
+		![](../assets/pics/networking/aws_cloudfront_signed_url_and_signed_cookie.png)
+		[圖片出處](Udemy: Tutorials Dojo)
+
+		- **signed URL**: 用於限制特定的 URL，以便只有擁有 signed URL 的人才能存取
+    		- 使用情境: 
+        		- 限制對單一檔案的存取權限，例如: 應用程式的安裝下載
+        		- 使用者正在使用不支援 cookie 的客戶端（例如: 自訂 HTTP 客戶端）
+		- **signed cookie**: 用於限制特定的 cookie，以便只有擁有 signed cookie 的人才能存取
+    		- 使用情境: 
+				- 限制對多個檔案的存取權限，例如: 訂閱者能存取的所有限制內容
+				- 不想改變現有的 URL
+
+		> **若同時使用，signed URL 會優先於 signed cookie**，AWS CloudFront 會僅根據檢查 signed URL，來決定是否允許存取
+
+	- 特色
+        - **Origin Access Control (OAC) - 較新的選項**
+            - 支援更細粒度的控制，並且支援多種 AWS 服務作為原點（例如: S3, ALB, EC2 等），不僅限於 S3
+            - 提供了更強的安全控制，例如: 強制 HTTPS、增強的使用者認證機制
+        - **Origin Access Identity (OAI)**
+            - 限制僅能透過 AWS CloudFront 存取 S3 檔案。**防止使用者僅使用檔案的 URL 直接查看您的 S3 檔案**
+                - 若不想使用 OAI，則 S3 存儲桶必須允許公開存取權限
+
+		![](../assets/pics/networking/aws_cloudfront_oai.png)
+		[圖片出處](Udemy: Tutorials Dojo)
+
+- 參考連結: 
+    - [AWS: What is a CDN (Content Delivery Network)?](https://aws.amazon.com/what-is/cdn)
+    - [AWS: Decide to use signed URLs or signed cookies](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-choosing-signed-urls-cookies.html)
+
+
 ## Protocol
 ![](../assets/pics/networking/osi_model_7_layers_illustration.png)
 [圖片出處](https://www.cloudflare.com/zh-tw/learning/ddos/glossary/open-systems-interconnection-model-osi/)
@@ -1149,3 +1202,81 @@
 - 參考連結:
 	- [Linux Curl 超詳細教學(常用篇)](https://www.cjkuo.net/linux-curl-detail/)
 	- [Linux curl -v 快速判別無法訪問服務問題點在哪裡?](https://www.cjkuo.net/linux-curl_v_debug/)
+
+## 其他學習資源
+- [O'Reilly: High Performance Browser Networking](https://hpbn.co/)
+    - [Chapter 1. Primer on Latency and Bandwidth](https://www.oreilly.com/library/view/high-performance-browser/9781449344757/ch01.html)
+        - **延遲才是效能瓶頸**; 而不是網路頻寬
+				![](../assets/pics/networking/web_performance_depends_on_latency.png)
+		
+		- 考慮到我們目前的速度已經在光速的 2/3 以內，我們對這項策略的最大期望只是 30% 的適度改善，已經達到物理定律的極限了。由於我們無法使光傳播得更快，我們可以縮短距離——地球上任意兩點之間的最短距離由它們之間的大圓路徑定義。因此，為了提高應用程式的效能，具體做法會是
+            - **優化我們的協定（TLS, TCP 協定）, 網路程式碼**
+            - **減少往返（RTT）**
+            - **將資料移動到更接近客戶端的位置**，並建立應用程式可以透過<strong>快取、預取、各種類似技術來隱藏延遲</strong>
+    - [Chapter 4. Transport Layer Security (TLS)](https://www.oreilly.com/library/view/high-performance-browser/9781449344757/ch04.html)
+        - **啟用 TLS false start**: **允許當 TLS 握手僅部分完成，就能開始發送應用程式的資料**
+            - **新的 TLS 連線需要 2 次 RTT** 才能實現<strong>完全握手</strong>
+            - TLS false start 不會修改 TLS 握手協議，而只會影響傳送應用程式資料的協議時間。直觀地說，**一旦客戶端發送了 tlsClientKeyExchange 記錄，它就已經知道加密金鑰並可以開始傳輸應用程式資料**，TLS 握手的其餘部分用於確認沒有人篡改握手記錄，並且可以併行完成。因此，TLS false start 讓我們可以在一次往返中保持 TLS 握手，無論我們是執行完整握手 or 簡短握手
+			![](../assets/pics/networking/tls_false_start.png)
+
+    - [Chapter 10. Primer on Web Performance](https://www.oreilly.com/library/view/high-performance-browser/9781449344757/ch10.html)
+        - 瀏覽器渲染網頁的流程
+			![](../assets/pics/networking/browser_processing_pipeline.png)
+
+			- Web 應用程式的效能，尤其是<strong>首次載入的渲染時間</strong>，直接<strong>取決於如何解析 HTML DOM、CSS 樣式表、 JavaScript 之間的依賴關係圖</strong>
+    		- 所以才會有 **CSS 樣式寫在 HTML 頂部，Javascript 腳本寫在 HTML 底部** 的名言
+		- 運用 [WebPagesTest](https://www.webpagetest.org/) 工具，來測試網頁的效能，根據產生的資源瀑布圖表（resource waterfall），來分析網頁的載入時間
+			![](../assets/pics/networking/yahoo_resource_waterfall_example.png)
+
+			- <font color="#9AFF02">開始渲染（Time to First Byte）</font>: 發生在所有資源完全載入以前，允許使用者在建立頁面時，就能開始與頁面互動
+			- <font color="#2894FF">文檔完成 事件（Content Download）</font>: 也會在剩餘資源載入之前提前觸發
+    			- 換句話說，雖然瀏覽器已停止轉動，使用者可以繼續執行其任務，但 Yahoo! 主頁正在後台逐步填充附加內容，例如: 廣告、社交小工具
+
+    - [Chapter 13. Optimizing Application Delivery](https://www.oreilly.com/library/view/high-performance-browser/9781449344757/ch13.html)
+		![](../assets/pics/networking/primer_on_web_performance.png)
+
+        - 根據上圖，欲優化網頁效能，可以分成以下三個層級的面向
+            - **優化應用程式層（Application Layer）**
+                - 解決 HTTP/1.x 的限制，並利用 HTTP/2 的新功能ㄍ
+                - 落實 evergreen performance 的最佳實踐
+                    - 基礎原則
+                        - **減少 DNS 查詢**: 每一個主機名解析需要網路往返，可能會造成延遲
+                        - **重複使用 TCP 連接**: 盡可能利用 keep-alive 連線，來消除 TCP 握手、慢啟動所造成的網路延遲時間
+                        - **最小化 HTTP 重定向次數**: HTTP 重新導向會造成高延遲
+                        - **減少往返時間**: 將伺服器定位在更靠近使用者的位置
+                        - **刪除不必要的資源**: 沒有請求比沒有提出請求更快，適時刪除不必要的資源
+                    - 資源優化
+                        - **在客戶端快取資源**: 應快取應用程式資源，以避免每次需要資源時重新請求相同的資料
+                        - **傳輸過程中壓縮資料**: 應對每個需傳輸的資料，採用最佳壓縮方法
+                        - **去除不必要的資料請求**: 減少傳輸的 HTTP 標頭資料（例如: HTTP cookie）可以節省整個往返的網路延遲
+                        - **併行化請求、回應處理**: 客戶端、伺服器上的請求、回應排隊延遲通常不會被注意到，但卻會造成顯著且不必要的延遲
+                        - **採用 HTTP/2 協定**: HTTP/2 協定支援多路請求、回應，並且支援伺服器推送資源
+            - **優化 TLS 協定（Presentation Layer）**:
+                - **重複使用 TCP + TLS 連線**: 設定 TCP 連線為 keep-alive，以減少 TLS 握手的次數
+                - **使用 edge proxy server 作為 CDN 服務**: 運用 CDN 讓邊緣伺服器能更靠近使用者，以大幅減少往返時間（RTT），以及 TCP, TLS 握手的總成本
+					![](../assets/pics/networking/enhance_tls_using_edge_proxy_as_cdn.png)
+
+                - **啟用會話恢復（Session Resumption）**: TLS 會話恢復允許客戶端、伺服器端之間的 TLS 連接在多次連接之間共享相同的 session 密鑰資訊，可以在重新連線時跳過完整的握手過程，以加快連線速度
+                - **啟用 TLS false start**: 允許當 TLS 握手流程僅部分完成時，就能開始發送應用程式的資料
+            - **優化 TCP 協定（Transportation Layer）**: 優化 TCP 協定的最佳方法是<strong>調整 TCP 如何感知當前網路狀況，並根據其上、下層的類型, 要求調整其行為</strong>，例如: 無線網路可能需要不同的擁塞演算法，並且某些應用程式可能需要自訂服務品質(QoS) 以提供最佳體驗。為了讓<strong>各個 TCP 連線實現最佳效能 - 更低的延遲、更高的吞吐量</strong>
+
+				> **擁塞視窗（cwnd）**: cwnd 用來<strong>進行 TCP 擁塞控制，可決定在未接收到確認（ACK）之前，TCP 連接能夠發送的最大資料量</strong>。透過動態調整 CWND 的大小，TCP 協定能夠適應網路狀況，在最大化傳輸效率的同時，盡量避免網路擁塞的發生
+
+				> **接收視窗（rwnd）**: rwnd 是 TCP 的接收窗口大小，它由接收端決定，用來通知發送端，當前接收端能夠處理的資料量。rwnd 用來<strong>進行 TCP 流量控制，確保發送端不會傳送過多的資料超出接收端的處理能力</strong>。rwnd 的值會隨著接收端緩衝區的變化而變化，是由接收端在 TCP header 中通過 `ACK` 消息來告知發送端的
+
+				> **慢啟動重啟（Slow Start Restart, SSR）**: <strong>為了調節新 TCP 連線的傳輸速率，TCP 還實現了慢啟動重啟（SSR）機制，該機制在連接空閒一段定義的時間後，會重置連接的擁塞視窗</strong>。理由很簡單 --- 在連接空閒時網路狀況可能已經發生變化，為了避免擁塞，視窗被重置為「安全」預設值
+
+				> **TCP 快速開啟（Fast Open, TFO）**: TCP 快速開啟 (TFO) 是一種機制，**允許在初始 `SYN` 封包中就傳送應用程式資料，來消除對新 TCP 連接造成的延遲損失**。但是，它確實有其自身的限制，例如: `SYN` 封包內資料有效負載的最大大小有限制、只能發送某些類型的 HTTP 請求，並且由於需要重複連接，因此它僅適用於重複連接加密 cookie
+
+                - **增加 TCP 的初始擁塞視窗**: 較大的起始擁塞視窗允許 TCP 在第一次往返中傳輸更多數據，並顯著加速 cwnd 視窗成長
+                    - 預設: 3 個 MSS (Maximum Segment Size) 的擁塞視窗大小。可調整為 10 個 MSS
+                - **停用 TCP 的 Slow Start Restart 功能**: 停用閒置後的 SSR，將提高以週期性突發方式傳輸資料的長期 TCP 連線的效能
+                - **調整 cwnd 視窗大小**: 啟用視窗縮放可增加最大接收視窗大小，並允許高延遲連線實現更好的吞吐量
+                - **啟用 TCP Fast Open（TFO）**: 在某些情況下，允許在初始 SYN 封包中發送應用程式資料。**TFO 是一個新的優化，需要客戶端和服務端都支援，需事先調查您的應用程式是否可以使用它**
+
+            - **優化物理層、傳輸層（Physical Layer, Data Link Layer）**: 光速、用戶端 :left_arrow_right: 伺服器之間的距離決定了傳播延遲; 而傳播媒介的選擇（有線、無線）決定了每個資料封包所產生的處理、傳輸、排隊的延遲時間
+                - 實際上，WiFi 網路通常是有線 LAN 的延伸，而有線 LAN 又透過 DSL、電纜或光纖連接到廣域網路。對於美國的普通用戶來說，這代表<strong>邊緣頻寬為 8.6 Mbps，全球平均頻寬為 3.1 Mbps</strong>。換句話說，**大多數 WiFi 用戶端仍然可能受到可用 WAN 頻寬的限制，而不是 WiFi 本身的限制**
+                - 根據下圖，**在最好的情況下，無線電已經處於高功率狀態，DNS 已預先解析，並且現有 TCP 連線可用**（客戶端可以重複使用現有的 TCP 連線，並避免建立新連線的開銷）。但是，如果連接繁忙或不存在，則在發送任何應用程式資料之前，我們必須進行多次額外的往返（RTT）
+					![](../assets/pics/networking/network_latency_of_http_request_illustration.png)
+
+- [High Performance Networking in Google Chrome](https://www.igvita.com/posa/high-performance-networking-in-google-chrome/)
