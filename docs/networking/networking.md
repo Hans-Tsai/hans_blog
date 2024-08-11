@@ -345,6 +345,33 @@
     - [HTTP headers 簡介: 一些常用的 headers](https://homuchen.com/posts/http-headers/)
     - [HTTP 狀態碼 (Status Codes)](https://notfalse.net/48/http-status-codes)
 
+### Layer 6: Presentation Layer
+#### SSL/TLS
+- SSL (Secure Sockets Layer): 用於加密、保護、驗證網際網路上所發生通訊的通訊協定
+    - 目前，SSL 已被 TLS (Transport Layer Security) 所取代
+- TLS 握手（handshake）: 使用<strong>非對稱加密（asymmetric encryption）來建立安全通道</strong>
+	![](../assets/pics/networking/tls_handshake.png)
+
+    - 決定雙方將使用的 TLS 版本（例如: TLS 1.0、1.2、1.3）
+    - 決定它們將使用的密碼套件
+    - 透過<strong>伺服器端的公開密鑰、SSL 的 CA 頒發機構的電子簽名（digital signature）來驗證伺服器端的身份</strong>
+    - 產生<strong>工作階段密鑰（session key）</strong>，以便在 TLS 握手完成後，可使用<strong>對稱加密（symmetric encryption）來加密通訊</strong>
+		![](../assets/pics/networking/ssl_symmetric_encryption.png)
+
+- 參考連結:
+    - [Cloudflare: SSL 是如何運作的？ | SSL 憑證和 TLS](https://www.cloudflare.com/zh-tw/learning/ssl/how-does-ssl-work/)
+    - [Cloudflare: TLS 握手中發生什麼事情？| SSL 握手](https://www.cloudflare.com/zh-tw/learning/ssl/what-happens-in-a-tls-handshake/)
+
+### Layer 4: Transport Layer
+#### TCP (Transmission Control Protocol)
+- 說明: 一種<strong>連結導向的協定</strong>，可<strong>確保資料的可靠傳輸</strong>
+- TCP 建立連線（三次握手） & TCP 中斷連線（四次握手）
+	![](../assets/pics/networking/tcp_handshake_example.png)
+	![](../assets/pics/networking/tcp_handshake_illustration.png)
+
+- 參考連結: [TCP 重傳、滑動窗口、流量控制、擁塞控制](https://xiaolincoding.com/network/3_tcp/tcp_feature.html)
+
+
 ### Layer 3: Network Layer
 #### subnet
 - 說明: subnet（子網）是網路的一部分，它<strong>由較大網路中的 IP 位址範圍劃分而來</strong>。子網的目的是<strong>將一個大的網路劃分成較小的、更容易管理的部分，從而提高網路的效率、安全性</strong>
@@ -1258,7 +1285,7 @@
 
                 - **啟用會話恢復（Session Resumption）**: TLS 會話恢復允許客戶端、伺服器端之間的 TLS 連接在多次連接之間共享相同的 session 密鑰資訊，可以在重新連線時跳過完整的握手過程，以加快連線速度
                 - **啟用 TLS false start**: 允許當 TLS 握手流程僅部分完成時，就能開始發送應用程式的資料
-            - **優化 TCP 協定（Transportation Layer）**: 優化 TCP 協定的最佳方法是<strong>調整 TCP 如何感知當前網路狀況，並根據其上、下層的類型, 要求調整其行為</strong>，例如: 無線網路可能需要不同的擁塞演算法，並且某些應用程式可能需要自訂服務品質(QoS) 以提供最佳體驗。為了讓<strong>各個 TCP 連線實現最佳效能 - 更低的延遲、更高的吞吐量</strong>
+            - **優化 TCP 協定（Transport Layer）**: 優化 TCP 協定的最佳方法是<strong>調整 TCP 如何感知當前網路狀況，並根據其上、下層的類型, 要求調整其行為</strong>，例如: 無線網路可能需要不同的擁塞演算法，並且某些應用程式可能需要自訂服務品質(QoS) 以提供最佳體驗。為了讓<strong>各個 TCP 連線實現最佳效能 - 更低的延遲、更高的吞吐量</strong>
 
 				> **擁塞視窗（cwnd）**: cwnd 用來<strong>進行 TCP 擁塞控制，可決定在未接收到確認（ACK）之前，TCP 連接能夠發送的最大資料量</strong>。透過動態調整 CWND 的大小，TCP 協定能夠適應網路狀況，在最大化傳輸效率的同時，盡量避免網路擁塞的發生
 
