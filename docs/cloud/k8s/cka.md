@@ -302,7 +302,7 @@
     ![](../../assets/pics/k8s/kubectl_get_all.png)
 
 ### Service
-- 用途: (是一個 K8s 物件)，用來將多個 pods 之間能夠互相通訊，有助於微服務架構(micro service)的鬆耦合特性(loose coupling)
+- 用途: (是一個 K8s 物件)，讓多個 pods 之間能夠互相通訊，有助於微服務架構(micro service)的鬆耦合特性(loose coupling)
 - 概念: (假設有個外部使用者，想要存取 pod 的網頁服務)
     - 若我們想存取私有網域中的 pod 時，必須先透過 SSH 連線進入 K8s 叢集中的該工作節點後，再透過 curl 指令來存取 pod 的內網 IP address
         ![](../../assets/pics/k8s/external_communication_using_ssh.png.png)
@@ -324,7 +324,9 @@
             ![](../../assets/pics/k8s/multiple_nodes_with_one_pod_using_service.png)
 
 - 三種 Service 類型
+
     ![](../../assets/pics/k8s/service_three_types.png)
+
     - **ClusterIP**: 會建立一個虛擬 IP address 以提供內部的 pod 之間通訊，僅能在叢集內部使用
         - ClusterIP Service 物件，能將一群 pods 視為一個群組，對外提供一個統一的介面來存取該群組中的 pod 服務
         - 預設的 Service 類型
@@ -1264,15 +1266,21 @@
 ### Monitoring
 - 截至目前(2024)，K8s 官方並無內建的<strong>全功能監控工具</strong>，因此需要透過第三方開源工具來監控 K8s 叢集
     ![](../../assets/pics/k8s/k8s_open_source_monitoring_tools.png)
+
 - Heapster 曾經是 K8s 官方的監控工具，但在 K8s v1.11 之後，已經被淘汰。**現已由 Metrics Server 取代**
     ![](../../assets/pics/k8s/metrics_server.png)
+
 - Metrics Server
     - 僅提供基本的監控功能 (e.g. CPU, Memory 使用率)，並不提供進階的監控功能 (log 收集、進階分析、視覺化顯示)
     - 僅會將各個 Node 上的 metrics 資料，儲存在 **in-memory** 中，而不會儲存在硬碟中，因此我們無法透過 Metrics Server 查詢歷史監控資料
+
     ![](../../assets/pics/k8s/metrics_server_in_memory.png)
+
 - 每個 Node 是如何收集監控指標的資料呢？
     - 透過 kubelet 的 cAdvisor 來收集 Pod 的監控指標資料，並定期向 Metrics Server 回報
+    
     ![](../../assets/pics/k8s/metrics_server_cAdvisor.png)
+
 - 啟動 Metrics Server
     - 法 1 (minikube):
         ```bash

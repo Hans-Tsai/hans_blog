@@ -17,6 +17,8 @@
 	![](../assets/pics/networking/osi_model_networking_protocol.png) <br>
 	[圖片出處](https://www.bmc.com/blogs/osi-model-7-layers/)
 
+    - **socket**: 屬於<strong>表現層（Layer 6）</strong>。socket 是一個抽象的概念，用於描述通訊的一端，通常由 IP address + port number 所組成
+	- **port**: 屬於<strong>傳輸層（Layer 4）</strong>。只有 TCP, UDP 協定才能指示封包應去往哪個 port，因為 TCP, UDP 標頭會有一個用於指示 port number 的區段
 
 ## Networking Protocol & Ports
 - 常見的網路協定與相對應的 port
@@ -465,6 +467,9 @@
 - TCP 建立連線（三次握手） & TCP 中斷連線（四次握手）
 	![](../assets/pics/networking/tcp_handshake_example.png)
 	![](../assets/pics/networking/tcp_handshake_illustration.png)
+
+- TCP 標頭（header）
+	![](../assets/pics/networking/tcp_header.png)
 
 - 參考連結: [TCP 重傳、滑動窗口、流量控制、擁塞控制](https://xiaolincoding.com/network/3_tcp/tcp_feature.html)
 
