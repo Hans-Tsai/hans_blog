@@ -13,6 +13,7 @@
 	[圖片出處](https://www.auvik.com/franklyit/blog/osi-model-explained/)
 
 - OSI model & Networking Protocol
+
 	![](../assets/pics/networking/osi_model_networking_protocol.png) <br>
 	[圖片出處](https://www.bmc.com/blogs/osi-model-7-layers/)
 
@@ -767,12 +768,12 @@
 - 常見的 `ping` 指令的選項
     - `-a`: 若能解析，就會將目的地的 IP 位址，解析為 hostname
 	- `-f`: 防止 ICMP Echo Request 訊息被路由器分段
-    - `-i <TTL>`：設置 Time To Live（TTL）值，範圍為 1 ~ 255
+    - `-i <TTL>`: 設定 Time To Live（TTL）值，範圍為 1 ～ 255
     - `-s <size>`: 指定要傳送的封包大小，預設為 32 bytes
     - `-c <count>`: 指定要傳送的封包數量，預設為 4 個
-    - `-i <TTL>`: 設定 Time To Live（TTL）值，範圍為 1 到 255
+    - `-l`: 設定預先發送的封包數量。亦即在開始正常發送封包之前，先快速發送一些封包（預發送），以測試網路的穩定性
 - 常見用法
-	- 透過 `ping` 指令，向 `www.google.com` 發送 5 個封包，每個封包大小為 1500 bytes
+	- 透過 `ping` 指令，向 `www.google.com` 發送 5 個封包，預先發送 1500 個封包，以測試網路的穩定性
 		```bash
 		sudo ping -c 5 -l 1500 www.google.com
 		```
