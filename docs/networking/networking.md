@@ -146,7 +146,7 @@
 	![](../assets/pics/networking/dns_feature.png)
 
 - DNS 的分散式、階層式架構
-    - Local DNS Server: 位於 ISP 內部，會先查看其快取內容（cache）中是否有匹配的 DNS entry; 若沒有，就會將查詢導向 Root DNS Server，繼續進一步的查詢
+    - Local DNS Server: **位於 ISP 內部**，會先查看其快取內容（cache）中是否有匹配的 DNS entry; 若沒有，就會將查詢導向 Root DNS Server，繼續進一步的查詢
         - Local DNS Server 不隸屬於任何一個 DNS 階層式架構的層級，而是一個獨立的 DNS 伺服器，其功能類似於 `/etc/hosts` 檔案
             - Local DNS Server 的快取是一個<strong>動態的、隨時間更新</strong>的資料庫，用於<strong>加速多次查詢相同域名的過程</strong>
 			- `/etc/hosts` 檔案則是一個<strong>靜態的、手動設定</strong>的快取檔案，**優先級高於 DNS 伺服器查詢**
@@ -552,7 +552,7 @@
 		- **IPv6 提供更寬廣的 IP 定址空間**
 		- **IPv6 提供傳輸流量等級(Traffic Class)的分類**
 		- **IPv6 簡化封包標頭**
-		- IPv6 datagram 增加了 **Flow Label**, **Priority** 兩個欄位，用來支援像視訊、語音這類即時服務的需求，以<strong>提高 QoS 的品質</strong>
+		- IPv6 datagram 增加了 **Flow Label** 欄位，用來支援像視訊、語音這類即時服務的需求，以<strong>提高 QoS 的品質</strong>
 		- IPv6 **預設使用 IPsec，來提升安全性**
 - IPv4 vs. IPv6
 	- datagram header 比較
@@ -929,7 +929,9 @@
 
 		- 根據上圖，躍點 8 發生了 100 % 的封包遺失率，並且這是最後一個躍點
     		- 表示雖然流量確實傳送到目標主機了，但因為目標主機未發送回應，這可能是由於網路 or 防火牆 (iptables) 規則設定不當，導致主機丟棄 ICMP 封包
+
 	- 情況 2: 家用 or 商用路由器的 ICMP 流量限制
+
 		![](../assets/pics/networking/mtr_report_residential_or_business_router_icmp_traffic_restriction.png) <br>
 		[圖片出處](https://www.linode.com/docs/guides/diagnosing-network-issues-with-mtr/)
 
@@ -1067,7 +1069,7 @@
 - 將捕獲的封包內容，儲存為 PCAP 檔案，供其他應用程式進行分析，例如: 網路分析器、入侵檢測系統
     - 儲存 PCAP 檔案
 		```bash
-		tcpdump  port 80 -w <capture_file.txt>
+		tcpdump port 80 -w <capture_file.txt>
 		```
 
 	- 讀取 PCAP 檔案
@@ -1392,7 +1394,7 @@
 
 				> **擁塞視窗（cwnd）**: cwnd 用來<strong>進行 TCP 擁塞控制，可決定在未接收到確認（ACK）之前，TCP 連接能夠發送的最大資料量</strong>。透過動態調整 CWND 的大小，TCP 協定能夠適應網路狀況，在最大化傳輸效率的同時，盡量避免網路擁塞的發生
 
-				> **接收視窗（rwnd）**: rwnd 是 TCP 的接收窗口大小，它由接收端決定，用來通知發送端，當前接收端能夠處理的資料量。rwnd 用來<strong>進行 TCP 流量控制，確保發送端不會傳送過多的資料超出接收端的處理能力</strong>。rwnd 的值會隨著接收端緩衝區的變化而變化，是由接收端在 TCP header 中通過 `ACK` 消息來告知發送端的
+				> **接收視窗（rwnd）**: rwnd 是 TCP 的接收窗口大小，它由接收端決定，用來通知發送端，當前接收端能夠處理的資料量。rwnd 用來<strong>進行 TCP 流量控制，確保發送端不會傳送過多的資料超出接收端的處理能力</strong>。rwnd 的值會隨著接收端緩衝區的變化而變化，是由接收端在 TCP header 中透過 `ACK` 消息來告知發送端的
 
 				> **慢啟動重啟（Slow Start Restart, SSR）**: <strong>為了調節新 TCP 連線的傳輸速率，TCP 還實現了慢啟動重啟（SSR）機制，該機制在連接空閒一段定義的時間後，會重置連接的擁塞視窗</strong>。理由很簡單 --- 在連接空閒時網路狀況可能已經發生變化，為了避免擁塞，視窗被重置為「安全」預設值
 

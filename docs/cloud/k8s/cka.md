@@ -4338,7 +4338,7 @@
     ![](../../assets/pics/k8s/troubleshooting_control_plane_node_failure_check_worker_node_services.png)
 
 - Step 5: 檢查 Control Plane Node 上，所有運行的物件的 log 訊息
-    - (若是使用 `SystemD` Service 來部署 K8s 叢集的 Control Plan 相關物件的話)，可以使用 `kubectl`
+    - (若是使用 kubeadm 工具來部署 K8s 叢集的 Control Plan 相關物件的話)，可以使用 `kubectl`
         ```bash
         kubectl logs kube-apiserver-master -n=kube-system
         ```

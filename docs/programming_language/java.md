@@ -109,7 +109,9 @@
 ## String
 
 - String, StringBuffer, StringBuilder 皆實作了 **CharSequence** 介面
+
 	![Java String - javatpoint](https://static.javatpoint.com/images/core/charsequence.png)
+
 - String vs. StringBuffer vs. StringBuilder
 
 	| 特色\字串                  |       String       |        StringBuffer         | StringBuilder |

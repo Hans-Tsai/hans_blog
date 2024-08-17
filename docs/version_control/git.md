@@ -3,6 +3,8 @@ Git Learn
 自主學習 Git 的觀念和指令後做的統整 & 學習筆記
 ---
 
+[TOC]
+
 ### 安裝方式
 #### Windows系統
   + 連結: https://git-scm.com/download/win
