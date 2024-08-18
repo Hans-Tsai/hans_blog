@@ -11,11 +11,11 @@
 
 ## 建立 Spring Boot 專案
 
-- **Spring Boot 框架** 實際上背後仍是使用 Spring 框架的功能，只是包裝得更簡單，希望達到 **開箱即用**
+- <strong>Spring Boot 框架</strong>實際上背後仍是使用 Spring 框架的功能，只是包裝得更簡單，希望達到<strong>開箱即用</strong>
 - Spring Boot 特性
 	- Convention over configuration: **約定大於配置 or 慣例優於設定**
     	- **不需添加任何設定**，只要知道運作規則，就能直接使用
-    	- 所有 project 皆遵循 **一致的標準化設定**
+    	- 所有 project 皆遵循<strong>一致的標準化設定</strong>
 - IDE: IntelliJ Ulitimate 版本
 - New Project -> Spring Initializr
     - Type(套件管理包工具): Gradle 或 Maven
@@ -24,10 +24,10 @@
     - Java: 程式語言的版本 (e.g. 17)
     	- Java 版本也會與 Spring Boot 版本有相依性
         	- Java 11 開發 Spring Boot 2
-            - Java 17 開法 Spring Boot 3
+            - Java 17 開發 Spring Boot 3
     - Packaging: JAR 或 WAR
 - Spring Boot 預設域名(domain) = `http://localhost:8080`
-- Spring Boot 預設當 **返回型別是使用者自定義 class** 時 (e.g. Student)，會 **自動轉換成 JSON 格式** 放到 response body 回傳出去
+- Spring Boot 預設當<strong>回傳型別是使用者自定義 class</strong> 時 (e.g. Student)，會<strong>自動轉換成 JSON 格式</strong>放到 response body 回傳出去
 
     - 背後是使用 Jackson library 來完成 Java class <-> JSON object
 
@@ -138,25 +138,25 @@ public class DemoApplication {
 ```java
 // 介面
 public interface Printer {
-  void print(String message);
+	void print(String message);
 }
 
 // 實作介面
 @Component  // bean (可想像成 Spring container 為我們執行 Printer hpPrinter = new HpPrinter();)
 public class HpPrinter implements Printer {
-  @Override
-  public void print(String message) {
-	System.out.println("HP 印表機: " + message);
-  }
+	@Override
+	public void print(String message) {
+		System.out.println("HP 印表機: " + message);
+	}
 }
 
 // 實作介面
 @Component
 public class CanonPrinter implements Printer {
-  @Override
-  public void print(String message) {
-	System.out.println("Canon 印表機: " + message);
-  }
+	@Override
+	public void print(String message) {
+		System.out.println("Canon 印表機: " + message);
+	}
 }
 ```
 
@@ -173,13 +173,13 @@ public class CanonPrinter implements Printer {
 // IoC 寫法: 由 Container 負責管理 Printer 物件
 @Component  // 要使用 DI bean 之前，自己本身也要是 bean
 public class Teacher {
-  @Autowired  // DI (依賴注入)的用法
-  @Qualifier("hpPrinter") // 指定要載入的 bean 名稱
-  private Printer printer; // 變數型別盡量使用 Interface (e.g. Printer)
+	@Autowired  // DI (依賴注入)的用法
+	@Qualifier("hpPrinter") // 指定要載入的 bean 名稱
+	private Printer printer; // 變數型別盡量使用 Interface (e.g. Printer)
 
-  public void teach() {
-	printer.print("I'm a teacher.");
-  }
+	public void teach() {
+		printer.print("I'm a teacher.");
+	}
 }
 ```
 
@@ -193,13 +193,13 @@ public class Teacher {
 ```java
 @Configuration
 public class MyConfiguration {
-  @Bean
-  public Printer myPrinter() {
-	// 可想像成 Spring container 幫我們執行以下這個 method
-	// Printer myPrinter = 該 method 返回的 object (hpPrinter)
-	// 所建立出來的 bean，預設會是 method 名稱 (myPrinter)
-	return new HpPrinter();
-  }
+		@Bean
+		public Printer myPrinter() {
+		// 可想像成 Spring container 幫我們執行以下這個 method
+		// Printer myPrinter = 該 method 返回的 object (hpPrinter)
+		// 所建立出來的 bean，預設會是 method 名稱 (myPrinter)
+		return new HpPrinter();
+	}
 }
 ```
 
@@ -215,19 +215,19 @@ public class MyConfiguration {
 	```java
 	// 法 1: @PostConstruct 註解
 	public class hpPrinter implements Printer {
-	private int count;
-    
-	@PostConstruct
-	public void initialize() {
-		count = 5;
-	}
-    
-	@Override
-	public void print(String message) {
-		count--;
-		System.out.println("HP 印表機: " + message);
-		System.out.println("剩餘使用次數: " + count);
-	}
+		private int count;
+		
+		@PostConstruct
+		public void initialize() {
+			count = 5;
+		}
+		
+		@Override
+		public void print(String message) {
+			count--;
+			System.out.println("HP 印表機: " + message);
+			System.out.println("剩餘使用次數: " + count);
+		}
 	}
 	```
 
@@ -235,43 +235,43 @@ public class MyConfiguration {
 	// 法 2: 實作 InitializingBean interface 的 afterPropertiesSet() method
 	@Component
 	public class HpPrinter implements Printer, InitializingBean {
-	private int count;
-    
-	@Override
-	public void afterPropertiesSet throws Exception {
-		count = 5;
-	}
-    
-	@Override
-	public void print(String message) {
-		count--;
-		System.out.println("HP 印表機: " + message);
-		System.out.println("剩餘使用次數: " + count);
-	}
+		private int count;
+		
+		@Override
+		public void afterPropertiesSet throws Exception {
+			count = 5;
+		}
+		
+		@Override
+		public void print(String message) {
+			count--;
+			System.out.println("HP 印表機: " + message);
+			System.out.println("剩餘使用次數: " + count);
+		}
 	}
 	```
 
 - Bean 生命週期
-    - **創建 -> 初始化 -> 可以被別人拿去使用**
+    - **建立 -> 初始化 -> 可以被別人拿去使用**
     - 當建立 bean 時發現需要依賴其它 bean，則 Spring 會回過頭去 "建立 + 初始化" 那個被依賴的 bean
     - 勿寫出會發生循環依賴的程式碼 (e.g. A 依賴於 B，且 B 依賴於 A)
 - **@Value 註解**: 讀取 Spring Boot 設定檔 (`application.properties`) 中，指定的 key 的值
-    - 用法: 加在 **bean** 或是**設定 Spring 用的 class** 裡面的 **變數** 上
-    	- e.g. 帶有 **@Component 註解、@Configuration 註解** 的 **class** 上
+    - 用法: 加在 **bean** 或是<spring>設定 Spring 用的 class</spring> 裡面的 <spring>變數</spring> 上
+    	- e.g. 帶有 **@Component 註解、@Configuration 註解** 的 <spring>class</spring> 上
     - 語法: `"${ }"`
     	- `${unknown:Amy}`: 設定 @Value 註解的預設值 (若找不到相對應 key 的值，才會使用指定的預設值)
 
 	```java
 	@Component
 	public class MyBean {
-	@Value("${count}")
-	private Integer numb;  // 5
-    
-	@Value("$my.name")
-	private String name;  // "Hans"
-    
-	@Value("${unknown:Amy}")
-	private String herName; // "Amy"
+		@Value("${count}")
+		private Integer numb;  // 5
+		
+		@Value("$my.name")
+		private String name;  // "Hans"
+		
+		@Value("${unknown:Amy}")
+		private String herName; // "Amy"
 	}
 	```
 
@@ -295,7 +295,7 @@ public class MyConfiguration {
     </dependency>
     ```
 
-- **@Aspect 註解**: 加在 **帶有 @Component 註解的 class** 上 (= bean)，用來 **宣告這個 class 是一個切面**
+- **@Aspect 註解**: 加在 **帶有 @Component 註解的 class** 上 (= bean)，用來<strong>宣告這個 class 是一個切面</strong>
 
 - **切入點(pointcut)** 表達式: 要用到時再查就可以了
 
@@ -358,9 +358,9 @@ public class MyAspectAround {
     - 將一個系統，去拆分成「Model、View、Controller」三個部分，並且讓每一個部分都各自負責不同的功能
     - 分類我們所寫的程式
     - 優點: 
-        - **職責分離**，更容易維護程式
-		- 使程式結構更直覺，有利於 **團隊分工**
-		- **可重複使用** 寫好的程式
+        - <strong>職責分離</strong>，更容易維護程式
+		- 使程式結構更直覺，有利於<strong>團隊分工</strong>
+		- <strong>可重複使用</strong> 寫好的程式
 
 	![spring_mvc_illustration](../../assets/pics/framework/spring_mvc_illustration.png)
 	[圖片出處](https://ithelp.ithome.com.tw/articles/10338883)
@@ -436,7 +436,7 @@ public class MyAspectAround {
 - **@RequestParam 註解**: 取得 **url 的參數** (query parameter)
 
 	- e.g. http://localhost:8080/test1?**id=123&name=Hans**
-	- 若後端 API method 的參數 **有加上 @RequestParam 註解的話**，前端發起 request 時，就 **必須要填入** 參數值，否則會引發錯誤
+	- 若後端 API method 的參數<strong>有加上 @RequestParam 註解的話</strong>，前端發起 request 時，就<strong>必須要填入</strong>參數值，否則會引發錯誤
 	- **name 或 value 設定**: 指定 url 參數的名字 (前端發出 request 時就必須使用該 url 參數名稱來賦值)
     	- 較少使用
 	- **required 設定**: 表示是否為必須的參數
@@ -475,7 +475,7 @@ public class MyAspectAround {
 - **@RequestBody 註解**: 取得 request body 的參數 (將 JSON 格式的參數轉換為 Java object)
 
 	- 後端: 先建立一個與 JSON 格式的參數，相對應的 Java class。接著，在 API method 參數前面加上 @RequestBody 註解
-	- Spring Boot 只會轉換後端 Java class 有宣告的屬性。若前端多帶一個 key，會被後端乎略; 反之，若前端少帶一個 key，則會將其所對應的 object 屬性值設定為 null
+	- Spring Boot 只會轉換後端 Java class 有宣告的屬性。若前端多帶一個 key，會被後端忽略; 反之，若前端少帶一個 key，則會將其所對應的 object 屬性值設定為 null
 
 	```java
 	@RequestMapping("/test2")
@@ -536,7 +536,7 @@ public class MyAspectAround {
 
 ### Restful API 風格
 
-> REST 風格只是一種 **約定俗成的習慣**，並不是標準規範。為了 **簡化溝通成本**
+> REST 風格只是一種<strong>約定俗成的習慣</strong>，並不是標準規範。為了<strong>簡化溝通成本</strong>
 
 - 使用 **HTTP method 表示動作**
 
@@ -598,26 +598,25 @@ public class MyAspectAround {
 // CRUD APIs 綜合範例
 @RestController
 public class StudentController {
-@PostMapping("/students")
-public String create(@RequestBody Student student) {
-	return "執行資料庫的 Create 操作";
-}
+	@PostMapping("/students")
+	public String create(@RequestBody Student student) {
+		return "執行資料庫的 Create 操作";
+	}
 
-@GetMapping("/students/{studentId}")
-public String read(@PathVariable Integer studentId) {
-	return "執行資料庫的 Read 操作";
-}
+	@GetMapping("/students/{studentId}")
+	public String read(@PathVariable Integer studentId) {
+		return "執行資料庫的 Read 操作";
+	}
 
-@PutMapping("/students/{studentId}")
-public String update(@PathVariable Integer studentId,
-					 @RequestBody Student student) {
-	return "執行資料庫的 Update 操作";
-}
+	@PutMapping("/students/{studentId}")
+	public String update(@PathVariable Integer studentId, @RequestBody Student student) {
+		return "執行資料庫的 Update 操作";
+	}
 
-@DeleteMapping("/students/{studentId}")
-public String delete(@PathVariable Integer studentId) {
-	return  "執行資料庫的 Delete 操作";
-}
+	@DeleteMapping("/students/{studentId}")
+	public String delete(@PathVariable Integer studentId) {
+		return  "執行資料庫的 Delete 操作";
+	}
 }
 ```
 
@@ -793,8 +792,8 @@ public class MyController {
 
 - 判斷 http request 是否有問題
 
-    - 若沒有問題就去執行該 url 路徑所對應的 API method; 反之
-    - 若有問題，就返回錯誤訊息給前端 (不會送達 controller)
+    - 若沒有問題就去執行該 url 路徑所對應的 API method
+    - 反之，若有問題，就回傳錯誤訊息給前端 (不會送達 controller)
 
 - 建立攔截器
 
@@ -831,15 +830,15 @@ public class MyController {
 	```
 
 ## Spring JDBC
-- 在 Spring Boot 中執行 **原始 SQL 語法**，去操作資料庫
+- 在 Spring Boot 中執行<string>原始 SQL 語法</string>，去操作資料庫
 
 | Spring JDBC | Spring Data JPA |
 | :--: | :--: |
 | 以 **SQL** 為中心 | 以 **Java object** 為中心 |
-| 需要 **自己寫** SQL 語法 | **不需寫** SQL 語法，Hibernate 會自動生成 SQL 語法，去操作資料庫 |
-| 開發效率 **低** | 開發效率 **高** |
-| 執行效能較 **好** | 執行效能較 **差** |
-| **可寫出** 複雜 SQL 語法 | **較難** 寫出複雜 SQL 語法 |
+| 需要<strong>自己寫</strong> SQL 語法 | <strong>不需寫</strong> SQL 語法，Hibernate 會自動生成 SQL 語法，去操作資料庫 |
+| 開發效率<strong>低</strong> | 開發效率<strong>高</strong> |
+| 執行效能較<strong>好</strong> | 執行效能較<strong>差</strong> |
+| <strong>可寫出</strong>複雜 SQL 語法 | <strong>較難</strong> 寫出複雜 SQL 語法 |
 
 ### IntelliJ 的資料庫 GUI
 - 點選 IntelliJ 的 Database 圖示 -> `+` -> Data Source -> MySQL
@@ -900,8 +899,9 @@ DELETE FROM student WHERE id = 1;
 - **NamedParameterJdbcTemplate** bean
     - 在 Spring JDBC 中，會根據 sql 的語法去區分成兩大類，分別是 update 系列、 query 系列
 		![spring_jdbc_sql_query_two_types](../../assets/pics/framework/spring_jdbc_sql_query_two_types.png)
-			[圖片出處](https://ithelp.ithome.com.tw/articles/10337891)
-		- **update** 系列的方法: **改變** 資料庫中儲存的數據
+		[圖片出處](https://ithelp.ithome.com.tw/articles/10337891)
+
+		- **update** 系列的方法: <strong>改變</strong>資料庫中儲存的數據
     		- 執行 INSERT、UPDATE、DELETE 這三種 sql 語法
 			![spring_jdbc_update_sql_map](../../assets/pics/framework/spring_jdbc_update_sql_map.png)
 			[圖片出處](https://ithelp.ithome.com.tw/articles/10337891)
@@ -973,7 +973,7 @@ DELETE FROM student WHERE id = 1;
 			- **RowMapper**: 將數據從資料庫格式，轉換成 Java object 格式
     			- 注意! `mapRow()` method 的返回型別，必須與 RowMapper<> 泛型的型別一致
     			- `rs` 參數: 包含的 column，即為 SQL select 出來的那些欄位
-  			- **ResultSetExtractor** class: 能 **同時操作多個 row 的資料**
+  			- **ResultSetExtractor** class: 能<strong>同時操作多個 row 的資料</strong>
 				- 用法: `namedParameterJdbcTemplate.query(sql, new ResultSetExtractor<>() { ... })`
 				- 用法: `namedParameterJdbcTemplate.query(sql, new ResultSetExtractor<>() { ... })`
 			- DB schema type 對照 Java object type
@@ -1254,7 +1254,7 @@ public class StudentDaoImpl implements StudentDao{
 		- **C**: Consistency (一致性)
 			- 交易前後，**數據的完整性必須保持一致**
 		- **I**: Isolation (隔離性)
-			- 交易之間 **互不干擾**
+			- 交易之間<strong>互不干擾</strong>
 		- **D**: Durability (持久性)
 			- 交易一旦提交，**對資料庫的修改是永久性的**
 	- 回滾 (rollback): 交易失敗時，會自動回滾 (rollback)
@@ -1378,7 +1378,7 @@ public void transfer(Integer fromAccountId, Integer toAccountId, Integer money) 
 - ORM (Object-Relational Mapping): 將 Java object，去對應到資料庫的 table
 
 ### JPA & Hibernate
-- **JPA** (Java Persistence API): **定義** 要如何操作資料庫
+- **JPA** (Java Persistence API): <strong>定義</strong>要如何操作資料庫
     - 提供 @Entity, @Table, @Column ...等註解
 - **Hibernate**: 是一種 ORM 框架，**實作** JPA 的 API，(根據 JPA 的規範)，自動生成 SQL 語法，去操作資料庫
 
@@ -1426,7 +1426,6 @@ public void transfer(Integer fromAccountId, Integer toAccountId, Integer money) 
 
 ```sql
 CREATE DATABASE myjpa;
-
 
 CREATE TABLE student (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -1555,7 +1554,7 @@ public class StudentController {
 ## Spring Boot 單元測試
 - 單元測試: **自動化** 測試程式碼的正確性
     - **一次只會測試一個功能點** (= 一個 method 或 API)
-    - 各個單元測試 **互相獨立**，彼此之間不能有依賴關係 (e.g. 先後順序)
+    - 各個單元測試<strong>互相獨立</strong>，彼此之間不能有依賴關係 (e.g. 先後順序)
     - 測試的結果是穩定的，**不受外部服務影響**
     - 測試的程式: 會放在 `test/` 資料夾中 (必須遵守的)
     - 命名風格: 測試的 class，會以 **原 class 的名字加上 Test 作為結尾** 來命名 (e.g. `StudentTest`)
@@ -1687,14 +1686,14 @@ public class MyTest {
 - @SpringBootTest 註解: 加在 class 上，表示這是一個 Spring Boot 的測試類別
     - 相當於直接啟動 Spring Boot 的應用程式
 	- 會自動載入 Spring Boot 的所有配置 (@Configuration, Interceptor 都會生效)
-	- 會 **自動載入所有的 bean** (可使用 @Autowired 來注入)
-- @Transactional 註解: 加在帶有 @Test 註解的 class 或 **method** 上，在**單元測試結束後，會強制回滾(rollback)所有資料庫操作，將數據恢復原狀**
+	- 會<strong>自動載入所有的 bean</strong> (可使用 @Autowired 來注入)
+- @Transactional 註解: 加在帶有 @Test 註解的 class 或 **method** 上，在<strong>單元測試結束後，會強制回滾(rollback)所有資料庫操作，將數據恢復原狀</strong>
 
 | 比較 | @Transactional 在 `main/` 資料夾 | @Transactional 在 `test/` 資料夾 |
 | :--: | :---------------------: | :----------------------: |
 | 說明 | 正常程式 | 單元測試 |
 | 目的 | 交易管理 | 避免測試影響到資料庫中的數據 |
-| 回滾機制(rollback) | 當程式運行 **中途發生錯誤** 時，**才會回滾** 已經執行的資料庫操作，將數據恢復元狀 | 在該單元測試結束後，**強制 rollback** 所有執行的資料庫操作，將數據恢復原狀 |
+| 回滾機制(rollback) | 當程式運行<strong>中途發生錯誤</strong>時，<strong>才會回滾</strong>已經執行的資料庫操作，將數據恢復元狀 | 在該單元測試結束後，**強制 rollback** 所有執行的資料庫操作，將數據恢復原狀 |
 
 - Service 層、Dao 層的單元測試 --- 基本範例
 ```java
@@ -1817,7 +1816,7 @@ public class StudentControllerTest {
 	
 ### Mock 測試
 - 目的: 避免為了測試某一個單元測試，而去建構了整個 bean 的 dependency 
-- 作法: 創造一個 **假的 bean，去替換掉** Spring container 中原有的 bean
+- 作法: 創造一個<strong>假的 bean，去替換掉</strong> Spring container 中原有的 bean
     - 使用 **@MockBean 註解**: 建立一個假的 bean
         - 沒有定義的 method，**預設回傳 null**
     - 使用 @SpyBean 註解: Spring container 中的 bean 仍舊是正常的 bean，**只替換其中幾個方法**
@@ -1910,9 +1909,9 @@ public class StudentServiceImplSpyTest {
 ```
 
 ### H2 資料庫
-- H2 資料庫: 是一種 **嵌入式資料庫**，可以再啟動 Spring Boot 時被生成出來，在運行結束時被銷毀，**用完即丟**
+- H2 資料庫: 是一種<strong>嵌入式資料庫</strong>，可以再啟動 Spring Boot 時被生成出來，在運行結束時被銷毀，**用完即丟**
     - 避免執行測試時，受到外部資料庫的影響 (e.g. MySQL)
-    - 常用在 **單元測試** 中，不需要額外安裝任何軟體，都可以運行該單元測試
+    - 常用在<strong>單元測試</strong>中，不需要額外安裝任何軟體，都可以運行該單元測試
 - 設定套件管理的設定檔 (`pom.xml`)
     - 使用 H2 資料庫 ([官網連結: maven h2](https://mvnrepository.com/artifact/com.h2database/h2))
 		```xml
@@ -1967,7 +1966,7 @@ public class StudentServiceImplSpyTest {
     - 重要的 Service 層，可以加一些專屬的單元測試
     - Dao 層比較少測，但如果有複雜的 sql 語法，可以額外添加測試
 - **從 User story 的角度出發**，來思考該如何寫單元測試
-	- 經驗: 不要在實作完直接寫單元測試，可以休息一下載回來寫，免得鑽牛角尖
+	- 經驗: 不要在實作完直接寫單元測試，可以休息一下再回來寫，免得鑽牛角尖
 - **一定要記得測試 Error case!**
     - e.g. 在測試 `getById()` method 時，可以測試當 id 不存在時怎麼處理? 當 id 的長度超過限制時怎麼處理?
     - 實作 Error handling 是開發中最難的一部分
