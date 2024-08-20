@@ -579,11 +579,11 @@
             apiVersion: v1
             kind: Binding
             metadata:
-            name: nginx
+                name: nginx
             target:
-            apiVersion: v1
-            kind: Node
-            name: node02
+                apiVersion: v1
+                kind: Node
+                name: node02
             ```
 
             ```yaml
@@ -727,7 +727,7 @@
 
         spec:
             # 使用 selectors 來選擇要管理的物件
-        selector:
+            selector:
                 app: App1
             ports:
             -   protocol: TCP
@@ -1385,6 +1385,7 @@
         ```bash
         kubectl apply -f deployment-definition.yaml
         ```
+
     - 法 2: 透過 `kubectl set` 指令，設定 Deployment 的 Rollout 策略
         ```bash
         kubectl set image deployment/myapp-deployment nginx=nginx:1.9.1
@@ -1740,7 +1741,7 @@
         - e.g. Logging, Monitoring 等
     - **Adapter (適配器模式)**: 主要 container 負責應用程式的主要邏輯，而 **adapter container 負責轉換主要 container 的輸出**
         - e.g. 把資料從 JSON 轉換為 YAML 格式
-    - **Ambassador (大使模式)**: 主要 container 負責應用程式的主要邏輯，而 **ambassador container 負責將主要 container 的輸出轉換成另一種格式**
+    - **Ambassador (大使模式)**: 主要 container 負責應用程式的主要邏輯，而 **ambassador container 負責代理主要 container 的網路請求**
         - e.g. 代理服務 (Proxy)、負載均衡 (Load Balance)、安全認證
     ![](../../assets/pics/k8s/multi_containers_in_pod_three_design_patterns.png)
 
@@ -2160,7 +2161,7 @@
         ![](../../assets/pics/k8s/k8s_tls_certificates.png)
 
 - Networking: 讓 K8s 叢集中的 Pods 能夠互相通訊
-    - 預設，K8s 叢集中的 Pods 能夠互相通訊
+    - 預設 K8s 叢集中的 Pods 能夠互相通訊
     - 可使用 Network Policies 來控制流量
         ![](../../assets/pics/k8s/k8s_network_policies.png)
 
@@ -2258,6 +2259,7 @@
 - 公私鑰的慣用命名風格
     - 公鑰: `.crt`, `.cert`, `.pem` 結尾
     - 私鑰: 含有 `.key`
+
     ![](../../assets/pics/k8s/public_key_and_private_key_naming_convention.png)
 
 - 在 K8s 叢集中，關於 TLS 加密傳輸通常會有以下兩個要求
@@ -2793,7 +2795,7 @@
     ![](../../assets/pics/k8s/cluster_role_and_cluster_rolebinding.png)
 
 #### Service Account
-- 一般的 User Account 供人類使用; 而 Service Account: 供應用程式使用
+- 一般的 User Account 供人類使用; 而 Service Account 供應用程式使用
     ![](../../assets/pics/k8s/user_account_and_service_account.png)
 
 - 在 K8s v1.24 版之後的更新
