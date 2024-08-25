@@ -9,18 +9,18 @@ Coding Interview Preparation
 ### 專有名詞
 - **Subarray**: 在原陣列中的一段 **連續元素**
     ```java
-    int[] arr = [2, 3, 6, 1, 5, 4];
-    // Subarray: [3, 6, 1]
-    // 不是 Subarray: [3, 1, 5]
+    int[] arr = { 2, 3, 6, 1, 5, 4 };
+    // Subarray: { 3, 6, 1 }
+    // 不是 Subarray: { 3, 1, 5 }
     ```
 - **Subsequence**: 可以透過刪除/不刪除元素，而 **不影響剩餘元素的順序**
     ```java
-    int[] arr = [2, 3, 6, 1, 5, 4];
-    // Subsequence: [3, 1, 5];
-    // 不是 Subsequence: [3, 5, 1]
+    int[] arr = { 2, 3, 6, 1, 5, 4 };
+    // Subsequence: { 3, 1, 5 };
+    // 不是 Subsequence: { 3, 5, 1 }
     ```
-- non-decreasing order: 陣列中的元素值是 **非遞減** 的，即元素值 **可以相等 or 遞增** (e.g. [1, 2, 2, 3, 4])
-- non-increasing order: 陣列中的元素值是 **非遞增** 的，即元素值 **可以相等 or 遞減** (e.g. [4, 3, 2, 2, 1])
+- non-decreasing order: 陣列中的元素值是 **非遞減** 的，即元素值 **可以相等 or 遞增** (e.g. { 1, 2, 2, 3, 4 })
+- non-increasing order: 陣列中的元素值是 **非遞增** 的，即元素值 **可以相等 or 遞減** (e.g. { 4, 3, 2, 2, 1 })
 
 ### 注意事項
 - Array 中有重複值嗎? 會影響答案嗎? 使問題變得更簡單還是更困難?
